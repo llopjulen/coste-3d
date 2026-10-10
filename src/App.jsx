@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 /* ==================================================================
    1) FIELDS
@@ -63,8 +63,7 @@ const LAYERS = [
   { key: 'packaging',     name: 'Packaging',     color: '#4E4E58' },
 ]
 
-const usd = n =>
-  (isFinite(n) ? n : 0).toLocaleString('en-US', { style: 'currency', currency: 'EUR' })
+
 
 /* ==================================================================
    2) CALCULATION — a pure function: numbers in, numbers out.
@@ -151,6 +150,53 @@ function Field({ id, label, unit, help, value, onChange, open, onHelp }) {
 export default function App() {
   const [d, setD] = useState(INITIAL)
 
+  /* =========================
+    ·Guardar Presupuesto
+    =========================*/
+    const [savedQuotes, setSavedQuotes] = useState(() => {
+      const saved = localStorage.getItem('savedQuotes')
+      return saved ? JSON.parse(saved) : []
+    })
+
+    useEffect(() => {
+      localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes))
+    }, [savedQuotes]) //al poner ahi el savedQuotes se ejecuta cada vez que savedQuotes cambie
+
+    const saveQuote = () => {
+      console.log('guardando...')
+      const quote = {
+        id: Date.now(),
+        date: new Date().toLocaleDateString(),
+        cost: r.cost,
+        price: r.recommendedPrice,
+      }
+      setSavedQuotes([...savedQuotes, quote])
+    }
+
+
+  
+  const [showFullBreakdown, setShowFullBreakdown] = useState(true)
+
+  const [currency, setCurrency] = useState('EUR')
+
+  const[rates, setRates] = useState({ EUR: 1})
+
+  const formatMoney = (n) => {
+  const rate = rates[currency] || 1
+  const value = (isFinite(n) ? n : 0) * rate
+  return `${value.toFixed(2)} ${currency}`
+}
+
+  useEffect(() => {
+    fetch('https://api.frankfurter.dev/v1/latest?from=EUR')
+      .then(res => res.json())
+      .then(data => setRates({ EUR: 1, ...data.rates}))
+      .catch(() => {})
+  }, [])
+  
+  const botonApagarCalculo = () => {
+    setShowFullBreakdown(!showFullBreakdown)
+  }
   // Only one help panel open at a time: store the key of the open
   // field, or null if none is open.
   const [openHelp, setOpenHelp] = useState(null)
@@ -176,30 +222,58 @@ export default function App() {
           Material, power, printer depreciation, failed prints and your own time.
         </p>
 
+        <button className="controls" onClick={botonApagarCalculo}>{showFullBreakdown ? 'Show cost only' : 'Show Full Breakdown'}</button>
+
+        <button className="controls" onClick={saveQuote}>Save quote</button>
+          {savedQuotes.length > 0 && (
+            <div className="panel">
+            <h2>Saved quotes</h2>
+            <div className="body">
+              {savedQuotes.map(quote => (
+                <div className="field" key={quote.id}>
+                <span>{formatMoney(quote.cost)} → {formatMoney(quote.price)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <select
+          className="controls"
+          value={currency}
+          onChange={e => setCurrency(e.target.value)}
+        >
+          {Object.keys(rates).map(code => (
+            <option key={code} value={code}>{code}</option>
+          ))}
+        </select>
+
         <div className="columns">
           {/* --- Form: drawn by looping over SECTIONS --- */}
           <div>
             {SECTIONS.map(section => (
-              <section className="panel" key={section.title}>
-                <h2>{section.title}</h2>
-                <div className="body">
-                  {section.fields.map(field => (
-                    <Field
-                      key={field.key}
-                      id={field.key}
-                      label={field.label}
-                      unit={field.unit}
-                      help={field.help}
-                      value={d[field.key]}
-                      onChange={set(field.key)}
-                      open={openHelp === field.key}
-                      onHelp={() =>
-                        setOpenHelp(k => (k === field.key ? null : field.key))
-                      }
-                    />
-                  ))}
-                </div>
-              </section>
+              (showFullBreakdown || !['Labor', 'Selling'].includes(section.title)) &&(
+                <section className="panel" key={section.title}>
+                  <h2>{section.title}</h2>
+                  <div className="body">
+                    {section.fields.map(field => (
+                      <Field
+                        key={field.key}
+                        id={field.key}
+                        label={field.label}
+                        unit={field.unit}
+                        help={field.help}
+                        value={d[field.key]}
+                        onChange={set(field.key)}
+                        open={openHelp === field.key}
+                        onHelp={() =>
+                          setOpenHelp(k => (k === field.key ? null : field.key))
+                        }
+                      />
+                    ))}
+                  </div>
+                </section>
+              )
             ))}
           </div>
 
@@ -225,7 +299,7 @@ export default function App() {
                     <div className="row-legend" key={layer.key}>
                       <i className="swatch" style={{ backgroundColor: layer.color }} />
                       <span className="name">{layer.name}</span>
-                      <span className="value">{usd(r.parts[layer.key])}</span>
+                      <span className="value">{formatMoney(r.parts[layer.key])}</span>
                     </div>
                   ))}
                 </div>
@@ -235,20 +309,20 @@ export default function App() {
             <div className="panel">
               <div className="figure main">
                 <span className="label">Cost per part</span>
-                <span className="value">{usd(r.cost)}</span>
+                <span className="value">{formatMoney(r.cost)}</span>
               </div>
               <div className="figure highlight">
                 <span className="label">Recommended price</span>
-                <span className="value">{usd(r.recommendedPrice)}</span>
+                <span className="value">{formatMoney(r.recommendedPrice)}</span>
               </div>
               <div className="figure">
                 <span className="label">Profit per printer hour</span>
-                <span className="value">{usd(r.perHour)}</span>
+                <span className="value">{formatMoney(r.perHour)}</span>
               </div>
               {r.units > 1 && (
                 <div className="figure">
                   <span className="label">Order total ({r.units} pcs)</span>
-                  <span className="value">{usd(r.orderPrice)}</span>
+                  <span className="value">{formatMoney(r.orderPrice)}</span>
                 </div>
               )}
             </div>
@@ -258,12 +332,12 @@ export default function App() {
                 <span className="context">At your current selling price</span>
                 <div className={`sentence ${r.profit < 0 ? 'loss' : 'gain'}`}>
                   {r.profit < 0
-                    ? `You lose ${usd(Math.abs(r.profit))} per part`
-                    : `You make ${usd(r.profit)} per part`}
+                    ? `You lose ${formatMoney(Math.abs(r.profit))} per part`
+                    : `You make ${formatMoney(r.profit)} per part`}
                 </div>
                 <span className="note">
                   Filament is only {r.materialPct.toFixed(0)}% of what it actually costs you.
-                  After fees you keep {usd(r.currentNet)} out of {usd(d.currentPrice)}.
+                  After fees you keep {formatMoney(r.currentNet)} out of {formatMoney(d.currentPrice)}.
                 </span>
               </div>
             </div>
