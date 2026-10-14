@@ -159,3 +159,37 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .controls{
   margin-right: 8px;
 }
+
+/* ------------------------ Presupuestos guardados ------------------- */
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.toolbar .controls{margin-right:0}
+
+.quotes{margin-top:14px}
+/* Las cuatro columnas (fecha, coste, precio, borrar) se definen una
+   sola vez aqui y las comparten la cabecera y cada fila. */
+.quote-head,.quote-row{
+  display:grid;
+  grid-template-columns:1fr auto auto 26px;
+  align-items:center;
+  gap:16px;
+  padding:7px 15px;
+}
+.quote-head{font-size:.72rem;color:var(--tenue);text-transform:uppercase;letter-spacing:.04em;padding-bottom:4px}
+.quotes ul{list-style:none;padding-bottom:5px}
+.quote-row + .quote-row{border-top:1px solid var(--borde)}
+.quote-row:hover{background:var(--panel-alto)}
+.quote-date{font-size:.86rem;color:var(--tenue)}
+.quote-cost,.quote-price{font-size:.89rem;font-variant-numeric:tabular-nums;text-align:right}
+.quote-head span:nth-child(2),.quote-head span:nth-child(3){text-align:right}
+.quote-price{font-weight:600;color:var(--verde-vivo)}
+
+.quote-delete{
+  width:24px;height:24px;
+  display:grid;place-items:center;
+  padding:0;
+  border:1px solid transparent;border-radius:5px;
+  background:none;color:var(--tenue);
+  font-size:.8rem;cursor:pointer;
+}
+.quote-delete:hover{border-color:var(--rojo);color:var(--rojo)}
+.quote-delete:focus-visible{outline:2px solid var(--verde);outline-offset:2px}

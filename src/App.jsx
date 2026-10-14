@@ -163,7 +163,6 @@ export default function App() {
     }, [savedQuotes]) //al poner ahi el savedQuotes se ejecuta cada vez que savedQuotes cambie
 
     const saveQuote = () => {
-      console.log('guardando...')
       const quote = {
         id: Date.now(),
         date: new Date().toLocaleDateString(),
@@ -171,6 +170,10 @@ export default function App() {
         price: r.recommendedPrice,
       }
       setSavedQuotes([...savedQuotes, quote])
+    }
+
+    const deleteQuote = (id) => {
+      setSavedQuotes(savedQuotes.filter( q => q.id !== id))
     }
 
 
@@ -222,31 +225,50 @@ export default function App() {
           Material, power, printer depreciation, failed prints and your own time.
         </p>
 
-        <button className="controls" onClick={botonApagarCalculo}>{showFullBreakdown ? 'Show cost only' : 'Show Full Breakdown'}</button>
+        <div className="toolbar">
+          <button className="controls" onClick={botonApagarCalculo}>{showFullBreakdown ? 'Show cost only' : 'Show Full Breakdown'}</button>
 
-        <button className="controls" onClick={saveQuote}>Save quote</button>
-          {savedQuotes.length > 0 && (
-            <div className="panel">
-            <h2>Saved quotes</h2>
-            <div className="body">
-              {savedQuotes.map(quote => (
-                <div className="field" key={quote.id}>
-                <span>{formatMoney(quote.cost)} → {formatMoney(quote.price)}</span>
-                </div>
-              ))}
+          <button className="controls" onClick={saveQuote}>Save quote</button>
+
+          <select
+            className="controls"
+            value={currency}
+            onChange={e => setCurrency(e.target.value)}
+          >
+            {Object.keys(rates).map(code => (
+              <option key={code} value={code}>{code}</option>
+            ))}
+          </select>
+        </div>
+
+        {savedQuotes.length > 0 && (
+          <section className="panel quotes">
+            <h2>Saved quotes ({savedQuotes.length})</h2>
+            <div className="quote-head" aria-hidden="true">
+              <span>Date</span>
+              <span>Cost</span>
+              <span>Price</span>
+              <span />
             </div>
-          </div>
+            <ul>
+              {savedQuotes.map(quote => (
+                <li className="quote-row" key={quote.id}>
+                  <span className="quote-date">{quote.date}</span>
+                  <span className="quote-cost">{formatMoney(quote.cost)}</span>
+                  <span className="quote-price">{formatMoney(quote.price)}</span>
+                  <button
+                    type="button"
+                    className="quote-delete"
+                    aria-label={`Delete quote from ${quote.date}`}
+                    onClick={() => deleteQuote(quote.id)}
+                  >
+                    ✕
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
-
-        <select
-          className="controls"
-          value={currency}
-          onChange={e => setCurrency(e.target.value)}
-        >
-          {Object.keys(rates).map(code => (
-            <option key={code} value={code}>{code}</option>
-          ))}
-        </select>
 
         <div className="columns">
           {/* --- Form: drawn by looping over SECTIONS --- */}
