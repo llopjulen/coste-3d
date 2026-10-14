@@ -1,16 +1,36 @@
-# React + Vite
+# 3D Print Cost Calculator
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A free calculator that shows what a 3D printed part *actually* costs you: material, power, printer depreciation, failed prints, your own time and platform fees.
 
-Currently, two official plugins are available:
+**Live:** https://llopjulen.github.io/coste-3d/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- Full cost breakdown per part, with a layered chart
+- Recommended selling price from your target margin and platform fee
+- Toggle to hide labor/selling and see only the raw printing cost
+- Currency selector with live exchange rates (Frankfurter API)
+- Save quotes locally in your browser (localStorage)
+- Everything runs in the browser, nothing is sent to any server
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Run it locally
 
-## Expanding the Oxlint configuration
+```bash
+git clone https://github.com/llopjulen/coste-3d.git
+cd coste-3d
+npm install
+npm run dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Roadmap
+
+- Delete individual saved quotes
+- CSV export of saved quotes
+- Printer utilization / parts per week
+- Charts and month-to-month comparison
+
+Ideas and feedback are welcome. Open an issue.
+
+## Built with
+
+React + Vite. Deployed on GitHub Pages.

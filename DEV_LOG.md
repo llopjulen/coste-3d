@@ -2,6 +2,13 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-14, README nuevo del proyecto
+- Archivo y sitio: README.md (todo el archivo; lo escribió Julen).
+- Qué cambió: se sustituyó el README de la plantilla de Vite por uno propio, con descripción, enlace a la web, funciones, cómo ejecutarlo en local y roadmap.
+- Por qué: el README es lo primero que ve quien entra al repositorio desde Reddit o GitHub.
+- Concepto nuevo: no hay.
+- Cómo probarlo: abre el repositorio en GitHub y comprueba que la portada muestra el README nuevo. Pendiente: añadir Excel, History y PDF report a la lista de Features.
+
 ### 2026-10-14, CLAUDE.md al día: estado actual y pendientes
 - Archivo y sitio: CLAUDE.md, secciones "Estado actual" y "Pendiente, por orden".
 - Qué cambió: se apuntó todo lo hecho hoy (History, Excel, PDF report) y se reordenaron los pendientes. Lo siguiente es "piezas por semana".
