@@ -197,6 +197,32 @@ export default function App() {
       .catch(() => {})
   }, [])
   
+  /* Builds a CSV file from the saved quotes and downloads it.
+     Amounts are exported in the currency currently selected. */
+  const exportCSV = () => {
+    const rate = rates[currency] || 1
+    const header = ['Date', 'Cost', 'Price', 'Currency']
+    const rows = savedQuotes.map(q => [
+      q.date,
+      (q.cost * rate).toFixed(2),
+      (q.price * rate).toFixed(2),
+      currency,
+    ])
+    // Every value goes between quotes so a comma inside a date
+    // can't split it into two columns.
+    const csv = [header, ...rows]
+      .map(row => row.map(v => `"${String(v).replaceAll('"', '""')}"`).join(','))
+      .join('\n')
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `print-quotes-${new Date().toISOString().slice(0, 10)}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
   const botonApagarCalculo = () => {
     setShowFullBreakdown(!showFullBreakdown)
   }
@@ -267,6 +293,9 @@ export default function App() {
                 </li>
               ))}
             </ul>
+            <div className="quotes-actions">
+              <button type="button" className="controls" onClick={exportCSV}>Export CSV</button>
+            </div>
           </section>
         )}
 

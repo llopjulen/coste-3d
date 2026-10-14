@@ -193,3 +193,5 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 }
 .quote-delete:hover{border-color:var(--rojo);color:var(--rojo)}
 .quote-delete:focus-visible{outline:2px solid var(--verde);outline-offset:2px}
+.quotes-actions{display:flex;justify-content:flex-end;padding:9px 15px;border-top:1px solid var(--borde)}
+.quotes-actions .controls{margin-right:0}
