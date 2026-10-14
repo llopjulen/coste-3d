@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import History from './History.jsx'
+import Report from './Report.jsx'
 
 /* ==================================================================
    1) FIELDS
@@ -224,8 +225,17 @@ export default function App() {
   
   const [showFullBreakdown, setShowFullBreakdown] = useState(true)
 
-  // Which screen is shown: 'calculator' or 'history'.
+  // Which screen is shown: 'calculator', 'history' or 'report'.
   const [view, setView] = useState('calculator')
+
+  // The report shows whatever History was showing when the button was
+  // pressed (all quotes, or only the ones matching the search).
+  const [report, setReport] = useState({ quotes: [], filter: '' })
+  const openReport = (quotes, filter) => {
+    setReport({ quotes, filter })
+    setView('report')
+    window.scrollTo(0, 0)
+  }
 
   const [currency, setCurrency] = useState('EUR')
 
@@ -276,7 +286,7 @@ export default function App() {
 
   return (
     <>
-      <div className="topbar">
+      <div className="topbar no-print">
         <i className="dot" />
         <strong>Print Cost</strong>
         <nav className="tabs">
@@ -290,8 +300,8 @@ export default function App() {
           </button>
           <button
             type="button"
-            className={`tab ${view === 'history' ? 'active' : ''}`}
-            aria-current={view === 'history' ? 'page' : undefined}
+            className={`tab ${view !== 'calculator' ? 'active' : ''}`}
+            aria-current={view !== 'calculator' ? 'page' : undefined}
             onClick={() => setView('history')}
           >
             History <span className="count">{savedQuotes.length}</span>
@@ -309,7 +319,15 @@ export default function App() {
         </select>
       </div>
 
-      {view === 'history' ? (
+      {view === 'report' ? (
+        <Report
+          quotes={report.quotes}
+          filter={report.filter}
+          currency={currency}
+          formatMoney={formatMoney}
+          onBack={() => setView('history')}
+        />
+      ) : view === 'history' ? (
         <div className="wrap">
           <h1>Quote history</h1>
           <p className="subtitle">Every quote you saved on this device, newest first.</p>
@@ -320,6 +338,7 @@ export default function App() {
             onDelete={deleteQuote}
             onExport={exportExcel}
             exporting={exporting}
+            onReport={openReport}
             onGoToCalculator={() => setView('calculator')}
           />
         </div>

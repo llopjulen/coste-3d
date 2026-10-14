@@ -19,7 +19,7 @@ function monthOf(q) {
   }
 }
 
-export default function History({ quotes, formatMoney, onLoad, onDelete, onExport, exporting, onGoToCalculator }) {
+export default function History({ quotes, formatMoney, onLoad, onDelete, onExport, exporting, onReport, onGoToCalculator }) {
   const [query, setQuery] = useState('')
 
   if (quotes.length === 0) {
@@ -85,6 +85,9 @@ export default function History({ quotes, formatMoney, onLoad, onDelete, onExpor
         />
         <button type="button" className="controls" onClick={() => onExport(visible)} disabled={exporting || visible.length === 0}>
           {exporting ? 'Exporting…' : `Export Excel (${visible.length})`}
+        </button>
+        <button type="button" className="controls" onClick={() => onReport(visible, query.trim())} disabled={visible.length === 0}>
+          PDF report
         </button>
       </div>
 

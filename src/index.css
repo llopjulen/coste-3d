@@ -264,3 +264,86 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 
 /* Texto solo para lectores de pantalla: existe pero no se ve */
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ------------------------- Informe (PDF) --------------------------- */
+/* El informe imita una hoja de papel blanca, igual en pantalla que
+   impresa, asi lo que ves es lo que sale en el PDF. */
+:root{
+  --papel:#FFFFFF;
+  --tinta:#1B1B1F;
+  --tinta-suave:#5E5E68;
+  --linea-papel:#E3E3E8;
+  --pista-papel:#F1F1F4;
+}
+.report-screen{max-width:900px;margin:0 auto;padding:22px 18px 64px}
+.report-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:16px;font-size:.82rem}
+.controls.primary{background:var(--verde);border-color:var(--verde);color:#fff}
+.controls.primary:hover:not(:disabled){background:var(--verde-vivo);border-color:var(--verde-vivo);color:#fff}
+
+.report{
+  background:var(--papel);color:var(--tinta);
+  border-radius:var(--radio);
+  padding:36px 40px;
+  font-size:.86rem;
+}
+@media(max-width:700px){.report{padding:22px 18px}.report-meta{align-items:flex-start}}
+.report h1{font-size:1.7rem;margin-top:6px}
+.report h2{font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--tinta-suave);margin-bottom:12px}
+.report .muted{color:var(--tinta-suave)}
+
+.report-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;padding-bottom:18px;border-bottom:2px solid var(--tinta)}
+.report-brand{display:flex;align-items:center;gap:7px;font-weight:600;font-size:.82rem}
+.report-sub{margin-top:4px;color:var(--tinta-suave)}
+.report-meta{display:flex;flex-direction:column;align-items:flex-end;gap:2px;color:var(--tinta-suave);font-size:.78rem}
+
+.report-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:22px 0 8px}
+@media(max-width:700px){.report-kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{display:flex;flex-direction:column;gap:2px;padding:12px;border:1px solid var(--linea-papel);border-radius:6px}
+.kpi .label{font-size:.72rem;color:var(--tinta-suave)}
+.kpi .value{font-size:1.15rem;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.kpi .hint{font-size:.68rem;color:var(--tinta-suave)}
+
+.report-block{margin-top:26px;break-inside:avoid}
+.report-block.breakable{break-inside:auto}
+.report-two{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+@media(max-width:700px){.report-two{grid-template-columns:1fr}}
+
+/* Grafica de columnas por mes */
+.columns-chart{display:flex;align-items:flex-end;gap:8px;height:190px;border-bottom:1px solid var(--tinta-suave)}
+.col{flex:1;max-width:72px;height:100%;display:flex;flex-direction:column;align-items:center;min-width:0}
+.col-value{font-size:.7rem;color:var(--tinta);font-variant-numeric:tabular-nums;margin-bottom:4px;white-space:nowrap}
+.col-bar-area{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center}
+.col-bar{width:70%;min-height:2px;background:var(--verde);border-radius:4px 4px 0 0}
+.col-label{font-size:.7rem;color:var(--tinta-suave);margin:6px 0 -22px;white-space:nowrap}
+.columns-chart{margin-bottom:26px}
+
+/* Barras horizontales (desglose y clientes) */
+.bar-list{display:flex;flex-direction:column;gap:7px}
+.bar-row{display:grid;grid-template-columns:92px 1fr auto;align-items:center;gap:10px}
+.bar-label{font-size:.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{height:12px;background:var(--pista-papel);border-radius:0 4px 4px 0}
+.bar-fill{display:block;height:100%;min-width:2px;background:var(--verde);border-radius:0 4px 4px 0}
+.bar-value{font-size:.8rem;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.bar-share{display:inline-block;width:34px;color:var(--tinta-suave)}
+
+.report-table{width:100%;border-collapse:collapse;font-size:.78rem;white-space:nowrap}
+.report-table th{text-align:left;font-weight:600;color:var(--tinta-suave);padding:6px 8px;border-bottom:1px solid var(--tinta)}
+.report-table td{padding:6px 8px;border-bottom:1px solid var(--linea-papel)}
+.report-table tr{break-inside:avoid}
+.report-table .num{text-align:right;font-variant-numeric:tabular-nums}
+.report-table .strong{font-weight:600}
+.report-table .total-row td{font-weight:700;border-top:2px solid var(--tinta);border-bottom:0}
+.report-foot{max-width:none;margin-top:26px;padding-top:12px;border-top:1px solid var(--linea-papel);font-size:.72rem;color:var(--tinta-suave)}
+
+/* Al imprimir: solo la hoja, sin barra superior ni botones, y con los
+   colores de fondo (las barras verdes) tal cual. */
+@page{size:A4;margin:14mm}
+@media print{
+  .no-print{display:none !important}
+  body{background:var(--papel)}
+  .report-screen{padding:0;max-width:none}
+  .report{padding:0;border-radius:0;font-size:9.5pt}
+  .report-kpis{grid-template-columns:repeat(5,1fr)}
+  .report-two{grid-template-columns:1fr 1fr}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
