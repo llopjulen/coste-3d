@@ -2,6 +2,13 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-14, CLAUDE.md al día: estado actual y pendientes
+- Archivo y sitio: CLAUDE.md, secciones "Estado actual" y "Pendiente, por orden".
+- Qué cambió: se apuntó todo lo hecho hoy (History, Excel, PDF report) y se reordenaron los pendientes. Lo siguiente es "piezas por semana".
+- Por qué: CLAUDE.md es lo primero que lee Claude en cada sesión. Si dice que falta algo que ya está hecho, la próxima vez empezaría por el sitio equivocado.
+- Concepto nuevo: no hay.
+- Cómo probarlo: abre CLAUDE.md y comprueba que "Pendiente" empieza por "piezas por semana".
+
 ### 2026-10-14, Informe en PDF con gráficas ("PDF report")
 - Archivo y sitio:
   - src/Report.jsx (archivo nuevo): la pantalla del informe, con sus cálculos y gráficas.

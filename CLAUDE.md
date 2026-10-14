@@ -29,14 +29,19 @@ No hagas ningún cambio sin dejar su entrada.
 - Si una petición es ambigua o crece demasiado, para y pregunta antes de construir.
 
 ## Estado actual
-Hecho: desglose de costes con gráfica por capas, precio recomendado, toggle "Show cost only", selector de moneda con tipos de cambio en vivo (api.frankfurter.dev/v1), botón Save quote con lista guardada en localStorage, README.
-No publicado todavía en la web: Save quote.
+Hecho: desglose de costes con gráfica por capas, precio recomendado, toggle "Show cost only", selector de moneda con tipos de cambio en vivo (api.frankfurter.dev/v1, ahora en la barra superior), README.
+Hecho el 2026-10-14 (ver DEV_LOG.md):
+- Guardar presupuesto con nombre de pieza, cliente y copia completa de datos y desglose (en localStorage, clave `savedQuotes`).
+- Pestaña History (src/History.jsx): tarjetas resumen, buscador, tabla agrupada por mes, "Load" para volver a cargar un presupuesto y borrar con confirmación.
+- Export Excel .xlsx con formato (src/exportExcel.js, librería write-excel-file, cargada solo al pulsar). Sustituye al CSV.
+- PDF report (src/Report.jsx): informe imprimible con 5 cifras clave, 3 gráficas y tabla. Se guarda con "Guardar como PDF" del navegador.
+No publicado todavía en la web: todo lo anterior desde Save quote (commits locales, sin push ni deploy).
 
 ## Pendiente, por orden
-1. Lista de presupuestos guardados: mostrar la fecha, botón de borrar por fila (deleteQuote con .filter) y mejorar el aspecto de la lista.
-2. Botón "Export CSV" con los presupuestos guardados.
-3. Mostrar cuántas piezas por semana saca la impresora según el tiempo de impresión (idea de un usuario de Reddit).
-4. Revisar que todo se vea bien en móvil.
+1. Mostrar cuántas piezas por semana saca la impresora según el tiempo de impresión (idea de un usuario de Reddit).
+2. Revisar que todo se vea bien en móvil (History y el informe ya se revisaron; falta repasar la calculadora con calma).
+3. Actualizar la sección Features del README con Excel, History y PDF report.
+4. Pensar cómo monetizar (por ejemplo, Excel y PDF como "Pro"). Solo hablarlo; no tocar código de pagos sin pedirlo.
 
 ## Ideas futuras, no tocar sin pedirlo
 Gráficas, comparativas mes a mes, cuentas de usuario, versión de pago.
