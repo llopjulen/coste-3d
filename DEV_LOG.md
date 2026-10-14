@@ -2,6 +2,13 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-14, CLAUDE.md y DEV_LOG.md pasan a la raíz del proyecto
+- Archivo y sitio: CLAUDE.md y DEV_LOG.md, que antes estaban en src/ y ahora están en la carpeta principal (coste-3d/).
+- Qué cambió: los dos archivos se movieron a la raíz y claude.md pasó a llamarse CLAUDE.md, en mayúsculas. No se tocó nada de código.
+- Por qué: Claude Code solo lee automáticamente el CLAUDE.md de la raíz. El nombre en mayúsculas importa en Linux y en la nube, que sí distinguen mayúsculas de minúsculas (tu Mac no).
+- Concepto nuevo: no hay.
+- Cómo probarlo: `ls` en la carpeta del proyecto muestra CLAUDE.md y DEV_LOG.md, y src/ ya no los tiene.
+
 ### 2026-10-14, Lista de presupuestos guardados: fecha, borrar y nuevo aspecto
 - Archivo y sitio:
   - src/App.jsx, dentro de la función App: `deleteQuote` (junto a `saveQuote`) y el bloque JSX que va justo después del subtítulo, antes de `<div className="columns">`.
