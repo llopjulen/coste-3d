@@ -162,14 +162,32 @@ export default function App() {
       localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes))
     }, [savedQuotes]) //al poner ahi el savedQuotes se ejecuta cada vez que savedQuotes cambie
 
-    const saveQuote = () => {
+    // What the user types in the "Part name" and "Client" boxes.
+    const [quoteName, setQuoteName] = useState('')
+    const [quoteClient, setQuoteClient] = useState('')
+
+    const saveQuote = (e) => {
+      // A <form> reloads the page when submitted; this stops it.
+      e.preventDefault()
+      const now = new Date()
       const quote = {
-        id: Date.now(),
-        date: new Date().toLocaleDateString(),
+        id: now.getTime(),
+        createdAt: now.toISOString(),
+        date: now.toLocaleDateString(),
+        name: quoteName.trim() || 'Untitled part',
+        client: quoteClient.trim(),
+        // A copy of every input and every cost layer, so the quote can
+        // be exported or reviewed later even after the form changes.
+        inputs: { ...d },
+        parts: { ...r.parts },
         cost: r.cost,
         price: r.recommendedPrice,
+        units: r.units,
+        orderTotal: r.orderPrice,
       }
       setSavedQuotes([...savedQuotes, quote])
+      setQuoteName('')
+      setQuoteClient('')
     }
 
     const deleteQuote = (id) => {
@@ -197,30 +215,20 @@ export default function App() {
       .catch(() => {})
   }, [])
   
-  /* Builds a CSV file from the saved quotes and downloads it.
-     Amounts are exported in the currency currently selected. */
-  const exportCSV = () => {
-    const rate = rates[currency] || 1
-    const header = ['Date', 'Cost', 'Price', 'Currency']
-    const rows = savedQuotes.map(q => [
-      q.date,
-      (q.cost * rate).toFixed(2),
-      (q.price * rate).toFixed(2),
-      currency,
-    ])
-    // Every value goes between quotes so a comma inside a date
-    // can't split it into two columns.
-    const csv = [header, ...rows]
-      .map(row => row.map(v => `"${String(v).replaceAll('"', '""')}"`).join(','))
-      .join('\n')
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `print-quotes-${new Date().toISOString().slice(0, 10)}.csv`
-    link.click()
-    URL.revokeObjectURL(url)
+  /* The Excel code (and its library) is only downloaded the first
+     time someone presses the button, so the page stays fast. */
+  const [exporting, setExporting] = useState(false)
+  const exportExcel = async () => {
+    setExporting(true)
+    try {
+      const { exportQuotesToExcel } = await import('./exportExcel.js')
+      await exportQuotesToExcel(savedQuotes, currency, rates[currency] || 1)
+    } catch (err) {
+      console.error(err)
+      alert('Could not create the Excel file. Please try again.')
+    } finally {
+      setExporting(false)
+    }
   }
 
   const botonApagarCalculo = () => {
@@ -254,8 +262,6 @@ export default function App() {
         <div className="toolbar">
           <button className="controls" onClick={botonApagarCalculo}>{showFullBreakdown ? 'Show cost only' : 'Show Full Breakdown'}</button>
 
-          <button className="controls" onClick={saveQuote}>Save quote</button>
-
           <select
             className="controls"
             value={currency}
@@ -267,11 +273,31 @@ export default function App() {
           </select>
         </div>
 
+        <form className="save-bar" onSubmit={saveQuote}>
+          <input
+            className="text-input"
+            type="text"
+            placeholder="Part name, e.g. Phone stand"
+            aria-label="Part name"
+            value={quoteName}
+            onChange={e => setQuoteName(e.target.value)}
+          />
+          <input
+            className="text-input"
+            type="text"
+            placeholder="Client (optional)"
+            aria-label="Client"
+            value={quoteClient}
+            onChange={e => setQuoteClient(e.target.value)}
+          />
+          <button type="submit" className="controls">Save quote</button>
+        </form>
+
         {savedQuotes.length > 0 && (
           <section className="panel quotes">
             <h2>Saved quotes ({savedQuotes.length})</h2>
             <div className="quote-head" aria-hidden="true">
-              <span>Date</span>
+              <span>Part</span>
               <span>Cost</span>
               <span>Price</span>
               <span />
@@ -279,13 +305,18 @@ export default function App() {
             <ul>
               {savedQuotes.map(quote => (
                 <li className="quote-row" key={quote.id}>
-                  <span className="quote-date">{quote.date}</span>
+                  <span className="quote-info">
+                    <span className="quote-name">{quote.name ?? 'Untitled part'}</span>
+                    <span className="quote-date">
+                      {[quote.client, quote.date].filter(Boolean).join(' · ')}
+                    </span>
+                  </span>
                   <span className="quote-cost">{formatMoney(quote.cost)}</span>
                   <span className="quote-price">{formatMoney(quote.price)}</span>
                   <button
                     type="button"
                     className="quote-delete"
-                    aria-label={`Delete quote from ${quote.date}`}
+                    aria-label={`Delete quote ${quote.name ?? ''} from ${quote.date}`}
                     onClick={() => deleteQuote(quote.id)}
                   >
                     ✕
@@ -294,7 +325,9 @@ export default function App() {
               ))}
             </ul>
             <div className="quotes-actions">
-              <button type="button" className="controls" onClick={exportCSV}>Export CSV</button>
+              <button type="button" className="controls" onClick={exportExcel} disabled={exporting}>
+                {exporting ? 'Exporting…' : 'Export Excel'}
+              </button>
             </div>
           </section>
         )}

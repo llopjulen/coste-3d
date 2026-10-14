@@ -195,3 +195,20 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .quote-delete:focus-visible{outline:2px solid var(--verde);outline-offset:2px}
 .quotes-actions{display:flex;justify-content:flex-end;padding:9px 15px;border-top:1px solid var(--borde)}
 .quotes-actions .controls{margin-right:0}
+
+/* Formulario para guardar: nombre de la pieza, cliente y boton */
+.save-bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.text-input{
+  flex:1 1 180px;min-width:0;
+  font-family:inherit;font-size:.89rem;
+  padding:6px 9px;
+  border:1px solid var(--borde);border-radius:5px;
+  background:var(--fondo);color:var(--texto);
+}
+.text-input::placeholder{color:var(--tenue)}
+.text-input:hover{border-color:#4A4A53}
+.text-input:focus-visible{outline:none;border-color:var(--verde);box-shadow:0 0 0 2px rgba(0,174,66,.22)}
+
+.quote-info{display:flex;flex-direction:column;min-width:0}
+.quote-name{font-size:.89rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.quote-info .quote-date{font-size:.76rem}
