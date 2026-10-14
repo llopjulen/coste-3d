@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import History from './History.jsx'
 
 /* ==================================================================
    1) FIELDS
@@ -154,8 +155,14 @@ export default function App() {
     ·Guardar Presupuesto
     =========================*/
     const [savedQuotes, setSavedQuotes] = useState(() => {
-      const saved = localStorage.getItem('savedQuotes')
-      return saved ? JSON.parse(saved) : []
+      // If the stored data is broken or blocked, start with an empty
+      // list instead of crashing the whole app.
+      try {
+        const saved = JSON.parse(localStorage.getItem('savedQuotes'))
+        return Array.isArray(saved) ? saved : []
+      } catch {
+        return []
+      }
     })
 
     useEffect(() => {
@@ -188,6 +195,25 @@ export default function App() {
       setSavedQuotes([...savedQuotes, quote])
       setQuoteName('')
       setQuoteClient('')
+      setJustSaved(quote.name)
+    }
+
+    // Name of the last saved quote, to show "Saved · View history".
+    // The message hides itself after 5 seconds.
+    const [justSaved, setJustSaved] = useState(null)
+    useEffect(() => {
+      if (!justSaved) return
+      const timer = setTimeout(() => setJustSaved(null), 5000)
+      return () => clearTimeout(timer)
+    }, [justSaved])
+
+    // "Load" in the history: put that quote's numbers back in the form.
+    const loadQuote = (quote) => {
+      setD({ ...INITIAL, ...quote.inputs })
+      setQuoteName(quote.name ?? '')
+      setQuoteClient(quote.client ?? '')
+      setView('calculator')
+      window.scrollTo(0, 0)
     }
 
     const deleteQuote = (id) => {
@@ -197,6 +223,9 @@ export default function App() {
 
   
   const [showFullBreakdown, setShowFullBreakdown] = useState(true)
+
+  // Which screen is shown: 'calculator' or 'history'.
+  const [view, setView] = useState('calculator')
 
   const [currency, setCurrency] = useState('EUR')
 
@@ -218,11 +247,11 @@ export default function App() {
   /* The Excel code (and its library) is only downloaded the first
      time someone presses the button, so the page stays fast. */
   const [exporting, setExporting] = useState(false)
-  const exportExcel = async () => {
+  const exportExcel = async (quotes) => {
     setExporting(true)
     try {
       const { exportQuotesToExcel } = await import('./exportExcel.js')
-      await exportQuotesToExcel(savedQuotes, currency, rates[currency] || 1)
+      await exportQuotesToExcel(quotes, currency, rates[currency] || 1)
     } catch (err) {
       console.error(err)
       alert('Could not create the Excel file. Please try again.')
@@ -250,9 +279,51 @@ export default function App() {
       <div className="topbar">
         <i className="dot" />
         <strong>Print Cost</strong>
-        <span>Everything runs in your browser</span>
+        <nav className="tabs">
+          <button
+            type="button"
+            className={`tab ${view === 'calculator' ? 'active' : ''}`}
+            aria-current={view === 'calculator' ? 'page' : undefined}
+            onClick={() => setView('calculator')}
+          >
+            Calculator
+          </button>
+          <button
+            type="button"
+            className={`tab ${view === 'history' ? 'active' : ''}`}
+            aria-current={view === 'history' ? 'page' : undefined}
+            onClick={() => setView('history')}
+          >
+            History <span className="count">{savedQuotes.length}</span>
+          </button>
+        </nav>
+        <select
+          className="currency"
+          aria-label="Currency"
+          value={currency}
+          onChange={e => setCurrency(e.target.value)}
+        >
+          {Object.keys(rates).map(code => (
+            <option key={code} value={code}>{code}</option>
+          ))}
+        </select>
       </div>
 
+      {view === 'history' ? (
+        <div className="wrap">
+          <h1>Quote history</h1>
+          <p className="subtitle">Every quote you saved on this device, newest first.</p>
+          <History
+            quotes={savedQuotes}
+            formatMoney={formatMoney}
+            onLoad={loadQuote}
+            onDelete={deleteQuote}
+            onExport={exportExcel}
+            exporting={exporting}
+            onGoToCalculator={() => setView('calculator')}
+          />
+        </div>
+      ) : (
       <div className="wrap">
         <h1>What a printed part actually costs you</h1>
         <p className="subtitle">
@@ -261,16 +332,6 @@ export default function App() {
 
         <div className="toolbar">
           <button className="controls" onClick={botonApagarCalculo}>{showFullBreakdown ? 'Show cost only' : 'Show Full Breakdown'}</button>
-
-          <select
-            className="controls"
-            value={currency}
-            onChange={e => setCurrency(e.target.value)}
-          >
-            {Object.keys(rates).map(code => (
-              <option key={code} value={code}>{code}</option>
-            ))}
-          </select>
         </div>
 
         <form className="save-bar" onSubmit={saveQuote}>
@@ -293,44 +354,15 @@ export default function App() {
           <button type="submit" className="controls">Save quote</button>
         </form>
 
-        {savedQuotes.length > 0 && (
-          <section className="panel quotes">
-            <h2>Saved quotes ({savedQuotes.length})</h2>
-            <div className="quote-head" aria-hidden="true">
-              <span>Part</span>
-              <span>Cost</span>
-              <span>Price</span>
-              <span />
-            </div>
-            <ul>
-              {savedQuotes.map(quote => (
-                <li className="quote-row" key={quote.id}>
-                  <span className="quote-info">
-                    <span className="quote-name">{quote.name ?? 'Untitled part'}</span>
-                    <span className="quote-date">
-                      {[quote.client, quote.date].filter(Boolean).join(' · ')}
-                    </span>
-                  </span>
-                  <span className="quote-cost">{formatMoney(quote.cost)}</span>
-                  <span className="quote-price">{formatMoney(quote.price)}</span>
-                  <button
-                    type="button"
-                    className="quote-delete"
-                    aria-label={`Delete quote ${quote.name ?? ''} from ${quote.date}`}
-                    onClick={() => deleteQuote(quote.id)}
-                  >
-                    ✕
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <div className="quotes-actions">
-              <button type="button" className="controls" onClick={exportExcel} disabled={exporting}>
-                {exporting ? 'Exporting…' : 'Export Excel'}
-              </button>
-            </div>
-          </section>
-        )}
+        {/* role="status" makes screen readers announce the message */}
+        <p className="saved-note" role="status">
+          {justSaved && (
+            <>
+              Saved “{justSaved}” ·{' '}
+              <button type="button" className="link" onClick={() => setView('history')}>View history</button>
+            </>
+          )}
+        </p>
 
         <div className="columns">
           {/* --- Form: drawn by looping over SECTIONS --- */}
@@ -433,6 +465,7 @@ export default function App() {
           the platform actually charges it. Nothing is sent to any server.
         </footer>
       </div>
+      )}
     </>
   )
 }

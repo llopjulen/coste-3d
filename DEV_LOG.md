@@ -2,6 +2,40 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-14, Pantalla de historial (History) con resumen, búsqueda, meses y "Load"
+- Archivo y sitio:
+  - src/History.jsx (archivo nuevo): toda la pantalla del historial.
+  - src/App.jsx: el import de History; dentro de la función App, la carga de `savedQuotes` (ahora con `try/catch`), los nuevos `justSaved` y `loadQuote` junto a `saveQuote`, el estado `view`, y en el JSX la barra superior (pestañas + moneda), el aviso "Saved · View history" y el cambio entre pantallas. La lista de presupuestos que había en la calculadora se ha quitado, porque ahora vive en History.
+  - src/index.css: estilos de las pestañas y del selector de moneda en la barra superior, de los botones `.controls` (ahora oscuros, como el resto de la app, y "Save quote" en verde), del aviso de guardado y de toda la sección "Historial". Se borraron los estilos de la lista antigua.
+- Qué cambió:
+  - Arriba hay dos pestañas, "Calculator" y "History (n)", y el selector de moneda pasa a la barra superior porque afecta a las dos pantallas.
+  - History muestra 4 tarjetas resumen (número de presupuestos, total presupuestado, precio medio por pieza y número de clientes), un buscador por pieza o cliente y una tabla agrupada por meses, con el total de cada mes, del más nuevo al más antiguo.
+  - Cada fila tiene "Load", que vuelve a cargar ese presupuesto en la calculadora (números, nombre y cliente), y ✕ para borrar, que ahora pide confirmación.
+  - "Export Excel" está en History y exporta solo lo que estás viendo: si buscas "Ana", exporta solo los de Ana.
+  - Al guardar, sale "Saved “nombre” · View history" durante 5 segundos.
+- Por qué:
+  - Un programa profesional separa "hacer un presupuesto" de "consultar los antiguos". Tener la lista debajo de la calculadora no escalaba con 50 presupuestos.
+  - "Load" sirve para repetir un pedido o hacer una variante sin volver a escribir los 17 datos.
+  - El `try/catch` al leer localStorage evita que la app entera se quede en blanco si los datos guardados se corrompen.
+  - Los presupuestos antiguos (sin datos de formulario) tienen el botón "Load" desactivado, porque no hay nada que cargar.
+- Concepto nuevo:
+  - Componente en otro archivo con props: `<History quotes={...} onLoad={...} />`. History no guarda datos propios; recibe la lista y avisa a App con funciones (`onLoad`, `onDelete`). Es como llamar a una función pasándole parámetros.
+  - Renderizado condicional con `? :`: `{view === 'history' ? <History/> : <Calculadora/>}` enseña una pantalla u otra según el valor de `view`, sin cambiar de página.
+  - `new Set(...)`: una colección que no admite repetidos. `new Set(['Ana', 'Ana', 'Luis']).size` da 2. Se usa para contar clientes distintos.
+  - Limpieza en `useEffect`: el `return () => clearTimeout(timer)` cancela el temporizador si guardas otro presupuesto antes de que pasen los 5 segundos, para que no se mezclen los avisos.
+  - `.sort((a, b) => b - a)`: ordena de mayor a menor. Restar dos fechas da la diferencia en milisegundos, así que quedan primero las más nuevas.
+- Cómo probarlo:
+  1. `npm run dev`. Arriba verás "Calculator" e "History" con un número.
+  2. En la calculadora, escribe un nombre y un cliente y pulsa "Save quote". Sale el aviso en verde, pulsa "View history".
+  3. En History comprueba las 4 tarjetas y que la tabla está agrupada por mes, con el total del mes a la derecha.
+  4. Escribe un cliente en el buscador: la tabla, las tarjetas y el número del botón "Export Excel" cambian.
+  5. Pulsa "Export Excel" con la búsqueda puesta: el Excel solo trae esos presupuestos.
+  6. Pulsa "Load" en una fila: vuelves a la calculadora con sus números, nombre y cliente.
+  7. Pulsa ✕: pide confirmación y, si aceptas, desaparece.
+  8. Cambia la moneda arriba a la derecha: cambian las dos pantallas.
+  9. Borra todos: sale el mensaje "No saved quotes yet" con un botón para volver a la calculadora.
+  10. En el móvil (o con la ventana estrecha), la tabla se desliza de lado dentro de su caja y la página no se desborda.
+
 ### 2026-10-14, Exportación a Excel (.xlsx) y presupuestos con nombre, cliente y desglose
 - Archivo y sitio:
   - src/exportExcel.js (archivo nuevo): todo el código que construye el Excel.

@@ -39,8 +39,29 @@ body{
   background:var(--panel);
 }
 .dot{width:7px;height:7px;border-radius:50%;background:var(--verde)}
-.topbar strong{font-size:.88rem;font-weight:600;letter-spacing:-.01em}
-.topbar span{margin-left:auto;font-size:.78rem;color:var(--tenue)}
+.topbar strong{font-size:.88rem;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+/* Pestanas Calculator / History */
+.tabs{display:flex;gap:2px;margin-left:14px}
+.tab{
+  white-space:nowrap;
+  font-family:inherit;font-size:.84rem;
+  padding:5px 11px;border:0;border-radius:5px;
+  background:none;color:var(--tenue);cursor:pointer;
+}
+.tab:hover{color:var(--texto)}
+.tab.active{background:var(--panel-alto);color:var(--texto)}
+.tab:focus-visible{outline:2px solid var(--verde);outline-offset:1px}
+.tab .count{
+  display:inline-block;min-width:18px;margin-left:4px;padding:0 5px;
+  border-radius:9px;background:var(--borde);
+  font-size:.7rem;text-align:center;color:var(--texto);
+}
+.currency{
+  margin-left:auto;
+  font-family:inherit;font-size:.8rem;
+  padding:4px 6px;border:1px solid var(--borde);border-radius:5px;
+  background:var(--fondo);color:var(--texto);
+}
 
 .wrap{max-width:1060px;margin:0 auto;padding:26px 18px 64px}
 
@@ -156,45 +177,23 @@ h1{font-size:clamp(1.45rem,4vw,2rem);font-weight:600;letter-spacing:-.025em;line
 
 footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 
+/* Botones generales (Show cost only, Save quote, Export Excel):
+   mismo estilo oscuro que el resto en vez del boton blanco del navegador. */
 .controls{
-  margin-right: 8px;
+  font-family:inherit;font-size:.86rem;font-weight:500;
+  padding:6px 13px;
+  border:1px solid var(--borde);border-radius:5px;
+  background:var(--panel-alto);color:var(--texto);
+  cursor:pointer;
 }
+.controls:hover:not(:disabled){border-color:var(--verde);color:var(--verde-vivo)}
+.controls:focus-visible{outline:2px solid var(--verde);outline-offset:2px}
+.controls:disabled{opacity:.5;cursor:wait}
+.save-bar button[type="submit"]{background:var(--verde);border-color:var(--verde);color:#fff}
+.save-bar button[type="submit"]:hover{background:var(--verde-vivo);border-color:var(--verde-vivo);color:#fff}
 
-/* ------------------------ Presupuestos guardados ------------------- */
+/* ----------------------------- Barra de botones -------------------- */
 .toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
-.toolbar .controls{margin-right:0}
-
-.quotes{margin-top:14px}
-/* Las cuatro columnas (fecha, coste, precio, borrar) se definen una
-   sola vez aqui y las comparten la cabecera y cada fila. */
-.quote-head,.quote-row{
-  display:grid;
-  grid-template-columns:1fr auto auto 26px;
-  align-items:center;
-  gap:16px;
-  padding:7px 15px;
-}
-.quote-head{font-size:.72rem;color:var(--tenue);text-transform:uppercase;letter-spacing:.04em;padding-bottom:4px}
-.quotes ul{list-style:none;padding-bottom:5px}
-.quote-row + .quote-row{border-top:1px solid var(--borde)}
-.quote-row:hover{background:var(--panel-alto)}
-.quote-date{font-size:.86rem;color:var(--tenue)}
-.quote-cost,.quote-price{font-size:.89rem;font-variant-numeric:tabular-nums;text-align:right}
-.quote-head span:nth-child(2),.quote-head span:nth-child(3){text-align:right}
-.quote-price{font-weight:600;color:var(--verde-vivo)}
-
-.quote-delete{
-  width:24px;height:24px;
-  display:grid;place-items:center;
-  padding:0;
-  border:1px solid transparent;border-radius:5px;
-  background:none;color:var(--tenue);
-  font-size:.8rem;cursor:pointer;
-}
-.quote-delete:hover{border-color:var(--rojo);color:var(--rojo)}
-.quote-delete:focus-visible{outline:2px solid var(--verde);outline-offset:2px}
-.quotes-actions{display:flex;justify-content:flex-end;padding:9px 15px;border-top:1px solid var(--borde)}
-.quotes-actions .controls{margin-right:0}
 
 /* Formulario para guardar: nombre de la pieza, cliente y boton */
 .save-bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
@@ -209,6 +208,59 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .text-input:hover{border-color:#4A4A53}
 .text-input:focus-visible{outline:none;border-color:var(--verde);box-shadow:0 0 0 2px rgba(0,174,66,.22)}
 
-.quote-info{display:flex;flex-direction:column;min-width:0}
-.quote-name{font-size:.89rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.quote-info .quote-date{font-size:.76rem}
+/* Aviso "Saved · View history" debajo del formulario de guardar */
+.saved-note{min-height:1.3em;margin-top:6px;font-size:.82rem;color:var(--verde-vivo)}
+.link{
+  font:inherit;padding:0;border:0;background:none;
+  color:var(--texto);text-decoration:underline;cursor:pointer;
+}
+
+/* ----------------------------- Historial --------------------------- */
+.muted{color:var(--tenue)}
+.empty{padding:28px 18px;text-align:center;margin-top:22px}
+.empty .muted{margin:6px 0 16px;font-size:.88rem}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:22px}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{
+  display:flex;flex-direction:column;gap:3px;
+  padding:12px 14px;
+  background:var(--panel);border:1px solid var(--borde);border-radius:var(--radio);
+}
+.stat .label{font-size:.76rem;color:var(--tenue)}
+.stat .value{font-size:1.25rem;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+
+.history-tools{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 12px}
+.no-results{margin:10px 0 18px;font-size:.88rem}
+
+.panel > h2.month-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.month-head span:last-child{font-variant-numeric:tabular-nums}
+
+/* position:relative keeps hidden helper text (.sr-only) inside this
+   scrolling box; without it, it escaped and widened the whole page. */
+.table-scroll{overflow-x:auto;position:relative}
+.history-table{width:100%;border-collapse:collapse;font-size:.86rem;white-space:nowrap}
+.history-table th{
+  font-size:.72rem;font-weight:500;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--tenue);text-align:left;padding:8px 12px 6px;
+}
+.history-table td{padding:8px 12px;border-top:1px solid var(--borde)}
+.history-table tbody tr:hover{background:var(--panel-alto)}
+.history-table .num{text-align:right;font-variant-numeric:tabular-nums}
+.history-table .strong{font-weight:600}
+.history-table .accent{color:var(--verde-vivo)}
+.history-table .actions{text-align:right;width:1%}
+
+.row-btn{
+  font-family:inherit;font-size:.78rem;
+  padding:3px 9px;margin-left:4px;
+  border:1px solid var(--borde);border-radius:5px;
+  background:none;color:var(--texto);cursor:pointer;
+}
+.row-btn:hover:not(:disabled){border-color:var(--verde);color:var(--verde-vivo)}
+.row-btn.danger:hover:not(:disabled){border-color:var(--rojo);color:var(--rojo)}
+.row-btn:disabled{opacity:.4;cursor:not-allowed}
+.row-btn:focus-visible{outline:2px solid var(--verde);outline-offset:2px}
+
+/* Texto solo para lectores de pantalla: existe pero no se ve */
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
