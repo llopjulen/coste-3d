@@ -2,6 +2,13 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-15, README al día: funciones y roadmap
+- Archivo y sitio: README.md, secciones "Features" y "Roadmap".
+- Qué cambió: Features ya incluye la importación del laminador (la primera, en negrita), el historial, el Excel y el informe PDF. En Roadmap se quitaron "borrar presupuestos" y "CSV" (ya hechos; el CSV se cambió por Excel) y entraron las próximas funciones.
+- Por qué: el README es lo primero que ve la gente que llega desde Reddit o GitHub, y la importación es lo que nos diferencia de la competencia.
+- Concepto nuevo: `**texto**` en Markdown se ve en negrita.
+- Cómo probarlo: abre README.md en GitHub (o en VS Code con la vista previa) y comprueba las dos listas.
+
 ### 2026-10-15, Importar tiempo y gramos desde el archivo del laminador
 - Archivo y sitio:
   - src/slicerFile.js (archivo nuevo): lee el archivo del laminador y saca el tiempo, los gramos, la purga y los filamentos. Son funciones puras: no saben nada de React ni de la pantalla.
