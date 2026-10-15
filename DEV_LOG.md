@@ -2,6 +2,36 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-15, Presupuesto para el cliente: varias piezas, logo y PDF
+- Archivo y sitio:
+  - src/CustomerQuote.jsx (archivo nuevo): la pantalla del presupuesto. Arriba el formulario ("This quote" y "Your business") y abajo la hoja que sale en el PDF.
+  - src/History.jsx: casillas para marcar presupuestos (columna nueva al principio de cada tabla), "Select all shown" y el botón "Customer quote (n)" debajo del buscador. Estado nuevo `selected`.
+  - src/App.jsx: el import de CustomerQuote; dentro de App, el estado `quoteParts` y la función `openCustomerQuote` (justo antes de `currency`); la cuarta pantalla `view === 'quote'`; History recibe `onCustomerQuote`.
+  - src/index.css, al final: sección "Presupuesto para el cliente".
+  - README.md: la función nueva en Features y fuera del Roadmap.
+- Qué cambió: en History marcas las piezas de un cliente y pulsas "Customer quote". Sale un presupuesto para mandarle, con tu logo, tu nombre y contacto, número, fecha y validez, las piezas con cantidad y precio, envío, impuesto (por ejemplo el 21 % de IVA), total y notas. Puedes cambiar cantidades y precios solo para ese presupuesto, sin tocar el historial. "Save as PDF" lo guarda como PDF, igual que el informe.
+- Por qué:
+  - Es lo que hace un vendedor cada día: mandar al cliente un presupuesto con varias piezas. MakerQuote y 3DPCC lo cobran en su plan PRO.
+  - La hoja del cliente solo enseña precios: nada de costes, márgenes ni comisiones, que son cosa tuya.
+  - Los datos de tu negocio (logo, nombre, contacto, notas, impuesto y validez) se guardan en el navegador (clave `business`) y se reutilizan en el siguiente presupuesto. El número sube solo (2026-001, 2026-002…) la primera vez que guardas el PDF (clave `quoteCounter`).
+  - Cada importe se redondea al céntimo antes de sumar, así las líneas siempre suman exactamente el total que lee el cliente. Sin esto, con envío e IVA salía un total que no cuadraba por un céntimo.
+  - El logo se reduce a 480 × 200 px como mucho antes de guardarlo, porque localStorage tiene poco sitio (unos 5 MB).
+  - Abajo de la hoja pone "Quote made with Print Cost": cada presupuesto que manda alguien hace publicidad de la web. Quitar esa línea podría ser una función de pago más adelante.
+- Concepto nuevo:
+  - `Set`: una colección sin repetidos. `selected.has(id)` dice si una fila está marcada. Para que React lo note se crea un Set nuevo en cada cambio: `const next = new Set(prev); next.add(id)`.
+  - Trabajar en céntimos enteros: con decimales el ordenador se equivoca un pelín (`0.1 + 0.2` da `0.30000000000000004`). Con céntimos (`Math.round(n * 100)`) se suman enteros y no hay error: `10 + 20` da `30`.
+  - `<canvas>` para encoger imágenes: se dibuja la imagen más pequeña y `canvas.toDataURL('image/png')` la convierte en texto, que sí se puede guardar en localStorage.
+  - `defaultValue` + `key`: el precio va en un input "no controlado" (React no lo reescribe a cada tecla, así el cursor no salta). Al cambiar de moneda cambia la `key` y React vuelve a dibujar el input con el número convertido.
+- Cómo se probó: recorrido completo en un navegador simulado: marcar piezas, abrir el presupuesto, cliente puesto solo, cantidades, envío, impuesto, totales que cuadran, nombre y notas guardados, número que sube una sola vez, cambio a USD, quitar una línea, volver sin tocar el historial y un segundo presupuesto con el número siguiente. Falta probar en tu navegador subir un logo y sacar el PDF de verdad.
+- Cómo probarlo:
+  1. `npm run dev` y guarda 2 o 3 presupuestos con el mismo cliente.
+  2. En History marca sus casillas: el botón dice "Customer quote (2)". Púlsalo.
+  3. Rellena "Your business": sube tu logo y pon nombre y contacto. Recarga, vuelve a abrirlo y siguen ahí.
+  4. Cambia la cantidad de una pieza, pon envío y 21 en "Tax (%)": la hoja cambia al momento y el total cuadra con las líneas.
+  5. Pulsa "Save as PDF" y elige "Guardar como PDF": solo sale la hoja, sin formulario ni botones, y el nombre propuesto es "Quote 2026-001 Cliente".
+  6. Abre otro presupuesto: el número ya es 2026-002.
+  7. En el móvil el formulario va en una columna, y la tabla de la hoja se desliza de lado si no cabe.
+
 ### 2026-10-15, README al día: funciones y roadmap
 - Archivo y sitio: README.md, secciones "Features" y "Roadmap".
 - Qué cambió: Features ya incluye la importación del laminador (la primera, en negrita), el historial, el Excel y el informe PDF. En Roadmap se quitaron "borrar presupuestos" y "CSV" (ya hechos; el CSV se cambió por Excel) y entraron las próximas funciones.

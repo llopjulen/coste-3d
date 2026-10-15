@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import History from './History.jsx'
 import Report from './Report.jsx'
 import ImportFile from './ImportFile.jsx'
+import CustomerQuote from './CustomerQuote.jsx'
 
 /* ==================================================================
    1) FIELDS
@@ -226,7 +227,7 @@ export default function App() {
   
   const [showFullBreakdown, setShowFullBreakdown] = useState(true)
 
-  // Which screen is shown: 'calculator', 'history' or 'report'.
+  // Which screen is shown: 'calculator', 'history', 'report' or 'quote'.
   const [view, setView] = useState('calculator')
 
   // The report shows whatever History was showing when the button was
@@ -235,6 +236,14 @@ export default function App() {
   const openReport = (quotes, filter) => {
     setReport({ quotes, filter })
     setView('report')
+    window.scrollTo(0, 0)
+  }
+
+  // The quotes ticked in History for a customer quote.
+  const [quoteParts, setQuoteParts] = useState([])
+  const openCustomerQuote = (quotes) => {
+    setQuoteParts(quotes)
+    setView('quote')
     window.scrollTo(0, 0)
   }
 
@@ -344,7 +353,14 @@ export default function App() {
         </select>
       </div>
 
-      {view === 'report' ? (
+      {view === 'quote' ? (
+        <CustomerQuote
+          quotes={quoteParts}
+          currency={currency}
+          rate={rates[currency] || 1}
+          onBack={() => setView('history')}
+        />
+      ) : view === 'report' ? (
         <Report
           quotes={report.quotes}
           filter={report.filter}
@@ -364,6 +380,7 @@ export default function App() {
             onExport={exportExcel}
             exporting={exporting}
             onReport={openReport}
+            onCustomerQuote={openCustomerQuote}
             onGoToCalculator={() => setView('calculator')}
           />
         </div>

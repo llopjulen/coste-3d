@@ -7,6 +7,7 @@ A free calculator that shows what a 3D printed part *actually* costs you: materi
 ## Features
 
 - **Import from your slicer:** drop a `.gcode`, `.bgcode` or `.gcode.3mf` from Bambu Studio, OrcaSlicer, PrusaSlicer or Cura and print time, grams and purge fill in by themselves. Works with several parts per plate and several plates.
+- **Customer quotes:** tick several saved parts and get a quote for your client with your logo, shipping, tax and notes, ready to save as PDF. Costs and margins stay private.
 - Full cost breakdown per part, with a layered chart
 - Recommended selling price from your target margin and platform fee
 - Toggle to hide labor/selling and see only the raw printing cost
@@ -27,7 +28,6 @@ npm run dev
 
 ## Roadmap
 
-- Customer quotes with several parts and your logo
 - Several filaments per part, each with its own price
 - Printer and material presets
 - Printer utilization / parts per week
