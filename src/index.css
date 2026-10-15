@@ -347,3 +347,51 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
   .report-two{grid-template-columns:1fr 1fr}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+/* ------------------------- Importar del laminador ------------------
+   Zona para soltar el archivo, resumen de lo leido y notas. */
+.dropzone{
+  display:flex;flex-direction:column;align-items:flex-start;gap:7px;
+  margin:8px 0 6px;padding:13px 14px;
+  border:1px dashed var(--borde);border-radius:var(--radio);
+  background:var(--fondo);
+  transition:border-color .15s,background-color .15s;
+}
+.dropzone.over{border-color:var(--verde);background:rgba(0,174,66,.08)}
+.drop-title{font-size:.89rem;font-weight:600}
+.drop-hint{font-size:.8rem;line-height:1.45;color:var(--tenue);max-width:34em}
+
+.import-status{font-size:.82rem;color:var(--tenue)}
+.import-status:empty{display:none}
+.import-error{
+  margin:6px 0 4px;padding:9px 11px;
+  background:var(--panel-alto);
+  border-left:2px solid var(--rojo);
+  border-radius:0 5px 5px 0;
+  font-size:.82rem;line-height:1.45;color:var(--texto);
+}
+
+.import-result{display:flex;flex-direction:column;gap:9px;margin-top:6px}
+.import-file{font-size:.86rem;overflow-wrap:anywhere}
+.import-facts{display:flex;flex-wrap:wrap;gap:6px 22px}
+.import-facts div{display:flex;flex-direction:column;gap:1px}
+.import-facts dt{font-size:.74rem;color:var(--tenue)}
+.import-facts dd{font-size:.98rem;font-weight:600;font-variant-numeric:tabular-nums}
+.import-filaments{list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+.import-filaments li{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:3px 9px;border:1px solid var(--borde);border-radius:999px;
+  font-size:.78rem;font-variant-numeric:tabular-nums;
+}
+.import-select{
+  max-width:60%;
+  font-family:inherit;font-size:.86rem;
+  padding:5px 8px;border:1px solid var(--borde);border-radius:5px;
+  background:var(--fondo);color:var(--texto);
+}
+.import-select:focus-visible{outline:none;border-color:var(--verde);box-shadow:0 0 0 2px rgba(0,174,66,.22)}
+.import-filled{font-size:.82rem;color:var(--verde-vivo)}
+.import-filled .link{color:var(--texto)}
+.import-note{font-size:.8rem;line-height:1.45;color:var(--tenue)}
+.import .field{padding:5px 0}
+.import .field + .field{border-top:0}

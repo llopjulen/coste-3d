@@ -35,13 +35,18 @@ Hecho el 2026-10-14 (ver DEV_LOG.md):
 - Pestaña History (src/History.jsx): tarjetas resumen, buscador, tabla agrupada por mes, "Load" para volver a cargar un presupuesto y borrar con confirmación.
 - Export Excel .xlsx con formato (src/exportExcel.js, librería write-excel-file, cargada solo al pulsar). Sustituye al CSV.
 - PDF report (src/Report.jsx): informe imprimible con 5 cifras clave, 3 gráficas y tabla. Se guarda con "Guardar como PDF" del navegador.
-No publicado todavía en la web: todo lo anterior desde Save quote (commits locales, sin push ni deploy).
+Hecho el 2026-10-15 (ver DEV_LOG.md):
+- Importar del laminador (src/slicerFile.js y src/ImportFile.jsx): soltar un .gcode, .bgcode o .gcode.3mf rellena tiempo, gramos y purga, con piezas por bandeja, elección de bandeja y Undo. Usa fflate, cargada solo al soltar un 3MF.
+No publicado todavía en la web (sin deploy): todo lo anterior desde Save quote.
 
 ## Pendiente, por orden
-1. Mostrar cuántas piezas por semana saca la impresora según el tiempo de impresión (idea de un usuario de Reddit).
-2. Revisar que todo se vea bien en móvil (History y el informe ya se revisaron; falta repasar la calculadora con calma).
-3. Actualizar la sección Features del README con Excel, History y PDF report.
-4. Pensar cómo monetizar (por ejemplo, Excel y PDF como "Pro"). Solo hablarlo; no tocar código de pagos sin pedirlo.
+Plan acordado tras analizar la competencia (MakerQuote, 3DPCC, CraftersQuote): una función cada vez, cada una con su post en Reddit.
+1. Probar la importación con un .gcode.3mf real de Bambu Studio y un G-code de Cura (solo se probó con archivos reales de PrusaSlicer y con muestras del formato de los demás).
+2. Presupuesto para el cliente: varias piezas distintas en un pedido y PDF con logo para mandárselo.
+3. Varios filamentos por pieza, cada uno con su precio, y perfiles de impresoras y materiales predefinidos.
+4. Mostrar cuántas piezas por semana saca la impresora según el tiempo de impresión (idea de un usuario de Reddit).
+5. Revisar que todo se vea bien en móvil (History y el informe ya se revisaron; falta repasar la calculadora con calma).
+6. Pensar cómo monetizar (por ejemplo, Excel y PDF como "Pro"). Solo hablarlo; no tocar código de pagos sin pedirlo.
 
 ## Ideas futuras, no tocar sin pedirlo
-Gráficas, comparativas mes a mes, cuentas de usuario, versión de pago.
+Gráficas, comparativas mes a mes, cuentas de usuario, versión de pago. Sincronizar presupuestos entre móvil y PC e inventario de filamento (serían "Pro" y necesitan backend: pedirlo antes).

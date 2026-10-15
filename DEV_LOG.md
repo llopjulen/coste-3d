@@ -2,6 +2,38 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-15, Importar tiempo y gramos desde el archivo del laminador
+- Archivo y sitio:
+  - src/slicerFile.js (archivo nuevo): lee el archivo del laminador y saca el tiempo, los gramos, la purga y los filamentos. Son funciones puras: no saben nada de React ni de la pantalla.
+  - src/ImportFile.jsx (archivo nuevo): el panel "Import from your slicer", con la zona para soltar, el botón "Choose file", el resumen, "Parts on this plate" y "Undo".
+  - src/App.jsx: el import de ImportFile; dentro de la función App, justo después de `set`, el estado `beforeImport` y las funciones `applyImport` y `undoImport`; en el JSX, `<ImportFile />` como primer panel de la columna del formulario.
+  - src/index.css, al final: sección "Importar del laminador".
+  - package.json: `fflate` pasa a ser dependencia directa (ver "Por qué").
+- Qué cambió: encima del formulario hay un panel nuevo. Sueltas en cualquier sitio de la página (o eliges con "Choose file") un .gcode, .bgcode o .gcode.3mf de Bambu Studio, OrcaSlicer, PrusaSlicer o Cura, y se rellenan solos "Print time", "Part weight" y "Purge & waste". Si en la bandeja hay varias piezas, pones cuántas en "Parts on this plate" y se divide. Si el 3MF tiene varias bandejas, eliges una o "All plates". "Undo" devuelve los números de antes.
+- Por qué:
+  - Ninguna calculadora de la competencia lo hace (MakerQuote, 3DPCC y CraftersQuote te hacen copiar a mano lo que dice el laminador). Quita el paso más pesado y los errores al copiar.
+  - El archivo se lee dentro del navegador y no se sube a ningún sitio, así que sigue siendo verdad el "nothing is sent to any server".
+  - Del G-code solo se leen el primer y el último mega, que es donde los laminadores escriben estos datos. Así un archivo de 200 MB no congela la página.
+  - Purga: PrusaSlicer dice cuánto filamento fue a la torre de purga y se separa del peso de la pieza. Bambu Studio y Orca no lo separan en el archivo: va dentro del total, así que la purga se pone a 0 para no contarla dos veces, y el panel lo avisa.
+  - fflate: un 3MF por dentro es un zip y hay que descomprimirlo. No es una librería nueva de verdad: ya estaba en el proyecto porque write-excel-file la usa para crear el .xlsx. Ahora la usamos también directamente (por eso aparece en package.json) y solo se descarga cuando alguien suelta un 3MF (unos 7 KB).
+- Concepto nuevo:
+  - Expresiones regulares (regex): patrones para buscar trozos de texto. `/total filament used \[g\]\s*=\s*([\d.]+)/` busca esa frase y guarda el número que va detrás. Ejemplo: `'peso = 12.5'.match(/peso = ([\d.]+)/)[1]` da `'12.5'`.
+  - `file.slice(inicio, fin).text()`: lee solo un trozo de un archivo. Ejemplo: `await file.slice(0, 1024).text()` lee el primer kilobyte.
+  - Un .gcode.3mf es un zip: dentro, `Metadata/slice_info.config` es un texto XML con el tiempo de cada bandeja (`prediction`, en segundos) y sus gramos (`weight`).
+  - Arrastrar y soltar: los eventos `dragover` y `drop` de la ventana. `e.preventDefault()` evita que el navegador abra el G-code como una página llena de texto.
+  - `useRef`: una "caja" que guarda algo entre renders sin redibujar la pantalla. Aquí guarda el input de archivo escondido (para abrirlo desde el botón) y la versión más nueva de `handleFile` (para los eventos de la ventana, que se crean una sola vez).
+  - `class ImportError extends Error`: un tipo de error propio. Si el fallo es de este tipo, su mensaje ya está escrito para la persona; si es de otro tipo, es un bug y además va a la consola.
+- Cómo se probó: con G-code real de PrusaSlicer 2.7.2 (una pieza, dos materiales con torre de purga de 14 g y el .bgcode binario), con archivos de muestra con el formato de Bambu Studio, OrcaSlicer y Cura, y con un G-code de 6 MB. También se recorrió el panel entero en un navegador simulado: elegir archivo, piezas por bandeja, Undo, soltar un 3MF de dos bandejas, error con un .stl y guardar presupuesto después de importar. Falta probarlo con un .gcode.3mf real tuyo de Bambu Studio.
+- Cómo probarlo:
+  1. `npm run dev`.
+  2. En Bambu Studio u OrcaSlicer, lamina algo y usa "Export plate sliced file" (sale un .gcode.3mf). Suéltalo en la página: cambian "Print time" y "Part weight", y arriba sale el resumen con el tiempo, los gramos y los filamentos con su color.
+  3. Pon 4 en "Parts on this plate": el tiempo y los gramos se dividen entre 4.
+  4. Pulsa "Undo": vuelven los números que había antes.
+  5. Con un 3MF de varias bandejas aparece "Plate": cambia de bandeja o elige "All plates".
+  6. En PrusaSlicer, exporta el G-code de algo multicolor con torre de purga: "Purge & waste" se rellena con lo de la torre.
+  7. Suelta un .stl: sale un aviso en rojo (es un modelo, no un archivo laminado) y el formulario no cambia.
+  8. En el móvil, "Choose file" abre el selector de archivos.
+
 ### 2026-10-14, README nuevo del proyecto
 - Archivo y sitio: README.md (todo el archivo; lo escribió Julen).
 - Qué cambió: se sustituyó el README de la plantilla de Vite por uno propio, con descripción, enlace a la web, funciones, cómo ejecutarlo en local y roadmap.
