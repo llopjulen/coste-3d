@@ -2,6 +2,22 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-16, Portada de GitHub: README con capturas y nombre layercents
+- Archivo y sitio:
+  - README.md: reescrito entero.
+  - screenshots/: carpeta nueva con logo.svg (el logo para el README) y tres capturas: calculator.png, quote.png e history.png.
+  - package.json y package-lock.json: el campo "name" de arriba del todo pasa de "coste-3d" a "layercents".
+- Qué cambió: el README, que es la portada del proyecto en GitHub, ahora tiene el logo, una frase de qué es, capturas de la calculadora, del presupuesto y del historial, la lista de funciones, cómo se protegen los datos, lo que viene, cómo arrancarlo en tu ordenador y que el código no es de uso libre. La web no cambia, así que no hace falta publicarla con `npm run deploy`.
+- Por qué: quien pulsa "Tell me on GitHub" en el pie de la web llega a esta portada, y con el post de Reddit llegará más gente. Con capturas y la marca nueva parece un producto serio, no un ejercicio. El nombre del paquete es una etiqueta interna que nadie ve, pero así todo el proyecto dice layercents. El nombre del repositorio y la caja "About" de GitHub solo se pueden cambiar desde los ajustes de GitHub, y eso lo hace Julen.
+- Concepto nuevo:
+  - Enlace relativo en un README: `[open an issue](../../issues)` no lleva la dirección completa. GitHub lo calcula desde donde está el archivo (`llopjulen/coste-3d/blob/main/README.md`): sube dos niveles y llega a `llopjulen/coste-3d/issues`. Así sigue funcionando aunque el repositorio cambie de nombre.
+  - HTML dentro de Markdown: `<p align="center">…</p>` centra el logo y el título. Markdown no sabe centrar, pero GitHub acepta un poco de HTML en los README.
+- Cómo probarlo:
+  1. Abre https://github.com/llopjulen/coste-3d: arriba salen el logo, el título centrado y la captura de la calculadora.
+  2. Baja: están las capturas del presupuesto y del historial.
+  3. Pulsa "open an issue": se abre la lista de issues del proyecto.
+  4. `npm run build` funciona igual que antes.
+
 ### 2026-10-16, Repaso visual: móvil, tres pasos y pie de página
 - Archivo y sitio:
   - src/App.jsx: debajo del subtítulo de la calculadora, la lista `steps` con los tres pasos. Antes del pie, la barra `mobile-total`. Dentro de App, `resultRef`, `resultInView` y `showResult`, justo antes de `currency`. La función nueva `SiteFooter`, encima de "4) APP", que se usa en la calculadora y en el historial. En la nota del resultado se quita la frase "Filament is only…". La ayuda de "Platform fee" ahora explica que la comisión se cobra sobre el precio final.
