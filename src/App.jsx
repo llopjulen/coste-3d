@@ -3,6 +3,7 @@ import History from './History.jsx'
 import Report from './Report.jsx'
 import ImportFile from './ImportFile.jsx'
 import CustomerQuote from './CustomerQuote.jsx'
+import Logo from './Logo.jsx'
 
 /* ==================================================================
    1) FIELDS
@@ -56,10 +57,10 @@ const INITIAL = Object.fromEntries(
   SECTIONS.flatMap(s => s.fields.map(f => [f.key, f.initial]))
 )
 
-/* Stack colors: material is green because it's the filament; the
-   rest are the costs nobody sees. */
+/* Stack colors: material is gold, the brand colour, because it's the
+   filament; the rest are the costs nobody sees. */
 const LAYERS = [
-  { key: 'material',      name: 'Material',      color: '#00AE42' },
+  { key: 'material',      name: 'Material',      color: '#F2B33D' },
   { key: 'power',         name: 'Power',         color: '#12A594' },
   { key: 'depreciation',  name: 'Depreciation',  color: '#3E8FD0' },
   { key: 'failures',      name: 'Failures',      color: '#6E74C4' },
@@ -321,8 +322,7 @@ export default function App() {
   return (
     <>
       <div className="topbar no-print">
-        <i className="dot" />
-        <strong>Print Cost</strong>
+        <strong className="brand"><Logo size={20} small /> layercents</strong>
         <nav className="tabs">
           <button
             type="button"

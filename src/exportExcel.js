@@ -8,7 +8,7 @@ import writeExcelFile from 'write-excel-file/browser'
 
 const HEADER_BG = '#212125'
 const HEADER_TEXT = '#FFFFFF'
-const ACCENT = '#00AE42'
+const ACCENT = '#9A6514' // brand gold, darkened so it reads on white
 const STRIPE_BG = '#F4F4F6'
 const MONEY = '#,##0.00'
 
@@ -46,7 +46,7 @@ const letter = n => String.fromCharCode(64 + n)
 export async function exportQuotesToExcel(quotes, currency, rate) {
   const columns = buildColumns(currency)
   const titleRows = [
-    [{ value: 'Print Cost — Saved quotes', fontWeight: 'bold', fontSize: 16, columnSpan: columns.length }],
+    [{ value: 'layercents — Saved quotes', fontWeight: 'bold', fontSize: 16, columnSpan: columns.length }],
     [{
       value: `Exported ${new Date().toISOString().slice(0, 10)} · ${quotes.length} quotes · amounts in ${currency}`,
       textColor: '#6E6E78',
