@@ -45,7 +45,7 @@ The flip side: clearing your browser data deletes your quotes, so export them to
 - Saved printer and material profiles
 - How many parts a week your printer can make
 
-Ideas and bug reports are welcome: [open an issue](../../issues). If a slicer file doesn't import, attaching it to the issue helps a lot.
+Ideas and bug reports are welcome: [open an issue](../../issues). If a slicer file doesn't import, zip it and attach it to the issue: that helps a lot.
 
 ## Run it locally
 
