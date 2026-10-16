@@ -2,6 +2,55 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-16, La web pasa a layercents.com
+- Archivo y sitio:
+  - vite.config.js: `base` pasa de `'/coste-3d/'` a `'/'`.
+  - public/CNAME (archivo nuevo): una sola línea, `layercents.com`.
+  - index.html: `og:url` y `og:image` con la dirección completa del dominio nuevo.
+  - README.md: el enlace "Live".
+  - CLAUDE.md: nombre, dirección, estilo (oro en vez de verde) y estado.
+- Qué cambió: la app ya no vive en llopjulen.github.io/coste-3d sino en https://layercents.com.
+- Por qué:
+  - Una dirección propia es más fácil de recordar y de enseñar, y no depende de tu usuario de GitHub.
+  - `base` le dice a Vite en qué carpeta va a estar la web. Antes era la carpeta /coste-3d/ dentro de tu web de GitHub; ahora la app está en la raíz del dominio, así que es `/`. Si no se cambia, la página busca sus archivos en layercents.com/coste-3d/ y sale en blanco.
+  - El archivo CNAME es cómo GitHub Pages sabe qué dominio servir. Va en public/ para que Vite lo copie tal cual al publicar.
+  - WhatsApp, Reddit y compañía solo enseñan la imagen de vista previa si la dirección está completa, con https:// y el dominio.
+  - Es el mejor momento para mudarse: la versión que había en la web no guardaba nada en el navegador, así que nadie pierde presupuestos. A partir de ahora sí guardan, y los datos van ligados a la dirección: por eso no conviene volver a cambiarla.
+- Concepto nuevo:
+  - DNS: la "agenda" de internet, que traduce un nombre (layercents.com) a la dirección de un servidor. Los registros A apuntan el dominio a los servidores de GitHub Pages (por ejemplo `185.199.108.153`), y el CNAME hace que `www.layercents.com` vaya al mismo sitio.
+  - Mismo origen: el navegador guarda localStorage por dirección. Lo guardado en https://layercents.com no se ve desde http://layercents.com ni desde otra dirección; son "cajones" distintos.
+- Cómo probarlo:
+  1. Abre https://layercents.com: sale la app con el logo nuevo. Si el navegador avisa de que no es segura, GitHub aún está preparando el certificado (puede tardar hasta un día). No lo anuncies hasta ver el candado.
+  2. Abre la dirección vieja, llopjulen.github.io/coste-3d: debe llevarte a layercents.com.
+  3. Pega el enlace en un chat de WhatsApp: debe salir la imagen con el logo.
+
+### 2026-10-16, Nueva marca: layercents, logo y color oro
+- Archivo y sitio:
+  - src/Logo.jsx (archivo nuevo): el símbolo, un ¢ hecho de capas impresas, dibujado en SVG.
+  - src/App.jsx: en la barra de arriba, el punto verde y "Print Cost" pasan a ser el logo y "layercents". En la lista `LAYERS`, el material pasa de verde a oro.
+  - src/Report.jsx: cabecera del informe, título de la pestaña ("layercents report AAAA-MM-DD") y pie.
+  - src/CustomerQuote.jsx: el pie de la hoja dice "Quote made with layercents · layercents.com".
+  - src/exportExcel.js: título del Excel y color de los importes destacados (`ACCENT`).
+  - src/index.css, arriba del todo: los colores. `--verde` y `--verde-vivo` pasan a ser `--oro` y `--oro-vivo`, y hay dos nuevos: `--sobre-oro` (texto encima de un botón de oro) y `--oro-papel` (un oro más oscuro para el informe). Estilos nuevos `.brand`, `.logo-layers` y `.logo-stroke`.
+  - index.html: título de la pestaña, descripción, tipo de letra Bricolage Grotesque (solo para el nombre) e iconos.
+  - public/: favicon.svg, favicon-32.png, apple-touch-icon.png, icon-512.png y social-preview.png (la imagen que sale al compartir el enlace por WhatsApp o Reddit), todos nuevos con el logo.
+  - README.md: el nombre y el lema.
+- Qué cambió: la app se llama layercents, tiene logo propio y su color es el oro en vez del verde.
+- Por qué:
+  - "Print Cost" describe la app pero no se puede proteger como marca, y el verde era el de Bambu Lab: con nombre y color propios no parece un producto suyo.
+  - Sobre un botón de oro el texto blanco casi no se lee, así que esos botones llevan texto oscuro (`--sobre-oro`).
+  - En papel blanco el oro normal se ve flojo; el informe usa `--oro-papel`, más oscuro, para las barras y el logo.
+  - El logo tiene dos versiones: la de siete capas para tamaños grandes y la de cuatro (`small`) para la barra, el informe y el favicon, porque siete capas a 16 px se emborronan.
+- Concepto nuevo:
+  - SVG: una imagen hecha con instrucciones en vez de píxeles, por eso se ve nítida a cualquier tamaño. Ejemplo: `<rect x="10" y="10" width="20" height="14" rx="7" />` dibuja una barra con las puntas redondeadas.
+  - `viewBox="0 0 100 100"`: el dibujo se piensa en una caja de 100 × 100 y luego se estira al tamaño que le pidas (`width={20}`).
+  - Colorear un dibujo desde CSS: las capas llevan `className="logo-layers"` y el CSS dice `.logo-layers{fill:var(--oro)}`. En el informe, `.report .logo-layers` lo pinta más oscuro sin tocar el dibujo.
+- Cómo probarlo:
+  1. `npm run dev`: arriba a la izquierda salen el logo y "layercents", y la pestaña del navegador muestra el icono nuevo.
+  2. "Save quote" y "Customer quote" son botones de oro con texto oscuro; el material en la gráfica de capas también es de oro.
+  3. Abre "PDF report": logo y barras en oro oscuro sobre blanco.
+  4. Abre un presupuesto: abajo pone "Quote made with layercents · layercents.com".
+
 ### 2026-10-15, Presupuesto para el cliente: varias piezas, logo y PDF
 - Archivo y sitio:
   - src/CustomerQuote.jsx (archivo nuevo): la pantalla del presupuesto. Arriba el formulario ("This quote" y "Your business") y abajo la hoja que sale en el PDF.

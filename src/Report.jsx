@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import Logo from './Logo.jsx'
 
 /* ==================================================================
    REPORT — a printable summary of the quotes shown in History.
@@ -94,7 +95,7 @@ export default function Report({ quotes, filter, currency, formatMoney, onBack }
   // while the report is open and put the old one back afterwards.
   useEffect(() => {
     const previous = document.title
-    document.title = `Print Cost report ${new Date().toISOString().slice(0, 10)}`
+    document.title = `layercents report ${new Date().toISOString().slice(0, 10)}`
     return () => { document.title = previous }
   }, [])
 
@@ -109,7 +110,7 @@ export default function Report({ quotes, filter, currency, formatMoney, onBack }
       <article className="report">
         <header className="report-head">
           <div>
-            <div className="report-brand"><i className="dot" /> Print Cost</div>
+            <div className="report-brand"><Logo size={16} small /> layercents</div>
             <h1>Quote report</h1>
             <p className="report-sub">
               {first && `${fmtDate(first)} – ${fmtDate(last)}`}
@@ -206,7 +207,7 @@ export default function Report({ quotes, filter, currency, formatMoney, onBack }
 
         <footer className="report-foot">
           Costs include material, power, printer depreciation, failed prints, labor and packaging.
-          Prices include the target margin and platform fee. Generated with Print Cost.
+          Prices include the target margin and platform fee. Generated with layercents.
         </footer>
       </article>
     </div>

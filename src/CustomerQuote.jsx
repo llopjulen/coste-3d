@@ -333,7 +333,7 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
           </section>
         )}
 
-        <footer className="report-foot">Quote made with Print Cost · llopjulen.github.io/coste-3d</footer>
+        <footer className="report-foot">Quote made with layercents · layercents.com</footer>
       </article>
     </div>
   )

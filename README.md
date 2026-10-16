@@ -1,8 +1,8 @@
-# 3D Print Cost Calculator
+# layercents
 
-A free calculator that shows what a 3D printed part *actually* costs you: material, power, printer depreciation, failed prints, your own time and platform fees.
+**Layer by layer, cent by cent.** A free 3D print cost calculator that shows what a printed part *actually* costs you (material, power, printer depreciation, failed prints, your own time and platform fees) and turns it into a quote for your customer.
 
-**Live:** https://llopjulen.github.io/coste-3d/
+**Live:** https://layercents.com
 
 ## Features
 

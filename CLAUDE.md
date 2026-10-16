@@ -1,6 +1,6 @@
-# Proyecto: 3D Print Cost Calculator
+# Proyecto: layercents (calculadora de coste de impresión 3D)
 
-Calculadora web del coste real de una pieza impresa en 3D. React + Vite, desplegada en GitHub Pages (https://llopjulen.github.io/coste-3d/). Todo el código y los textos de interfaz están en inglés.
+Calculadora web del coste real de una pieza impresa en 3D y presupuestos para el cliente. La marca es layercents. React + Vite, desplegada en GitHub Pages con dominio propio: https://layercents.com (comprado en Cloudflare; en su DNS hay 4 registros A a GitHub Pages y un CNAME `www` a llopjulen.github.io, todos en "DNS only"). El archivo public/CNAME le dice a GitHub qué dominio usar: no lo borres. Todo el código y los textos de interfaz están en inglés.
 
 ## Sobre el dueño
 Julen, 21 años, estudia Ingeniería Informática a distancia y trabaja a jornada completa. Tiene poco tiempo y quiere entender lo que hace el proyecto aunque no lo escriba él. Todo lo que explique tiene que estar en español, en lenguaje de principiante: qué se hizo y por qué.
@@ -25,7 +25,7 @@ No hagas ningún cambio sin dejar su entrada.
 - No metas backend, cuentas de usuario ni bases de datos. La app guarda datos en localStorage y así se queda por ahora.
 - Nunca escribas claves, tokens ni emails personales en el código.
 - Git usa el email noreply de GitHub; no lo cambies.
-- Mantén el estilo actual: oscuro, estilo Bambu Studio, colores definidos como variables en index.css.
+- Mantén el estilo actual: oscuro con el oro de la marca (`--oro`), colores definidos como variables en index.css. El logo está en src/Logo.jsx; no uses el verde de Bambu Lab.
 - Si una petición es ambigua o crece demasiado, para y pregunta antes de construir.
 
 ## Estado actual
@@ -38,7 +38,10 @@ Hecho el 2026-10-14 (ver DEV_LOG.md):
 Hecho el 2026-10-15 (ver DEV_LOG.md):
 - Importar del laminador (src/slicerFile.js y src/ImportFile.jsx): soltar un .gcode, .bgcode o .gcode.3mf rellena tiempo, gramos y purga, con piezas por bandeja, elección de bandeja y Undo. Usa fflate, cargada solo al soltar un 3MF.
 - Presupuesto para el cliente (src/CustomerQuote.jsx): se marcan piezas en History y sale un presupuesto con logo y datos del negocio (clave `business`), número automático (clave `quoteCounter`), envío, impuesto y notas. Importes en céntimos para que cuadren. PDF con window.print(), como el informe.
-No publicado todavía en la web (sin deploy): todo lo anterior desde Save quote.
+Hecho el 2026-10-16 (ver DEV_LOG.md):
+- Nueva marca: layercents, con logo (src/Logo.jsx) y el oro como color en vez del verde. Iconos e imagen para compartir en public/.
+- La web pasa a https://layercents.com (base de Vite `/` y public/CNAME).
+- Publicado todo lo anterior en layercents.com el 2026-10-16. La versión vieja no guardaba nada en el navegador, así que con el cambio de dirección nadie perdió datos.
 
 ## Pendiente, por orden
 Plan acordado tras analizar la competencia (MakerQuote, 3DPCC, CraftersQuote): una función cada vez, cada una con su post en Reddit.
@@ -49,4 +52,4 @@ Plan acordado tras analizar la competencia (MakerQuote, 3DPCC, CraftersQuote): u
 5. Pensar cómo monetizar (por ejemplo, Excel y PDF como "Pro"). Solo hablarlo; no tocar código de pagos sin pedirlo.
 
 ## Ideas futuras, no tocar sin pedirlo
-Gráficas, comparativas mes a mes, cuentas de usuario, versión de pago. Sincronizar presupuestos entre móvil y PC e inventario de filamento (serían "Pro" y necesitan backend: pedirlo antes). Quitar "Quote made with Print Cost" del presupuesto como función de pago.
+Gráficas, comparativas mes a mes, cuentas de usuario, versión de pago. Sincronizar presupuestos entre móvil y PC e inventario de filamento (serían "Pro" y necesitan backend: pedirlo antes). Quitar "Quote made with layercents" del presupuesto como función de pago.
