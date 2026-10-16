@@ -2,6 +2,28 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-16, La web pasa a layercents.com
+- Archivo y sitio:
+  - vite.config.js: `base` pasa de `'/coste-3d/'` a `'/'`.
+  - public/CNAME (archivo nuevo): una sola línea, `layercents.com`.
+  - index.html: `og:url` y `og:image` con la dirección completa del dominio nuevo.
+  - README.md: el enlace "Live".
+  - CLAUDE.md: nombre, dirección, estilo (oro en vez de verde) y estado.
+- Qué cambió: la app ya no vive en llopjulen.github.io/coste-3d sino en https://layercents.com.
+- Por qué:
+  - Una dirección propia es más fácil de recordar y de enseñar, y no depende de tu usuario de GitHub.
+  - `base` le dice a Vite en qué carpeta va a estar la web. Antes era la carpeta /coste-3d/ dentro de tu web de GitHub; ahora la app está en la raíz del dominio, así que es `/`. Si no se cambia, la página busca sus archivos en layercents.com/coste-3d/ y sale en blanco.
+  - El archivo CNAME es cómo GitHub Pages sabe qué dominio servir. Va en public/ para que Vite lo copie tal cual al publicar.
+  - WhatsApp, Reddit y compañía solo enseñan la imagen de vista previa si la dirección está completa, con https:// y el dominio.
+  - Es el mejor momento para mudarse: la versión que había en la web no guardaba nada en el navegador, así que nadie pierde presupuestos. A partir de ahora sí guardan, y los datos van ligados a la dirección: por eso no conviene volver a cambiarla.
+- Concepto nuevo:
+  - DNS: la "agenda" de internet, que traduce un nombre (layercents.com) a la dirección de un servidor. Los registros A apuntan el dominio a los servidores de GitHub Pages (por ejemplo `185.199.108.153`), y el CNAME hace que `www.layercents.com` vaya al mismo sitio.
+  - Mismo origen: el navegador guarda localStorage por dirección. Lo guardado en https://layercents.com no se ve desde http://layercents.com ni desde otra dirección; son "cajones" distintos.
+- Cómo probarlo:
+  1. Abre https://layercents.com: sale la app con el logo nuevo. Si el navegador avisa de que no es segura, GitHub aún está preparando el certificado (puede tardar hasta un día). No lo anuncies hasta ver el candado.
+  2. Abre la dirección vieja, llopjulen.github.io/coste-3d: debe llevarte a layercents.com.
+  3. Pega el enlace en un chat de WhatsApp: debe salir la imagen con el logo.
+
 ### 2026-10-16, Nueva marca: layercents, logo y color oro
 - Archivo y sitio:
   - src/Logo.jsx (archivo nuevo): el símbolo, un ¢ hecho de capas impresas, dibujado en SVG.
