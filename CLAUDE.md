@@ -42,13 +42,14 @@ Hecho el 2026-10-16 (ver DEV_LOG.md):
 - Nueva marca: layercents, con logo (src/Logo.jsx) y el oro como color en vez del verde. Iconos e imagen para compartir en public/.
 - La web pasa a https://layercents.com (base de Vite `/` y public/CNAME).
 - Publicado todo lo anterior en layercents.com el 2026-10-16. La versión vieja no guardaba nada en el navegador, así que con el cambio de dirección nadie perdió datos.
+- Repaso visual (publicado el mismo día): barra de arriba en dos filas en el móvil, barra fija con coste y precio en el móvil, tres pasos bajo el título, títulos con la letra del logo, pie de página con enlace a GitHub y fechas tipo "12 Oct 2026". Quitada la frase "Filament is only X%".
 
 ## Pendiente, por orden
 Plan acordado tras analizar la competencia (MakerQuote, 3DPCC, CraftersQuote): una función cada vez, cada una con su post en Reddit.
 1. Probar con cosas reales: la importación con un .gcode.3mf de Bambu Studio y un G-code de Cura (solo se probó con archivos reales de PrusaSlicer y con muestras del formato de los demás), y en el navegador subir un logo y sacar el PDF del presupuesto.
 2. Varios filamentos por pieza, cada uno con su precio, y perfiles de impresoras y materiales predefinidos.
 3. Mostrar cuántas piezas por semana saca la impresora según el tiempo de impresión (idea de un usuario de Reddit).
-4. Revisar que todo se vea bien en móvil (History y el informe ya se revisaron; falta repasar la calculadora y el presupuesto con calma).
+4. Revisar que todo se vea bien en móvil (History, el informe y la calculadora ya están; falta repasar con calma la pantalla del presupuesto en un móvil de verdad).
 5. Pensar cómo monetizar (por ejemplo, Excel y PDF como "Pro"). Solo hablarlo; no tocar código de pagos sin pedirlo.
 
 ## Ideas futuras, no tocar sin pedirlo
