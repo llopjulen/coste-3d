@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import History from './History.jsx'
 import Report from './Report.jsx'
+import ImportFile from './ImportFile.jsx'
+import CustomerQuote from './CustomerQuote.jsx'
 
 /* ==================================================================
    1) FIELDS
@@ -225,7 +227,7 @@ export default function App() {
   
   const [showFullBreakdown, setShowFullBreakdown] = useState(true)
 
-  // Which screen is shown: 'calculator', 'history' or 'report'.
+  // Which screen is shown: 'calculator', 'history', 'report' or 'quote'.
   const [view, setView] = useState('calculator')
 
   // The report shows whatever History was showing when the button was
@@ -234,6 +236,14 @@ export default function App() {
   const openReport = (quotes, filter) => {
     setReport({ quotes, filter })
     setView('report')
+    window.scrollTo(0, 0)
+  }
+
+  // The quotes ticked in History for a customer quote.
+  const [quoteParts, setQuoteParts] = useState([])
+  const openCustomerQuote = (quotes) => {
+    setQuoteParts(quotes)
+    setView('quote')
     window.scrollTo(0, 0)
   }
 
@@ -281,6 +291,30 @@ export default function App() {
   // changes by comparing references, not contents.
   const set = key => value => setD(current => ({ ...current, [key]: value }))
 
+  /* =========================
+    ·Import from slicer
+    =========================*/
+  // What the fields held before the last imported file filled them,
+  // so "Undo" can put exactly those fields back.
+  const [beforeImport, setBeforeImport] = useState(null)
+
+  const applyImport = (values, isNewFile) => {
+    const previous = (keys) => Object.fromEntries(keys.map(key => [key, d[key]]))
+    if (isNewFile) {
+      setBeforeImport(previous(Object.keys(values)))
+    } else {
+      // Changing plate or parts can fill a field the first import didn't touch.
+      setBeforeImport(prev => prev && { ...previous(Object.keys(values).filter(k => !(k in prev))), ...prev })
+    }
+    setD(current => ({ ...current, ...values }))
+  }
+
+  const undoImport = () => {
+    if (!beforeImport) return
+    setD(current => ({ ...current, ...beforeImport }))
+    setBeforeImport(null)
+  }
+
   // The result isn't stored in state, it's recalculated on every render.
   const r = calculate(d)
 
@@ -319,7 +353,14 @@ export default function App() {
         </select>
       </div>
 
-      {view === 'report' ? (
+      {view === 'quote' ? (
+        <CustomerQuote
+          quotes={quoteParts}
+          currency={currency}
+          rate={rates[currency] || 1}
+          onBack={() => setView('history')}
+        />
+      ) : view === 'report' ? (
         <Report
           quotes={report.quotes}
           filter={report.filter}
@@ -339,6 +380,7 @@ export default function App() {
             onExport={exportExcel}
             exporting={exporting}
             onReport={openReport}
+            onCustomerQuote={openCustomerQuote}
             onGoToCalculator={() => setView('calculator')}
           />
         </div>
@@ -386,6 +428,7 @@ export default function App() {
         <div className="columns">
           {/* --- Form: drawn by looping over SECTIONS --- */}
           <div>
+            <ImportFile onApply={applyImport} onUndo={undoImport} />
             {SECTIONS.map(section => (
               (showFullBreakdown || !['Labor', 'Selling'].includes(section.title)) &&(
                 <section className="panel" key={section.title}>

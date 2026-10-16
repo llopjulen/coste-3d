@@ -11,6 +11,7 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "fflate": "^0.8.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "write-excel-file": "^4.1.1"

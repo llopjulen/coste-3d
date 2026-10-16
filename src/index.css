@@ -347,3 +347,106 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
   .report-two{grid-template-columns:1fr 1fr}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+/* ------------------------- Importar del laminador ------------------
+   Zona para soltar el archivo, resumen de lo leido y notas. */
+.dropzone{
+  display:flex;flex-direction:column;align-items:flex-start;gap:7px;
+  margin:8px 0 6px;padding:13px 14px;
+  border:1px dashed var(--borde);border-radius:var(--radio);
+  background:var(--fondo);
+  transition:border-color .15s,background-color .15s;
+}
+.dropzone.over{border-color:var(--verde);background:rgba(0,174,66,.08)}
+.drop-title{font-size:.89rem;font-weight:600}
+.drop-hint{font-size:.8rem;line-height:1.45;color:var(--tenue);max-width:34em}
+
+.import-status{font-size:.82rem;color:var(--tenue)}
+.import-status:empty{display:none}
+.import-error{
+  margin:6px 0 4px;padding:9px 11px;
+  background:var(--panel-alto);
+  border-left:2px solid var(--rojo);
+  border-radius:0 5px 5px 0;
+  font-size:.82rem;line-height:1.45;color:var(--texto);
+}
+
+.import-result{display:flex;flex-direction:column;gap:9px;margin-top:6px}
+.import-file{font-size:.86rem;overflow-wrap:anywhere}
+.import-facts{display:flex;flex-wrap:wrap;gap:6px 22px}
+.import-facts div{display:flex;flex-direction:column;gap:1px}
+.import-facts dt{font-size:.74rem;color:var(--tenue)}
+.import-facts dd{font-size:.98rem;font-weight:600;font-variant-numeric:tabular-nums}
+.import-filaments{list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+.import-filaments li{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:3px 9px;border:1px solid var(--borde);border-radius:999px;
+  font-size:.78rem;font-variant-numeric:tabular-nums;
+}
+.import-select{
+  max-width:60%;
+  font-family:inherit;font-size:.86rem;
+  padding:5px 8px;border:1px solid var(--borde);border-radius:5px;
+  background:var(--fondo);color:var(--texto);
+}
+.import-select:focus-visible{outline:none;border-color:var(--verde);box-shadow:0 0 0 2px rgba(0,174,66,.22)}
+.import-filled{font-size:.82rem;color:var(--verde-vivo)}
+.import-filled .link{color:var(--texto)}
+.import-note{font-size:.8rem;line-height:1.45;color:var(--tenue)}
+.import .field{padding:5px 0}
+.import .field + .field{border-top:0}
+
+/* ---------------------- Presupuesto para el cliente ----------------
+   Arriba el formulario (no se imprime); abajo la hoja que sale en el PDF. */
+.quote-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:-4px 0 14px;font-size:.84rem}
+.select-all{display:inline-flex;align-items:center;gap:7px;cursor:pointer;color:var(--texto)}
+.history-table .check{width:1%;padding-right:0}
+.history-table input[type="checkbox"],.select-all input{width:16px;height:16px;accent-color:var(--verde);cursor:pointer}
+.history-table tr.ticked{background:rgba(0,174,66,.07)}
+
+.quote-editor{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;margin-bottom:16px}
+@media(max-width:860px){.quote-editor{grid-template-columns:1fr}}
+.quote-editor .panel{margin-bottom:0}
+.form-grid{display:flex;flex-direction:column;gap:11px;padding:12px 15px 15px}
+.form-row{display:flex;flex-direction:column;gap:5px;min-width:0}
+.form-row label,.form-label{font-size:.8rem;color:var(--tenue)}
+.form-row .text-input,.line-edit .text-input{flex:none;width:100%}
+textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
+.num-input{text-align:right;font-variant-numeric:tabular-nums}
+.form-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-hint{font-size:.78rem;color:var(--tenue)}
+.form-error{font-size:.8rem;color:var(--rojo)}
+.line-edit{display:grid;grid-template-columns:minmax(0,1fr) 64px 104px 30px;gap:6px;align-items:center}
+.line-head{font-size:.72rem;color:var(--tenue);margin-bottom:-5px}
+.line-edit .row-btn{margin-left:0}
+.logo-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.logo-preview{max-height:40px;max-width:140px;padding:3px;border-radius:4px;background:var(--papel)}
+.file-label{position:relative;display:inline-block}
+
+.quote-doc .quote-top{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;padding-bottom:18px;border-bottom:2px solid var(--tinta)}
+.quote-from{display:flex;flex-direction:column;gap:4px;max-width:60%}
+.quote-logo{max-height:64px;max-width:220px;object-fit:contain;align-self:flex-start;margin-bottom:6px}
+.quote-business{font-size:1.05rem;font-weight:600}
+.quote-contact{white-space:pre-line;color:var(--tinta-suave);font-size:.8rem;line-height:1.5}
+.quote-title{text-align:right}
+.quote-title h1{font-size:1.9rem;letter-spacing:.05em;text-transform:uppercase;margin-top:0}
+.quote-title dl{display:grid;grid-template-columns:auto auto;justify-content:end;gap:2px 12px;margin-top:6px;font-size:.8rem}
+.quote-title dt{color:var(--tinta-suave);text-align:right}
+.quote-title dd{text-align:right;font-variant-numeric:tabular-nums}
+.quote-to{margin-top:20px}
+.quote-to .label{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--tinta-suave)}
+.quote-to .name{margin-top:2px;font-size:1rem;font-weight:600}
+.quote-lines{margin-top:20px}
+.quote-totals{display:grid;grid-template-columns:1fr auto;gap:5px 18px;width:min(320px,100%);margin:14px 0 0 auto;font-variant-numeric:tabular-nums}
+.quote-totals dt{color:var(--tinta-suave)}
+.quote-totals dd{text-align:right}
+.quote-totals .grand{padding-top:8px;border-top:2px solid var(--tinta);font-size:1.15rem;font-weight:700;color:var(--tinta)}
+.quote-notes{margin-top:26px;break-inside:avoid}
+.quote-notes p{white-space:pre-line;font-size:.82rem;line-height:1.5}
+@media(max-width:700px){
+  .quote-from{max-width:100%}
+  .quote-title{text-align:left}
+  .quote-title dl{justify-content:start}
+  .quote-title dt,.quote-title dd{text-align:left}
+  .line-edit{grid-template-columns:minmax(0,1fr) 56px 92px 30px}
+}

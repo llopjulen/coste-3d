@@ -19,8 +19,10 @@ function monthOf(q) {
   }
 }
 
-export default function History({ quotes, formatMoney, onLoad, onDelete, onExport, exporting, onReport, onGoToCalculator }) {
+export default function History({ quotes, formatMoney, onLoad, onDelete, onExport, exporting, onReport, onCustomerQuote, onGoToCalculator }) {
   const [query, setQuery] = useState('')
+  // Ids of the quotes ticked for a customer quote. A Set holds each id once.
+  const [selected, setSelected] = useState(() => new Set())
 
   if (quotes.length === 0) {
     return (
@@ -59,6 +61,24 @@ export default function History({ quotes, formatMoney, onLoad, onDelete, onExpor
   const avgPrice = visible.length ? visible.reduce((sum, item) => sum + item.price, 0) / visible.length : 0
   const clients = new Set(visible.map(item => item.client).filter(Boolean)).size
 
+  // Ticking works on a copy of the Set: React only redraws on a new object.
+  const toggle = id => setSelected(prev => {
+    const next = new Set(prev)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    return next
+  })
+  const allShownTicked = visible.length > 0 && visible.every(item => selected.has(item.id))
+  const toggleAllShown = () => setSelected(prev => {
+    const next = new Set(prev)
+    for (const item of visible) {
+      if (allShownTicked) next.delete(item.id)
+      else next.add(item.id)
+    }
+    return next
+  })
+  const ticked = quotes.filter(item => selected.has(item.id))
+
   const remove = item => {
     if (window.confirm(`Delete “${item.name ?? 'Untitled part'}” from ${quoteDate(item).toLocaleDateString()}?`)) {
       onDelete(item.id)
@@ -91,6 +111,17 @@ export default function History({ quotes, formatMoney, onLoad, onDelete, onExpor
         </button>
       </div>
 
+      <div className="quote-tools">
+        <label className="select-all">
+          <input type="checkbox" checked={allShownTicked} onChange={toggleAllShown} disabled={visible.length === 0} />
+          Select all shown
+        </label>
+        <button type="button" className="controls primary" onClick={() => onCustomerQuote(ticked)} disabled={ticked.length === 0}>
+          Customer quote ({ticked.length})
+        </button>
+        {ticked.length === 0 && <span className="muted">Tick the parts for one client to send them a quote.</span>}
+      </div>
+
       {visible.length === 0 && <p className="muted no-results">No quotes match “{query}”.</p>}
 
       {months.map(month => (
@@ -105,6 +136,7 @@ export default function History({ quotes, formatMoney, onLoad, onDelete, onExpor
             <table className="history-table">
               <thead>
                 <tr>
+                  <th className="check"><span className="sr-only">Select</span></th>
                   <th>Date</th>
                   <th>Part</th>
                   <th>Client</th>
@@ -117,7 +149,15 @@ export default function History({ quotes, formatMoney, onLoad, onDelete, onExpor
               </thead>
               <tbody>
                 {month.items.map(item => (
-                  <tr key={item.id}>
+                  <tr key={item.id} className={selected.has(item.id) ? 'ticked' : undefined}>
+                    <td className="check">
+                      <input
+                        type="checkbox"
+                        aria-label={`Select ${item.name ?? 'Untitled part'}`}
+                        checked={selected.has(item.id)}
+                        onChange={() => toggle(item.id)}
+                      />
+                    </td>
                     <td className="muted">{quoteDate(item).toLocaleDateString()}</td>
                     <td className="strong">{item.name ?? 'Untitled part'}</td>
                     <td>{item.client || <span className="muted">—</span>}</td>
