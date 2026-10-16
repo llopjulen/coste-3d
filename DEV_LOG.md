@@ -2,6 +2,33 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-16, Repaso visual: móvil, tres pasos y pie de página
+- Archivo y sitio:
+  - src/App.jsx: debajo del subtítulo de la calculadora, la lista `steps` con los tres pasos. Antes del pie, la barra `mobile-total`. Dentro de App, `resultRef`, `resultInView` y `showResult`, justo antes de `currency`. La función nueva `SiteFooter`, encima de "4) APP", que se usa en la calculadora y en el historial. En la nota del resultado se quita la frase "Filament is only…". La ayuda de "Platform fee" ahora explica que la comisión se cobra sobre el precio final.
+  - src/History.jsx: la función `fmtDay`, junto a `quoteDate`, para las fechas de la tabla y del aviso de borrar.
+  - src/index.css: `h1` con la letra del logo; arreglo de la barra de arriba en el móvil (debajo de `.currency`); estilos `.steps`, `.site-foot` y `.mobile-total`.
+- Qué cambió:
+  - En el móvil la barra de arriba va en dos filas y ya no sale cortada.
+  - Abajo hay una barra fija con el coste y el precio recomendado; se esconde al llegar al resultado.
+  - Los títulos usan la letra del logo, debajo del título hay tres pasos y al final un pie con la promesa de privacidad y dónde mandar ideas.
+  - Las fechas salen como "12 Oct 2026".
+- Por qué:
+  - En un móvil de 390 px la barra de arriba medía 401 px: el selector de moneda salía cortado y la página se movía de lado. Casi toda la gente que llega desde Reddit entra con el móvil.
+  - En el móvil el resultado quedaba tres pantallas más abajo que las casillas, y quien entraba por primera vez no veía el precio.
+  - Los tres pasos cuentan en un vistazo qué hace la app distinto: soltar el archivo del laminador.
+  - Con el mes en letras nadie confunde el día con el mes (10/12 es octubre en EE. UU. y diciembre en España).
+  - Julen pidió quitar la frase del filamento y el texto de abajo. La idea de la comisión pasa a la ayuda (botón i) de su casilla, y la de que nada sale del navegador, al pie.
+- Concepto nuevo:
+  - `useRef`: una "etiqueta" para un elemento de la página. `const resultRef = useRef(null)` y `<div ref={resultRef}>`; luego `resultRef.current` es ese div, por ejemplo para hacer `resultRef.current.scrollIntoView()`.
+  - `IntersectionObserver`: el navegador avisa cuando un elemento entra o sale de la pantalla, sin tener que vigilar el scroll a mano. Ejemplo: `new IntersectionObserver(([e]) => console.log(e.isIntersecting)).observe(el)`.
+  - `@media(max-width:520px){…}`: reglas de CSS que solo valen cuando la pantalla mide 520 px de ancho o menos. Así el móvil tiene su propio diseño sin tocar el del ordenador.
+- Cómo probarlo:
+  1. `npm run dev` y abre la página con el móvil, o en el ordenador con la vista de móvil del navegador (F12 → icono del móvil).
+  2. Arriba se ven la marca y EUR en una fila y las pestañas en otra, y la página no se mueve de lado.
+  3. Abajo sale la barra con el coste y el precio. Pulsa "Breakdown": baja hasta el resultado y la barra se esconde.
+  4. Al final de la página está el pie con el enlace a GitHub.
+  5. En History las fechas salen como "12 Oct 2026".
+
 ### 2026-10-16, La web pasa a layercents.com
 - Archivo y sitio:
   - vite.config.js: `base` pasa de `'/coste-3d/'` a `'/'`.

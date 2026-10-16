@@ -9,6 +9,8 @@ import { useState } from 'react'
 // Older quotes only have `id` (a Date.now() timestamp), newer ones
 // also have `createdAt`. Both turn into a real Date here.
 const quoteDate = q => new Date(q.createdAt ?? q.id)
+// "12 Oct 2026": with the month in letters nobody mixes up day and month.
+const fmtDay = dt => dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 const orderTotal = q => q.orderTotal ?? q.price
 
 function monthOf(q) {
@@ -80,7 +82,7 @@ export default function History({ quotes, formatMoney, onLoad, onDelete, onExpor
   const ticked = quotes.filter(item => selected.has(item.id))
 
   const remove = item => {
-    if (window.confirm(`Delete “${item.name ?? 'Untitled part'}” from ${quoteDate(item).toLocaleDateString()}?`)) {
+    if (window.confirm(`Delete “${item.name ?? 'Untitled part'}” from ${fmtDay(quoteDate(item))}?`)) {
       onDelete(item.id)
     }
   }
@@ -158,7 +160,7 @@ export default function History({ quotes, formatMoney, onLoad, onDelete, onExpor
                         onChange={() => toggle(item.id)}
                       />
                     </td>
-                    <td className="muted">{quoteDate(item).toLocaleDateString()}</td>
+                    <td className="muted">{fmtDay(quoteDate(item))}</td>
                     <td className="strong">{item.name ?? 'Untitled part'}</td>
                     <td>{item.client || <span className="muted">—</span>}</td>
                     <td className="num">{item.units ?? 1}</td>
