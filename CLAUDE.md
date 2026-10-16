@@ -1,6 +1,6 @@
 # Proyecto: layercents (calculadora de coste de impresión 3D)
 
-Calculadora web del coste real de una pieza impresa en 3D y presupuestos para el cliente. La marca es layercents. React + Vite, desplegada en GitHub Pages con dominio propio: https://layercents.com (comprado en Cloudflare; en su DNS hay 4 registros A a GitHub Pages y un CNAME `www` a llopjulen.github.io, todos en "DNS only"). El archivo public/CNAME le dice a GitHub qué dominio usar: no lo borres. Todo el código y los textos de interfaz están en inglés.
+Calculadora web del coste real de una pieza impresa en 3D y presupuestos para el cliente. La marca es layercents. React + Vite, desplegada en GitHub Pages con dominio propio: https://layercents.com (comprado en Cloudflare; en su DNS hay 4 registros A a GitHub Pages y un CNAME `www` a llopjulen.github.io, con el proxy de Cloudflare activado, la nube naranja, que es quien pone el candado HTTPS. En Cloudflare tiene que estar activado "Always Use HTTPS", para que nadie use la versión http y se le separen los datos guardados). El archivo public/CNAME le dice a GitHub qué dominio usar: no lo borres. Todo el código y los textos de interfaz están en inglés.
 
 ## Sobre el dueño
 Julen, 21 años, estudia Ingeniería Informática a distancia y trabaja a jornada completa. Tiene poco tiempo y quiere entender lo que hace el proyecto aunque no lo escriba él. Todo lo que explique tiene que estar en español, en lenguaje de principiante: qué se hizo y por qué.

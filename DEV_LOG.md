@@ -20,9 +20,10 @@ Registro de cambios del proyecto. La entrada más nueva va arriba.
   - DNS: la "agenda" de internet, que traduce un nombre (layercents.com) a la dirección de un servidor. Los registros A apuntan el dominio a los servidores de GitHub Pages (por ejemplo `185.199.108.153`), y el CNAME hace que `www.layercents.com` vaya al mismo sitio.
   - Mismo origen: el navegador guarda localStorage por dirección. Lo guardado en https://layercents.com no se ve desde http://layercents.com ni desde otra dirección; son "cajones" distintos.
 - Cómo probarlo:
-  1. Abre https://layercents.com: sale la app con el logo nuevo. Si el navegador avisa de que no es segura, GitHub aún está preparando el certificado (puede tardar hasta un día). No lo anuncies hasta ver el candado.
-  2. Abre la dirección vieja, llopjulen.github.io/coste-3d: debe llevarte a layercents.com.
-  3. Pega el enlace en un chat de WhatsApp: debe salir la imagen con el logo.
+  1. Abre https://layercents.com: sale la app con el logo nuevo y el candado. El certificado lo pone Cloudflare, porque los registros tienen el proxy activado (nube naranja).
+  2. Abre la dirección vieja, llopjulen.github.io/coste-3d: te lleva a layercents.com.
+  3. Escribe http://layercents.com (sin la s): debe pasar solo a https://. Si no, activa "Always Use HTTPS" en Cloudflare (SSL/TLS → Edge Certificates).
+  4. Pega el enlace en un chat de WhatsApp: debe salir la imagen con el logo.
 
 ### 2026-10-16, Nueva marca: layercents, logo y color oro
 - Archivo y sitio:
