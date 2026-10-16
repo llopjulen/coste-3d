@@ -70,11 +70,26 @@ body{
   padding:4px 6px;border:1px solid var(--borde);border-radius:5px;
   background:var(--fondo);color:var(--texto);
 }
+/* En el movil la barra no cabe en una linea: arriba la marca y la
+   moneda, y debajo las pestanas. Sin esto la pagina se movia de lado. */
+@media(max-width:520px){
+  .topbar{flex-wrap:wrap;row-gap:8px}
+  .currency{order:1}
+  .tabs{order:2;flex-basis:100%;margin-left:0}
+}
 
 .wrap{max-width:1060px;margin:0 auto;padding:26px 18px 64px}
 
-h1{font-size:clamp(1.45rem,4vw,2rem);font-weight:600;letter-spacing:-.025em;line-height:1.15}
+h1{font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;font-size:clamp(1.55rem,4.4vw,2.2rem);font-weight:700;letter-spacing:-.03em;line-height:1.12}
 .subtitle{margin-top:7px;color:var(--tenue);font-size:.94rem;max-width:40em}
+/* Los tres pasos debajo del titulo: lo que hace la app de un vistazo */
+.steps{list-style:none;display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:14px;font-size:.88rem}
+.steps li{display:flex;align-items:center;gap:8px}
+.step-n{
+  display:grid;place-items:center;width:22px;height:22px;flex:none;
+  border-radius:50%;background:rgba(242,179,61,.15);
+  color:var(--oro);font-size:.74rem;font-weight:700;
+}
 
 .columns{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;margin-top:24px}
 @media(max-width:860px){.columns{grid-template-columns:1fr}}
@@ -184,6 +199,33 @@ h1{font-size:clamp(1.45rem,4vw,2rem);font-weight:600;letter-spacing:-.025em;line
 .gain{color:var(--oro-vivo)}
 
 footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
+/* Pie de pagina de la calculadora y del historial */
+.site-foot{
+  display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;
+  max-width:none;margin-top:44px;padding-top:18px;border-top:1px solid var(--borde);
+}
+.site-foot .brand{font-size:.92rem;color:var(--texto)}
+.site-foot a{color:var(--oro-vivo)}
+.site-foot a:hover{color:var(--oro)}
+
+/* Barra fija abajo en el movil: coste y precio sin bajar hasta el final.
+   Se esconde cuando el panel del resultado ya se ve en pantalla. */
+.mobile-total{display:none}
+@media(max-width:860px){
+  .calc-page{padding-bottom:120px}
+  .mobile-total{
+    position:fixed;left:0;right:0;bottom:0;z-index:5;
+    display:flex;align-items:center;gap:18px;
+    padding:10px 18px calc(10px + env(safe-area-inset-bottom));
+    background:var(--panel);border-top:1px solid var(--borde);
+    font-size:.78rem;color:var(--tenue);
+    transition:transform .2s ease,visibility .2s;
+  }
+  .mobile-total strong{display:block;font-size:1.05rem;color:var(--texto);font-variant-numeric:tabular-nums}
+  .mobile-total .price strong{color:var(--oro-vivo)}
+  .mobile-total .controls{margin-left:auto}
+  .mobile-total.away{transform:translateY(110%);visibility:hidden}
+}
 
 /* Botones generales (Show cost only, Save quote, Export Excel):
    mismo estilo oscuro que el resto en vez del boton blanco del navegador. */

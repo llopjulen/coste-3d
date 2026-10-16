@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import History from './History.jsx'
 import Report from './Report.jsx'
 import ImportFile from './ImportFile.jsx'
@@ -44,7 +44,7 @@ const SECTIONS = [
     title: 'Selling',
     fields: [
       { key: 'quantity', label: 'Order quantity', unit: 'pcs', initial: 1,  help: "Parts in this order. Only changes the total — the per-part cost stays the same." },
-      { key: 'fee', label: 'Platform fee',         unit: '%',  initial: 8,  help: 'What the platform keeps between commission and card processing. Selling in person, this is 0.' },
+      { key: 'fee', label: 'Platform fee',         unit: '%',  initial: 8,  help: "What the platform keeps between commission and card processing. It's taken from the final selling price, the same way the platform charges it. Selling in person, this is 0." },
       { key: 'margin', label: 'Target margin',     unit: '%',  initial: 40, help: "What you want to earn on top of cost. Below 20% you have nothing left to reinvest or absorb a surprise." },
       { key: 'currentPrice', label: 'Current price', unit: '€', initial: 12, help: 'What you currently charge for the part. Used to compare against the recommended price.' },
     ],
@@ -149,6 +149,18 @@ function Field({ id, label, unit, help, value, onChange, open, onHelp }) {
   )
 }
 
+/* Footer under the calculator and the history: what it is, the privacy
+   promise and where to send ideas. */
+function SiteFooter() {
+  return (
+    <footer className="site-foot">
+      <strong className="brand"><Logo size={16} small /> layercents</strong>
+      <span>Free 3D print cost calculator. Nothing you type or drop leaves your browser.</span>
+      <a href="https://github.com/llopjulen/coste-3d/issues">Ideas or bugs? Tell me on GitHub</a>
+    </footer>
+  )
+}
+
 /* ==================================================================
    4) APP
 ================================================================== */
@@ -246,6 +258,23 @@ export default function App() {
     setQuoteParts(quotes)
     setView('quote')
     window.scrollTo(0, 0)
+  }
+
+  /* On a phone the result comes after all the fields, so a bar at the
+     bottom shows cost and price while you type. It hides itself when
+     the real result panel scrolls into view. */
+  const resultRef = useRef(null)
+  const [resultInView, setResultInView] = useState(false)
+  useEffect(() => {
+    const el = resultRef.current
+    if (!el || !('IntersectionObserver' in window)) return
+    const watcher = new IntersectionObserver(([entry]) => setResultInView(entry.isIntersecting))
+    watcher.observe(el)
+    return () => watcher.disconnect()
+  }, [view])
+  const showResult = () => {
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    resultRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
   }
 
   const [currency, setCurrency] = useState('EUR')
@@ -383,13 +412,19 @@ export default function App() {
             onCustomerQuote={openCustomerQuote}
             onGoToCalculator={() => setView('calculator')}
           />
+          <SiteFooter />
         </div>
       ) : (
-      <div className="wrap">
+      <div className="wrap calc-page">
         <h1>What a printed part actually costs you</h1>
         <p className="subtitle">
           Material, power, printer depreciation, failed prints and your own time.
         </p>
+        <ol className="steps">
+          <li><span className="step-n" aria-hidden="true">1</span>Drop your sliced file</li>
+          <li><span className="step-n" aria-hidden="true">2</span>See the real cost and price</li>
+          <li><span className="step-n" aria-hidden="true">3</span>Save it and send a quote</li>
+        </ol>
 
         <div className="toolbar">
           <button className="controls" onClick={botonApagarCalculo}>{showFullBreakdown ? 'Show cost only' : 'Show Full Breakdown'}</button>
@@ -456,7 +491,7 @@ export default function App() {
           </div>
 
           {/* --- Result --- */}
-          <div className="result">
+          <div className="result" ref={resultRef}>
             <div className="panel">
               <h2>Breakdown</h2>
               <div className="cross-section">
@@ -514,7 +549,6 @@ export default function App() {
                     : `You make ${formatMoney(r.profit)} per part`}
                 </div>
                 <span className="note">
-                  Filament is only {r.materialPct.toFixed(0)}% of what it actually costs you.
                   After fees you keep {formatMoney(r.currentNet)} out of {formatMoney(d.currentPrice)}.
                 </span>
               </div>
@@ -522,10 +556,13 @@ export default function App() {
           </div>
         </div>
 
-        <footer>
-          The platform fee is applied to the final selling price, the same way
-          the platform actually charges it. Nothing is sent to any server.
-        </footer>
+        <div className={`mobile-total ${resultInView ? 'away' : ''}`}>
+          <span>Cost per part<strong>{formatMoney(r.cost)}</strong></span>
+          <span className="price">Recommended<strong>{formatMoney(r.recommendedPrice)}</strong></span>
+          <button type="button" className="controls" onClick={showResult}>Breakdown</button>
+        </div>
+
+        <SiteFooter />
       </div>
       )}
     </>
