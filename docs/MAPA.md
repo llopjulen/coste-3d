@@ -20,8 +20,8 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | Archivo | Qué hace |
 |---|---|
 | `index.html` | El shell: metadatos para buscadores y para compartir (Open Graph), fuentes de Google, Cloudflare Web Analytics y el `<div id="root">` donde React pinta todo. |
-| `src/main.jsx` | Punto de entrada. Importa `index.css` y monta `<App>` dentro de `<StrictMode>`. En desarrollo, StrictMode ejecuta dos veces renders y efectos para destapar efectos secundarios mal hechos; en producción no hace nada. |
-| `src/App.jsx` | Estado global, cálculo y navegación. Cuatro secciones: 1) campos (`SECTIONS`, `INITIAL`) y colores de las capas (`LAYERS`); 2) `calculate(d)`; 3) componentes pequeños (`Field`, `SiteFooter`); 4) `App`. |
+| `src/main.jsx` | Punto de entrada. Importa `index.css`, lee y quita el `?agent` de la dirección (una vez por carga) y monta `<App>` dentro de `<StrictMode>`. En desarrollo, StrictMode ejecuta dos veces renders y efectos para destapar efectos secundarios mal hechos; en producción no hace nada. |
+| `src/App.jsx` | Estado global, cálculo y navegación. Cuatro secciones: 1) campos (`SECTIONS`, `INITIAL`) y colores del gráfico (`LAYERS`, en el orden en que se imprime: de abajo arriba); 2) `calculate(d)`; 3) componentes pequeños (`Field`, `SiteFooter`); 4) `App`. |
 | `src/History.jsx` | Lista de presupuestos: tarjetas resumen, buscador, tabla agrupada por mes, marcar piezas para el presupuesto de cliente, Load y borrar. No es dueño de ningún dato. |
 | `src/Report.jsx` | Informe imprimible (KPIs y 3 gráficas hechas con `div` y porcentajes, sin librería de gráficas). El PDF sale de `window.print()`. |
 | `src/CustomerQuote.jsx` | Presupuesto para el cliente: formulario arriba, hoja abajo. Lee y escribe `business` y `quoteCounter`. Calcula en céntimos enteros. |
@@ -30,10 +30,21 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/exportExcel.js` | Export `.xlsx` con formato y fórmulas `SUM`. Se carga solo al pulsar el botón. |
 | `src/backup.js` | Copia de seguridad: funciones puras (construir, validar, fusionar, planificar, recordatorio) y capa de almacenamiento (`writeAtomically`, `applyRestore`, `downloadBackup`). |
 | `src/BackupPanel.jsx` | Panel "Backup" al final de History y aviso `BackupReminder` encima. |
+| `src/agent.js` | Cliente del agente local: `checkAgent()` (¿está corriendo y habla nuestro protocolo?) y la activación por enlace (`?agent`). Sin React. |
+| `src/agent.test.js` | Tests de contrato entre la web y el agente: `checkAgent` contra el código real de `agent/handler.js`. |
+| `src/Printers.jsx` | Pestaña Printers (beta): estado del agente. Solo existe si la persona la activó. |
+| `src/backup.test.js` | Tests de la parte "Your setup" de `backup.js`: ida y vuelta, copias antiguas sin `setup`, Merge/Replace, almacenamiento bloqueado. |
 | `src/Logo.jsx` | El logo en SVG; los colores salen del CSS. |
+| `src/logoGeometry.js` | Las coordenadas de las capas del logo, como datos. Las leen el logo y la gráfica de costes, para que no se descuadren. |
+| `src/symbolChart.js` | Función pura `symbolPieces`: reparte los costes sobre las 11 capas del símbolo (cada coste ocupa un trozo del largo total proporcional a su parte del coste). Sin React. |
+| `src/symbolChart.test.js` | Tests de `symbolChart.js`: proporciones, orden, huecos entre colores, entradas raras (NaN, negativos, todo a 0). |
+| `src/CostSymbol.jsx` | La gráfica "Breakdown": dibuja el símbolo con un `clipPath` por capa y un rectángulo por coste. Solo pinta; las cuentas están en `symbolChart.js`. |
 | `src/index.css` | Todos los estilos. Arriba los tokens (`--fondo`, `--oro`…) en `:root`; luego una sección por pantalla, con comentarios en español. `@media print` decide qué sale en los PDF. |
 | `public/` | Se copia tal cual a la web: `CNAME` (el dominio para GitHub Pages: no se borra), iconos e imagen para compartir. |
 | `screenshots/` | Capturas del README. |
+| `agent/server.js` | Arranque del agente local (`npm run agent`): abre el puerto 31415 solo en `127.0.0.1` y pasa cada petición a `handler.js`. |
+| `agent/handler.js` | Qué responde el agente a cada petición: seguridad (Host, Origin, CORS, preflight) y rutas. Hoy solo `/health`. |
+| `agent/handler.test.js` | Tests del agente con `node:test` (`npm test`), sin dependencias. |
 | `docs/MAPA.md` | Este archivo. |
 | `CLAUDE.md`, `DEV_LOG.md` | Instrucciones del proyecto y registro de cada cambio con su porqué. |
 
@@ -48,8 +59,8 @@ Restos de la plantilla de Vite que nada usa y se pueden borrar: `src/assets/` (h
                  │   d ──► calculate(d) ──► r (se recalcula en  │
                  │                            cada render)      │
                  │   saveQuote: {…d, …r} ──► savedQuotes ──► useEffect ──► localStorage
-                 │   view decide la pantalla:                   │
-                 │     calculator │ history │ report │ quote    │
+                 │   view decide la pantalla: calculator │      │
+                 │     history │ report │ quote │ printers     │
                  └───────┬──────────────┬───────────┬───────────┘
                          ▼              ▼           ▼
              History (quotes,      Report       CustomerQuote ◄──► localStorage
@@ -57,11 +68,37 @@ Restos de la plantilla de Vite que nada usa y se pueden borrar: `src/assets/` (h
              onExport, onReport,                                    quoteCounter
              onCustomerQuote)
              BackupPanel / BackupReminder ──► backup.js ◄──► localStorage
+  App.set (campos de "Your setup") ──► saveSetupField ──► localStorage `setup`
+             Printers ──► agent.js ──fetch──► agente en 127.0.0.1:31415
 ```
 
 - `r` es estado derivado: no se guarda en `useState`, se recalcula con `calculate(d)` en cada render. Calcular es barato, y así nunca puede quedar desincronizado de `d`.
+- "Your setup" (impresora, luz, tarifa, comisión, margen) se recuerda en el dispositivo: los campos de las secciones con `setup: true` en `SECTIONS`. Se guarda desde el manejador `set` (no desde un efecto), campo a campo y solo cuando la persona lo edita; así "Load" de un presupuesto viejo o importar un laminador, que llaman a `setD` directamente, nunca pisan lo guardado.
 - `savedQuotes` se escribe en `localStorage` desde un `useEffect` con `[savedQuotes]` como dependencias: se ejecuta después de cada render en el que la lista cambió.
-- `view` sustituye a un router: no hay una URL por pantalla. Por eso recargar la página vuelve siempre a la calculadora y el botón Atrás del navegador no cambia de pantalla.
+- `view` sustituye a un router: no hay una URL por pantalla (salvo `?agent`, que abre Printers y se borra de la dirección nada más leerse). Por eso recargar la página vuelve siempre a la calculadora y el botón Atrás del navegador no cambia de pantalla.
+
+## El agente local (conexión con impresoras, en construcción)
+
+La web no puede hablar con una impresora: el navegador solo habla MQTT por WebSocket, y la impresora no lo ofrece, y una página `https` no puede llamar a `http://192.168.x.x`. Por eso hay un segundo programa, el agente, que corre en un ordenador de la misma red:
+
+```
+  navegador (layercents.com)  ──HTTP──►  agente (127.0.0.1:31415)  ──MQTT/FTPS──►  impresora
+         la web, sin backend               agent/, Node, sin nube            (PRs siguientes)
+```
+
+- Es otro proceso, no forma parte de la web: Vite no lo empaqueta porque nada de `src/` lo importa. Usa los mismos `node_modules` del proyecto.
+- Solo escucha en `127.0.0.1`: nadie de la red puede llamarlo, solo este ordenador.
+- Antes de responder comprueba tres cosas, por este orden:
+  1. El `Host` tiene que ser `127.0.0.1:31415` o `localhost:31415`. Es la defensa contra DNS rebinding: una web maliciosa podría hacer que su dominio apunte a 127.0.0.1, y entonces el navegador trataría al agente como parte de esa web y se saltaría CORS.
+  2. El `Origin` tiene que estar en `ALLOWED_ORIGINS` (la web publicada y los servidores de desarrollo). Si no, devuelve 403 antes de hacer nada: CORS solo impide que la página lea la respuesta, no que la petición se ejecute.
+  3. El preflight (`OPTIONS`) responde a la Private Network Access de Chrome con `Access-Control-Allow-Private-Network: true`.
+- `/health` devuelve `protocol`: la web se actualiza en cada despliegue, pero el agente de cada persona no, así que la web compara ese número para saber si el agente es compatible.
+
+En la web (`src/agent.js` y `src/Printers.jsx`):
+
+- La pestaña Printers solo existe si la persona la activa: con el enlace `layercents.com/?agent`, o en su navegador si ya la activó antes (clave `agentEnabled`). El motivo es que pedir algo a 127.0.0.1 desde una web pública hace que Chrome pregunte por permisos ("acceder a otras apps y servicios de este dispositivo"); si se comprobara en cada visita, ese aviso le saldría a todo el mundo. Sin activar la pestaña, la web no hace ni una sola petición al agente.
+- `checkAgent()` nunca lanza: devuelve `connected`, `outdated`, `wrong` (otro programa en el puerto) u `offline`. Desde el código de la página no se puede distinguir un puerto cerrado de un CORS rechazado o de un permiso denegado: todo es un `fetch` que falla.
+- Printers comprueba el agente al abrirse y con "Check again", no con un temporizador. Si dos comprobaciones se solapan, gana la última (un contador en `useRef`).
 
 ## Dinero y monedas
 
@@ -74,7 +111,9 @@ Todo se guarda en EUR. Al arrancar, `App` pide los tipos de cambio a `api.frankf
 | `savedQuotes` | Array de presupuestos (forma abajo) | `App` (efecto tras cada cambio) y `applyRestore` | `App` al arrancar |
 | `business` | `{ name, contact, logo, notes, tax, validDays }`; `logo` es un data URL PNG de 480 × 200 px como mucho | `CustomerQuote.saveBusiness`, `applyRestore` | `CustomerQuote` al abrirse |
 | `quoteCounter` | Entero: el siguiente número de presupuesto (2026-007) | `CustomerQuote.savePdf`, `applyRestore` (nunca lo baja) | `CustomerQuote` |
+| `setup` | `{ campo: número }` con solo los campos de "Your setup" que la persona ha editado (`printerPrice`, `watts`, `hourlyRate`, `fee`…) | `App.set` (vía `saveSetupField`), `resetSetup`, `applyRestore` | `App` al arrancar (`readSetup`) |
 | `lastBackupAt` | Fecha ISO de la última copia en este dispositivo; no va dentro de la copia | `downloadBackup`, `applyRestore` | `App` |
+| `agentEnabled` | `'1'` si este navegador enseña la pestaña Printers; tampoco va en la copia | `agent.js` (`setAgentEnabled`, `consumeAgentOptIn`) | `App` al arrancar |
 
 Forma de un presupuesto guardado:
 
@@ -126,6 +165,10 @@ Simplificación a tener en cuenta: con una tasa de fallos `p`, el coste esperado
 |---|---|
 | Añadir o cambiar un campo del formulario, su ayuda o su valor por defecto | `SECTIONS` en `App.jsx` (y `calculate` si interviene en el coste) |
 | Cambiar una fórmula | `calculate` en `App.jsx` |
+| Decidir qué campos se recuerdan entre visitas | `setup: true` en la sección de `SECTIONS` (App.jsx); `backup.js` solo valida que sean números |
+| Cambiar el orden o el contenido de lo que se ve en el resultado | el bloque `{/* --- Result --- */}` de `App` (precio grande, gráfica, veredicto, guardar) |
+| Cambiar los colores o el orden de la gráfica de costes | `LAYERS` en `App.jsx` (el orden es de abajo arriba) |
+| Cambiar la forma del símbolo (logo y gráfica a la vez) | `logoGeometry.js` |
 | Cambiar colores o espaciado | tokens de `:root` en `index.css` |
 | Soportar otro laminador | `parseSlicerText` en `slicerFile.js` |
 | Añadir una columna al Excel | `buildColumns` en `exportExcel.js` |
@@ -138,4 +181,6 @@ Simplificación a tener en cuenta: con una tasa de fallos `p`, el coste esperado
 - `npm run dev`: servidor de desarrollo con recarga en caliente (HMR) en `localhost:5173`.
 - `npm run build`: compila a `dist/` (JS minificado y separado en trozos).
 - `npm run lint`: oxlint, con las reglas de hooks de React.
+- `npm run agent`: arranca el agente local. Para comprobarlo, abre `http://127.0.0.1:31415/health` en el navegador. Se para con Ctrl+C.
+- `npm test`: `node --test` busca y ejecuta todos los `*.test.js` del proyecto, con el test runner que ya trae Node.
 - `npm run deploy`: `gh-pages` publica `dist/` en la rama `gh-pages`. GitHub Pages sirve esa rama y `public/CNAME` le dice el dominio; Cloudflare va delante y pone el HTTPS.

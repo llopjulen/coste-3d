@@ -159,29 +159,63 @@ h1{font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;font-size:clam
 
 /* ---------------------------- Resultado --------------------------- */
 .result{position:sticky;top:18px;display:flex;flex-direction:column;gap:12px}
+/* La columna ya mide ~820 px (precio, grafica, veredicto y guardar). En una
+   pantalla mas baja, pegada arriba taparia el boton de guardar sin forma de
+   llegar a el: ahi mejor que se desplace con la pagina. */
+@media(max-height:880px){.result{position:static}}
 
 .cross-section{display:flex;gap:15px;padding:16px 15px}
 
-/* Seccion transversal de la pieza: cada coste es un tramo de capas */
-.stack{
-  width:70px;flex:none;height:258px;
-  display:flex;flex-direction:column-reverse;
-  border:1px solid var(--borde);
-  border-radius:3px;
-  background:var(--fondo);
-  overflow:hidden;
-}
-.layer{
-  width:100%;
-  background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 5px);
-  transition:height .2s ease;
-}
+/* Grafica de costes: el simbolo de layercents (src/CostSymbol.jsx), con
+   cada coste en su color. Va de abajo arriba, como se imprime. */
+.cost-symbol{width:176px;height:176px;flex:none;display:block}
+/* In a phone the legend needs the room: the amounts must not wrap */
+@media (max-width:560px){.cost-symbol{width:118px;height:118px}}
+/* Barra vacia bajo los colores: la forma se lee aunque un coste sea 0 */
+.cost-symbol-empty{fill:var(--panel-alto)}
+/* Al cambiar un numero, las fronteras entre colores se deslizan en vez
+   de saltar. Si el sistema pide menos movimiento, no se anima. */
+.cost-symbol-piece{transition:x .35s ease,width .35s ease}
+@media (prefers-reduced-motion:reduce){.cost-symbol-piece{transition:none}}
 
-.legend{flex:1;display:flex;flex-direction:column-reverse;justify-content:flex-start}
+.legend{flex:1;display:flex;flex-direction:column-reverse;justify-content:center}
 .row-legend{display:flex;align-items:baseline;gap:9px;font-size:.86rem;padding:3px 0}
 .swatch{width:10px;height:10px;flex:none;border-radius:2px}
 .row-legend .name{flex:1;color:var(--tenue)}
-.row-legend .value{font-weight:500;font-variant-numeric:tabular-nums}
+.row-legend .value{font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* La respuesta: el precio recomendado, grande y en oro, arriba del todo
+   de la columna de resultados. Los centimos y la moneda van mas pequenos
+   para que se lea primero el numero entero. */
+.hero{padding:20px 20px 18px;border-color:rgba(242,179,61,.35)}
+.hero-label{display:block;font-size:.78rem;font-weight:600;color:var(--tenue)}
+.hero-price{
+  display:flex;align-items:baseline;gap:3px;margin-top:2px;
+  font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;
+  font-weight:700;letter-spacing:-.04em;color:var(--oro-vivo);
+  font-variant-numeric:tabular-nums;
+}
+.hero-whole{font-size:4.6rem;line-height:1}
+.hero-cents{font-size:2rem}
+.hero-currency{margin-left:6px;font-size:1rem;letter-spacing:0;color:var(--tenue)}
+.hero-sub{margin-top:8px;font-size:.88rem;color:var(--tenue)}
+.hero-sub strong{color:var(--texto);font-weight:600;font-variant-numeric:tabular-nums}
+@media(max-width:560px){.hero-whole{font-size:3.6rem}}
+
+/* "Your setup": lo que se escribe una vez y el navegador recuerda */
+.setup-note{padding:10px 15px 0;font-size:.82rem;color:var(--tenue)}
+.setup-group h3{margin:10px 0 0;font-size:.74rem;font-weight:600;letter-spacing:.02em;color:var(--tenue)}
+.setup-actions{padding:0 15px 12px}
+/* Plegado: una linea por dato, solo lectura */
+.setup-summary{padding:8px 15px 12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px}
+.setup-summary div{display:flex;justify-content:space-between;gap:8px;font-size:.84rem;min-width:0}
+.setup-summary dt{color:var(--tenue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.setup-summary dd{font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+@media(max-width:560px){.setup-summary{grid-template-columns:1fr}}
+
+/* Titulo de panel con una cifra a la derecha (Cost to make it) */
+.panel > h2.with-value{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.panel > h2.with-value strong{font-size:.95rem;font-weight:600;color:var(--texto);font-variant-numeric:tabular-nums}
 
 .figure{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:9px 15px}
 .figure + .figure{border-top:1px solid var(--borde)}
@@ -222,7 +256,8 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
     transition:transform .2s ease,visibility .2s;
   }
   .mobile-total strong{display:block;font-size:1.05rem;color:var(--texto);font-variant-numeric:tabular-nums}
-  .mobile-total .price strong{color:var(--oro-vivo)}
+  /* El precio es la respuesta: mas grande y en oro; el coste, segundo */
+  .mobile-total .price strong{color:var(--oro-vivo);font-size:1.3rem;font-weight:700;letter-spacing:-.02em}
   .mobile-total .controls{margin-left:auto}
   .mobile-total.away{transform:translateY(110%);visibility:hidden}
 }
@@ -242,11 +277,9 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .save-bar button[type="submit"]{background:var(--oro);border-color:var(--oro);color:var(--sobre-oro)}
 .save-bar button[type="submit"]:hover{background:var(--oro-vivo);border-color:var(--oro-vivo);color:var(--sobre-oro)}
 
-/* ----------------------------- Barra de botones -------------------- */
-.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
 
 /* Formulario para guardar: nombre de la pieza, cliente y boton */
-.save-bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.save-bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .text-input{
   flex:1 1 180px;min-width:0;
   font-family:inherit;font-size:.89rem;
@@ -553,4 +586,27 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 .tab-dot{
   display:inline-block;width:7px;height:7px;margin-left:5px;
   border-radius:50%;background:var(--oro);vertical-align:middle;
+}
+
+/* ------------------------- Impresoras (beta) -------------------------
+   Pestana Printers: por ahora solo el estado del agente local. */
+.printers h1{display:flex;align-items:center;gap:10px}
+/* Etiqueta "Beta" al lado del titulo: avisa de que es una funcion a medias */
+.beta{
+  font-family:'Inter',system-ui,sans-serif;font-size:.7rem;font-weight:600;letter-spacing:.02em;
+  padding:2px 8px;border-radius:9px;
+  background:rgba(242,179,61,.15);color:var(--oro);
+}
+.printers .panel{margin-top:22px}
+.agent-body{display:flex;flex-direction:column;gap:9px;padding:13px 15px 15px;font-size:.88rem}
+.agent-body p,.agent-steps{max-width:46em}
+/* Conectado: punto de oro, como el de la pestana History, y texto destacado */
+.agent-ok{display:flex;align-items:center;gap:8px;font-weight:600;color:var(--oro-vivo)}
+.agent-dot{width:8px;height:8px;border-radius:50%;background:var(--oro)}
+.agent-steps{display:flex;flex-direction:column;gap:3px;padding-left:20px}
+.agent-actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:2px}
+/* Comandos para copiar en la terminal: letra monoespaciada sobre un fondo algo mas claro */
+.printers code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.84em;
+  padding:1px 6px;border-radius:4px;background:var(--panel-alto);border:1px solid var(--borde);
 }

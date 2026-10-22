@@ -23,7 +23,7 @@ No hagas ningún cambio sin dejar su entrada.
 - Cada tarea llega como pull request: rama `feature/...` contra `main`, con el código comentado explicando el porqué. Julen lo revisa, lo cambia o lo acepta.
 - Nunca hagas push a `main` ni `npm run deploy`: eso lo hace Julen después del merge. Al abrir el PR, dile qué probar.
 - No añadas dependencias nuevas sin explicar por qué hacen falta.
-- No metas backend, cuentas de usuario ni bases de datos. La app guarda datos en localStorage y así se queda por ahora.
+- No metas backend, cuentas de usuario ni bases de datos. La app guarda datos en localStorage y así se queda por ahora. Única excepción, acordada el 2026-10-22: el agente local de agent/ (Node, escucha solo en 127.0.0.1, sin nube) para conectar impresoras. Mantén su seguridad: Host local, lista de Origin permitidos, CORS y `PROTOCOL` subido si cambia su API.
 - Nunca escribas claves, tokens ni emails personales en el código.
 - Git usa el email noreply de GitHub; no lo cambies.
 - Mantén el estilo actual: oscuro con el oro de la marca (`--oro`), colores definidos como variables en index.css. El logo está en src/Logo.jsx; no uses el verde de Bambu Lab.
@@ -48,8 +48,21 @@ Hecho el 2026-10-16 (ver DEV_LOG.md):
 - Repaso visual (publicado el mismo día): barra de arriba en dos filas en el móvil, barra fija con coste y precio en el móvil, tres pasos bajo el título, títulos con la letra del logo, pie de página con enlace a GitHub y fechas tipo "12 Oct 2026". Quitada la frase "Filament is only X%".
 - Portada de GitHub: README con logo y capturas (carpeta screenshots/) y el paquete se llama layercents. Los ajustes del repositorio (nombre, About, temas, imagen para compartir) no se pueden cambiar desde Claude: los cambia Julen en GitHub.
 Hecho el 2026-10-22 (ver DEV_LOG.md), no publicado todavía:
+- Rediseño de la calculadora (PRs #10 a #13, apilados): gráfica de costes con el símbolo ¢ (src/symbolChart.js, src/CostSymbol.jsx), precio recomendado como protagonista, y "Your setup" (impresora, luz, tarifa, comisión y margen) guardado en el dispositivo (clave `setup`, también dentro de la copia de seguridad sin subir `schemaVersion`). Sustituye al botón "Show cost only".
 - Copia de seguridad (src/backup.js y src/BackupPanel.jsx): "Download backup" baja un JSON versionado (`schemaVersion`) con `savedQuotes`, `business` y `quoteCounter`; "Restore from file" lo valida, enseña un resumen y deja elegir Merge o Replace. El contador de presupuestos nunca baja. Aviso en History y punto en la pestaña cuando toca copia (clave `lastBackupAt`, propia de cada dispositivo y fuera del archivo).
 - Mapa del código en docs/MAPA.md: archivos, flujo de datos, claves de localStorage, fórmulas y dónde tocar para cada cambio.
+- Agente local, paso 1 de la conexión con impresoras: servidor HTTP en agent/ (`npm run agent`, puerto 31415, solo `/health`) con tests en `node:test` (`npm test`).
+- Paso 2: la web detecta el agente (src/agent.js, src/Printers.jsx). Pestaña Printers solo si la persona la activa con `layercents.com/?agent` (clave `agentEnabled`); sin activarla, la web no hace ninguna petición a 127.0.0.1.
+
+## Conexión con impresoras: en curso, un PR por paso
+Empieza por Bambu, con la P1S de Julen. Él prueba cada PR con su impresora; Claude no puede verla.
+1. Servidor del agente (hecho, ver arriba).
+2. La web detecta el agente, solo cuando la persona lo activa: un sondeo automático a 127.0.0.1 le saltaría un aviso de permisos de Chrome a todo el mundo (hecho, ver arriba).
+3. Conexión MQTT con la P1S y estado en vivo. Antes de nada, comprobar qué deja leer sin Developer Mode.
+4. Registro de trabajos (inicio, fin, fallo) en un JSON en disco: la impresora no guarda historial.
+5. Gramos y tiempo reales: el 3MF por FTPS, leído con `parseSliceInfo` de src/slicerFile.js.
+6. Pestaña Printers: historial, tasa de fallos y tiempo medio.
+7. "Use real data" en la calculadora.
 
 ## Pendiente, por orden
 Plan acordado tras analizar la competencia (MakerQuote, 3DPCC, CraftersQuote): una función cada vez, cada una con su post en Reddit.
@@ -61,4 +74,4 @@ Plan acordado tras analizar la competencia (MakerQuote, 3DPCC, CraftersQuote): u
 
 ## Ideas futuras, no tocar sin pedirlo
 Gráficas, comparativas mes a mes, cuentas de usuario, versión de pago. Sincronizar presupuestos entre móvil y PC e inventario de filamento (serían "Pro" y necesitan backend: pedirlo antes). Quitar "Quote made with layercents" del presupuesto como función de pago.
-Recordar los datos de la calculadora entre visitas (ahora vuelven a los valores por defecto al recargar) y meterlos en la copia de seguridad. Conectar impresoras (Bambu, Klipper/Moonraker, OctoPrint, PrusaLink) para que tiempo, gramos y fallos se rellenen solos: necesita un agente local o un backend, pedirlo antes.
+Recordar también los datos por pieza entre visitas (ahora solo se recuerda "Your setup"; el resto vuelve a los valores por defecto al recargar). Más impresoras en el agente (Klipper/Moonraker, OctoPrint, PrusaLink) cuando Bambu funcione.

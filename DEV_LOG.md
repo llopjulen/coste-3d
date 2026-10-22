@@ -2,6 +2,182 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-22, Barra de precio fija en el móvil: el precio primero
+- Archivo y sitio:
+  - src/App.jsx, al final del render de la calculadora: el bloque `mobile-total` (la barra fija de abajo). Cambia el orden y los textos.
+  - src/index.css, sección "Barra fija abajo en el movil": el precio, más grande y en oro.
+- Qué cambió: en el móvil, la barra de abajo empieza por "Recommended price" (grande y en oro), después "Cost", y el botón pasa de "Breakdown" a "See details". Los demás comportamientos de la barra no cambian.
+- Por qué:
+  - Va con el PR del precio protagonista: en el móvil el resultado sigue estando debajo de todos los campos, y la barra es lo único que enseña la respuesta mientras escribes. Que coincida con la jerarquía de escritorio (precio primero, coste segundo) evita que la persona lea una cosa en el móvil y otra en el ordenador.
+  - "See details" en lugar de "Breakdown": el panel al que lleva ya no empieza por el desglose sino por el precio con su explicación, y "Breakdown" ya no es el título de ninguna sección.
+  - La barra sigue escondiéndose cuando el panel del resultado entra en pantalla (`IntersectionObserver` sobre `.result`), para no enseñar el precio dos veces. No hizo falta tocar esa lógica: `.result` sigue siendo la columna entera.
+  - Alternativa descartada: una tercera cifra (beneficio) en la barra. En 360 px no cabe sin partir líneas, y la barra se come la pantalla.
+  - Sin cambios en lógica, `localStorage` ni `backup.js`.
+- Concepto nuevo: `position: fixed` con `env(safe-area-inset-bottom)`: la barra se pega al borde de la ventana y el padding inferior respeta la franja de gestos de iPhone y Android, para que el botón no quede bajo ella (ya estaba así; solo se cambia el contenido).
+- Cómo probarlo:
+  1. `npm run build` y `npm run dev`; abre la web con el modo móvil del navegador a 390 px (y a 360 px).
+  2. Arriba de todo, la barra de abajo enseña "Recommended price 7.94 EUR" en grande, "Cost 5.22 EUR" y "See details".
+  3. Pulsa "See details": baja hasta el precio y la barra se esconde.
+  4. Baja hasta el final: el pie de página no queda tapado y no hay desplazamiento horizontal.
+  5. A 360 px los tres elementos de la barra caben en una línea.
+
+### 2026-10-22, "Your setup": lo que se escribe una vez se queda guardado
+- Archivo y sitio:
+  - src/backup.js: `KEYS.setup`, `sanitizeSetup`, `readSetup`, `saveSetupField`, `clearSetup`; `setup` en `buildBackup`, `parseBackup`, `planRestore` (con `mergeSetup`), `readSettings`, `hasStoredSettings`, `applyRestore` y `downloadBackup`.
+  - src/backup.test.js (nuevo): 16 tests.
+  - src/BackupPanel.jsx: una línea más en el resumen de la restauración ("Your setup") y el texto "saved settings".
+  - src/App.jsx: `SECTIONS` reagrupado (Material, This print, This sale y las dos de "Your setup" con `setup: true`), `SETUP_FIELDS`, `pickSetup`, el estado `d` con inicializador perezoso, `hasSavedSetup`, `setupOpen`, `set` ahora guarda, `resetSetup`, `renderField`, `restoreBackup` actualiza `d`, y el bloque de formulario del render.
+  - src/index.css: `.setup-*`; se quita `.toolbar`.
+  - docs/MAPA.md y CLAUDE.md: clave nueva, flujo y estado.
+- Qué cambió: los números que se escriben una sola vez (precio, vida y consumo de la impresora, luz, fallos, tu tarifa por hora, comisión y margen) están en un bloque "Your setup" que el navegador recuerda campo a campo. Una vez guardado, el bloque aparece plegado con un resumen y botón "Edit"; "Reset to defaults" lo borra. Va también en la copia de seguridad. El botón "Show cost only" desaparece: plegar el bloque hace lo mismo con más sentido.
+- Por qué:
+  - Qué es "setup" lo decide `SECTIONS` (`setup: true`) y `backup.js` solo valida que sean números no negativos (`sanitizeSetup`): así no hay una segunda lista de nombres que se desincronice del formulario. `App` descarta los nombres que no conoce (`pickSetup`).
+  - Se guarda desde el manejador `set`, no desde un `useEffect` sobre `d`: "Load" de un presupuesto viejo y la importación de un laminador llaman a `setD` directamente, así que nunca pisan lo guardado con números antiguos. Con un efecto sobre `d`, cargar un presupuesto de hace un mes sobrescribiría tu configuración actual.
+  - Se guarda solo el campo editado, fusionado con lo que ya había (`{ ...guardado, [key]: value }`): un campo que nunca se tocó sigue los valores por defecto de la app, y si algún día cambia un valor por defecto, no se queda fijado un número que la persona nunca escribió.
+  - `Field` entrega `0` cuando se vacía el campo (ya era así), por lo que siempre llega un número finito; `saveSetupField` igualmente rechaza negativos y no finitos.
+  - Copia de seguridad: `data.setup` es un campo opcional nuevo y por eso `BACKUP_SCHEMA_VERSION` sigue en 1 (el propio backup.js dice que añadir una clave opcional no la sube, porque `parseBackup` ignora lo que no conoce). Un test fija el caso de un archivo v1 de la versión anterior: se restaura con `setup` a `null`.
+  - Merge y Replace: Merge rellena, nunca pisa (como `mergeBusiness`). Replace usa el `setup` del archivo, pero si el archivo no tiene (uno anterior a esta función) conserva el de aquí: Replace significa "que este navegador quede como el archivo", y un archivo que no habla de la configuración no debe borrarla.
+  - `applyRestore` devuelve `setup` y `restoreBackup` lo vuelca en `d`: el formulario guarda sus números en estado, así que sin eso la restauración solo se vería al recargar.
+  - `readSetup`, `saveSetupField` y `clearSetup` buscan `localStorage` dentro de su `try`: con almacenamiento bloqueado, solo leer `window.localStorage` ya lanza una excepción, y como valor por defecto de un parámetro se evaluaría fuera de cualquier `try`. Si falla, la calculadora funciona igual y el número simplemente no se recuerda.
+  - Se quita "Show cost only" (escondía las secciones Labor y Selling, aunque seguían contando en el precio). Reorganizar el formulario por "esta pieza" y "tu configuración", con la segunda plegable, resuelve lo mismo sin un botón que nadie entiende. Es un cambio de producto: se puede recuperar si prefieres tenerlo.
+  - Alternativa descartada: guardar todo el formulario entre visitas. Los datos de una pieza (gramos, horas) son de esa pieza, y recordar los del último trabajo es más molesto que útil.
+- Concepto nuevo:
+  - Inicializador perezoso de `useState`: `useState(() => ({ ...INITIAL, ...pickSetup(readSetup()) }))` ejecuta la función una sola vez, en el primer render, en lugar de leer `localStorage` en cada render.
+  - Parámetro por defecto que lanza: `function f(x = algo())` evalúa `algo()` en la llamada, antes de entrar en el cuerpo; un `try` dentro de la función no lo cubre. Por eso `storage ?? browserStorage()` va dentro del `try`.
+  - `Array.prototype.some`: `[a, b, c].some(key => storage.getItem(key) !== null)` es `true` en cuanto uno cumple, y deja de mirar.
+- Cómo probarlo:
+  1. `npm test` (44 tests, 16 nuevos) y `npm run build`.
+  2. `npm run dev`. Primera visita: "Your setup" aparece abierto. Cambia "Power draw" a 300 y "Hourly rate" a 30: cambia el precio.
+  3. Recarga: el bloque sale plegado con "Power draw 300 W" y el precio es el mismo. En DevTools, Application > Local Storage, la clave `setup` vale `{"watts":300,"hourlyRate":30}`: solo lo editado.
+  4. Guarda un presupuesto, cambia "Power draw" a 50, ve a History y pulsa "Load": el formulario muestra los números del presupuesto (300) pero `setup` sigue en 50.
+  5. History > "Download backup": el JSON lleva `data.setup` y `schemaVersion` sigue siendo 1.
+  6. En una ventana de incógnito: History > Restore from file con ese archivo > Merge. En Calculator, "Edit" enseña los números del archivo sin recargar.
+  7. Restaura un archivo antiguo (de antes de este PR) con Replace: tu "Your setup" no se borra.
+  8. "Reset to defaults": vuelve 110 W y el precio original; la clave `setup` desaparece.
+
+### 2026-10-22, El precio recomendado pasa a ser lo primero que se ve
+- Archivo y sitio:
+  - src/App.jsx, dentro de `calculate`: nuevo campo `recommendedProfit` en lo que devuelve (la fórmula del coste y del precio no cambia).
+  - src/App.jsx, dentro de la función App: `moneyParts` junto a `formatMoney` (que ahora se apoya en ella), y `price` justo después de `const r = calculate(d)`.
+  - src/App.jsx, bloque `{/* --- Result --- */}`: ahora son cuatro paneles (precio grande, "Cost to make it" con el símbolo, veredicto con el beneficio por hora, y "Save this quote"). El formulario de guardar, que estaba arriba del todo, se mueve al final de esa columna.
+  - src/index.css, sección "Resultado": `.hero*`, `.panel > h2.with-value`, y `.result` deja de ser `sticky` en pantallas de menos de 880 px de alto.
+  - docs/MAPA.md: dónde tocar el resultado.
+- Qué cambió: el precio recomendado es ahora un número grande en oro, con "You keep X per part after fees" debajo. Después viene el coste con su gráfica, luego qué pasa a tu precio actual (con el beneficio por hora) y al final el formulario de guardar.
+- Por qué:
+  - El precio es la respuesta que busca la persona; antes el protagonista era el coste, y el precio era una fila más.
+  - "Profit per printer hour" estaba pegado al precio recomendado, pero se calcula con tu precio ACTUAL (`profit / hours`). Parecía el beneficio del precio de arriba y no lo era. Pasa al panel del veredicto, que habla del precio actual.
+  - `recommendedProfit = recommendedPrice × (1 − f) − cost`, con la misma `f` (comisión ya acotada) que usa el precio: así "You keep" es coherente con la fórmula del precio, y por álgebra sale igual a `cost × margen`. Alternativa descartada: calcularlo en el JSX, que duplicaría la comisión y su acotado (`Math.min`/`Math.max`) en dos sitios.
+  - `moneyParts` devuelve entero, céntimos y moneda por separado para poder pintar los céntimos más pequeños. `formatMoney` se construye encima, así que sigue habiendo un único sitio que decide cómo se escribe el dinero y el resto de la web no cambia (se sigue viendo `7.94 EUR`). Alternativa descartada por ahora: pasar a `Intl.NumberFormat` con el símbolo (`7,94 €`); cambiaría el texto de History, informe y presupuestos y es un cambio aparte.
+  - Guardar va después del resultado: guardas lo que acabas de ver. En escritorio la columna es `sticky`, pero con todo lo anterior mide unos 820 px; en una pantalla baja (menos de 880 px) se quedaría pegada tapando el botón de guardar, así que ahí se desplaza con la página.
+  - No se toca localStorage ni backup.js: el presupuesto guardado es exactamente el mismo (nombre, cliente, entradas, partes, coste, precio).
+- Concepto nuevo:
+  - `String.prototype.split` con desestructuración: `const [whole, cents] = '7.94'.split('.')` da `whole = '7'` y `cents = '94'` en una línea.
+  - `@media (max-height: …)`: igual que `max-width`, pero mira el alto de la ventana; sirve para decidir el diseño según cuánto cabe en vertical.
+- Cómo probarlo:
+  1. `npm test` y `npm run build`.
+  2. `npm run dev`. En Calculator, arriba a la derecha: "Recommended price" 7.94 EUR en grande y "You keep 2.09 EUR per part after fees".
+  3. Cambia "Target margin" a 60: el precio sube y "You keep" sube; si lo pones a 0, "You keep" es 0.00 EUR.
+  4. Pon "Order quantity" a 10: debajo del precio sale "Order total (10 pcs)".
+  5. Escribe un nombre y pulsa "Save quote" (ahora está al final de la columna de la derecha): sale "Saved … · View history" y el presupuesto aparece en History igual que antes.
+  6. Con la ventana de menos de 880 px de alto, la columna ya no se queda pegada: baja con la página y se llega al botón.
+  7. En 390 px de ancho: el precio no se corta y el resto de la pantalla sigue igual.
+
+### 2026-10-22, La gráfica de costes pasa a ser el símbolo de layercents
+- Archivo y sitio:
+  - src/logoGeometry.js (nuevo): las coordenadas de las capas del logo (`FULL`, `SMALL`) y su altura. Antes estaban dentro de Logo.jsx.
+  - src/symbolChart.js (nuevo): `printOrder` y `symbolPieces`, funciones puras que reparten los costes sobre las capas.
+  - src/symbolChart.test.js (nuevo): 11 tests.
+  - src/CostSymbol.jsx (nuevo): el componente SVG.
+  - src/Logo.jsx: ahora importa la geometría de logoGeometry.js (mismo dibujo).
+  - src/App.jsx: import de `CostSymbol`; en `LAYERS` los dos grises se aclaran; en el panel "Breakdown", `<CostSymbol>` sustituye al pilar vertical `.stack`.
+  - src/index.css, sección "Resultado": se quitan `.stack` y `.layer`; entran `.cost-symbol`, `.cost-symbol-empty` y `.cost-symbol-piece`; el importe de la leyenda no parte línea.
+  - docs/MAPA.md: archivos nuevos y dónde tocar.
+- Qué cambió: la gráfica de "Breakdown" ya no es una barra vertical, sino el símbolo ¢ "impreso" con los costes: el material llena las capas de abajo y el embalaje las de arriba, cada coste con su color. Al cambiar un número, las fronteras entre colores se deslizan.
+- Por qué:
+  - Reparto por longitud: las 11 capas miden lo mismo de alto, así que su largo total (215,08 unidades) es proporcional a su superficie. A cada coste le toca `(coste / total) × 215,08`, y se recorre capa a capa, la de abajo primero y de izquierda a derecha. Es el mismo reparto que una barra apilada, pero desenrollado sobre el símbolo.
+  - Función pura aparte (`symbolChart.js`) y componente que solo pinta: es la única parte que puede mentir (si falla una cuenta, la gráfica enseña un reparto falso sin que nada se rompa). Por eso tiene tests: proporciones, que llene el símbolo sin dejar una línea vacía al final, el orden, el hueco entre colores y entradas raras (NaN de un campo vacío, negativos, todo a 0).
+  - Una capa compartida por dos costes: se dibuja la barra redondeada como `clipPath` y encima rectángulos de color. Así los extremos siguen redondos y el corte entre colores es recto. Alternativa descartada: calcular el contorno de cada trozo (arco más recta), mucho más código para el mismo resultado.
+  - Siempre 6 rectángulos por capa, aunque midan 0: React mueve el mismo elemento en lugar de crear y destruir elementos, y eso es lo que permite que CSS anime `x` y `width` (sin elemento estable no hay transición). Con `prefers-reduced-motion` no se anima.
+  - Hueco de 0,6 entre dos colores de una misma capa, quitado a los trozos (no pintado con el color del panel): no depende del fondo. Los extremos de la capa no se recortan.
+  - `logoGeometry.js` aparte: el logo y la gráfica necesitan las mismas coordenadas, y con dos copias, cambiar el logo rompería la gráfica sin avisar.
+  - `useId` para los `clipPath`: si hay dos símbolos en la misma página, un `id` repetido haría que `url(#id)` cogiera el recorte equivocado.
+  - Accesibilidad: el SVG lleva `role="img"` y un `aria-label` con los importes, y la leyenda con las cifras exactas sigue visible. Los colores solos no dicen nada a quien no los ve.
+  - Los grises de mano de obra y embalaje se aclaran (`#7E7E8C`→`#A3A3B1`, `#4E4E58`→`#6C6C7A`): el embalaje es la capa de arriba y con el gris oscuro se perdía sobre el panel, y el símbolo perdía la forma.
+  - Límite que hay que conocer: un coste muy pequeño (la luz, un 1 %) se queda en una rayita. Por eso la leyenda lleva el importe exacto: el símbolo dice qué domina; la leyenda, cuánto.
+  - No se toca `calculate()` ni se guarda nada nuevo: no hay claves de localStorage ni cambios en backup.js.
+- Concepto nuevo:
+  - `clipPath` (SVG): recorta lo que se dibuja dentro de él a una forma. `<clipPath id="a"><rect .../></clipPath>` y luego `<g clip-path="url(#a)">` pinta solo lo que cae dentro del rectángulo.
+  - Transición CSS sobre atributos SVG: en un `<rect>`, `x` y `width` son propiedades CSS en los navegadores modernos, así que `transition: x .35s, width .35s` las anima. Si un navegador no lo soporta, simplemente salta, sin romperse.
+  - Ordenar una copia: `[...layers].sort(...)` ordena sin cambiar el array original (`sort` modifica el array sobre el que se llama).
+- Cómo probarlo:
+  1. `npm test` (28 tests, 11 nuevos) y `npm run build`.
+  2. `npm run dev`. En Calculator, el panel "Breakdown" muestra el símbolo: abajo oro (material) y arriba gris (embalaje).
+  3. Cambia "Print time" a 30: la depreciación (azul) crece y las fronteras se deslizan. Pon "Part weight" a 0: el oro casi desaparece.
+  4. Vacía algún campo: no debe salir ningún error ni un trozo raro.
+  5. En el móvil (o con el navegador a 390 px), la leyenda no parte "0.80 EUR" en dos líneas.
+  6. Con "reducir movimiento" activado en el sistema, las fronteras saltan sin deslizar.
+
+### 2026-10-22, Agente local, paso 2: la web detecta el agente (pestaña Printers, opt-in)
+- Archivo y sitio:
+  - src/agent.js (nuevo): `checkAgent`, `isAgentEnabled`, `setAgentEnabled` y `consumeAgentOptIn`, más las constantes `AGENT_URL` y `AGENT_PROTOCOL`.
+  - src/agent.test.js (nuevo): 8 tests, entre ellos los de contrato contra el código real de agent/handler.js.
+  - src/Printers.jsx (nuevo): la pantalla, con cinco estados (comprobando, conectado, desactualizado, otro programa en el puerto y apagado), "Check again" y "Hide this tab".
+  - src/main.jsx: lee y quita `?agent` antes de arrancar React y pasa `agentOptIn` a App.
+  - src/App.jsx: imports; la prop `agentOptIn`; `view` puede empezar en `'printers'`; estado `agentOn` y `turnOffAgent` junto a `view`; la pestaña Printers; History se marca activa solo en sus pantallas (`history`, `report`, `quote`); la rama `view === 'printers'` del render.
+  - src/backup.js: `KEYS.agentEnabled`, por dispositivo y fuera de las copias.
+  - src/index.css, al final: sección "Impresoras (beta)".
+  - docs/MAPA.md y CLAUDE.md: archivos, clave nueva, flujo y estado.
+- Qué cambió: `layercents.com/?agent` activa en ese navegador una pestaña Printers que dice si el agente está corriendo, con su versión y desde cuándo. Si no lo está, explica cómo arrancarlo. Para quien no la activa, la web es exactamente igual que antes.
+- Por qué:
+  - Opt-in y no detección automática: desde una web pública, una petición a 127.0.0.1 hace que Chrome pida permiso para acceder a apps y servicios del dispositivo (Local Network Access, la evolución de Private Network Access). Sondear en cada visita le enseñaría ese aviso a todo el mundo, y casi nadie tiene el agente. Además el agente aún no se puede instalar sin Node, así que la pestaña no se anuncia: se llega por enlace.
+  - `?agent` se lee en main.jsx y no en un inicializador de `useState`: cambia la URL y el almacenamiento, y StrictMode llama dos veces a los inicializadores en desarrollo; la segunda llamada ya no vería el parámetro. Después se borra con `history.replaceState`, para que un enlace copiado de la página no active la pestaña a quien lo reciba.
+  - `checkAgent` nunca lanza y separa cuatro casos. `offline` agrupa puerto cerrado, timeout, CORS rechazado y permiso denegado, porque desde el código de la página todos son el mismo `TypeError` de `fetch`. `wrong` comprueba el nombre `layercents-agent` para no confundir el agente con otro programa en el 31415. `outdated` compara `protocol`.
+  - Timeout de 2 s con `AbortSignal.timeout`: un servidor local responde en milisegundos, pero si un firewall descarta el paquete en vez de rechazarlo, el navegador esperaría alrededor de un minuto.
+  - En Printers, comprobación al abrir y con un botón, no con temporizador: sondear sin que nadie mire es tráfico inútil a 127.0.0.1. Un contador en `useRef` hace que gane la última comprobación si dos se solapan (doble clic, o el doble efecto de StrictMode en desarrollo).
+  - El `setState` de "comprobando" está en el manejador del botón y no dentro del efecto: oxlint (`set-state-in-effect`) avisa porque un `setState` síncrono dentro de un efecto provoca un render extra. Al abrir, el estado ya empieza en `checking`.
+  - Tests de contrato: `checkAgent` se prueba contra el handler real del agente en un puerto aleatorio, y hay un test que exige que `AGENT_PROTOCOL` y `PROTOCOL` coincidan. Si un lado cambia el contrato sin el otro, `npm test` falla antes de llegar al navegador.
+- Concepto nuevo:
+  - `history.replaceState(state, '', url)`: cambia la dirección de la barra sin recargar ni añadir un paso al botón Atrás.
+  - `AbortSignal.timeout(ms)`: una señal que cancela el `fetch` sola al pasar ese tiempo, sin tener que crear un `AbortController` a mano.
+  - `useCallback(fn, [])`: devuelve la misma función en cada render, así un efecto que depende de ella no se repite en cada render.
+- Cómo se probó: los 17 tests de `npm test` (9 del agente y 8 de la web) y un recorrido en Chromium sobre el build de producción con el agente real. Comprobado: una visita normal no hace ninguna petición al agente; `?agent` abre Printers, borra el parámetro y sale "Agent connected"; al recargar la pestaña sigue; con el agente parado salen los pasos y "Check again" vuelve a conectar al arrancarlo; "Hide this tab" la quita, borra la clave y no hay más peticiones; en un móvil de 390 px caben las tres pestañas. También se repitió el recorrido de la copia de seguridad, sin cambios. Falta probar en Safari y en la web publicada, que es https: Chrome puede pedir el permiso.
+- Cómo probarlo:
+  1. Terminal 1: `npm run agent`. Terminal 2: `npm run dev`.
+  2. Abre `http://localhost:5173/?agent`: sale Printers con "Agent connected" y la dirección queda sin `?agent`.
+  3. Para el agente con Ctrl+C y pulsa "Check again": salen los pasos para arrancarlo.
+  4. "Hide this tab": la pestaña desaparece y, en las herramientas del navegador (pestaña Network), no hay más peticiones a 127.0.0.1.
+
+### 2026-10-22, Agente local, paso 1: servidor HTTP en 127.0.0.1
+- Archivo y sitio:
+  - agent/handler.js (nuevo): `createHandler`, que decide la respuesta a cada petición, y las constantes `PROTOCOL`, `VERSION` y `ALLOWED_ORIGINS`.
+  - agent/server.js (nuevo): arranque, puerto, mensaje si el puerto está ocupado y parada limpia con Ctrl+C.
+  - agent/handler.test.js (nuevo): 9 tests con `node:test`.
+  - package.json: scripts `agent` (`node agent/server.js`) y `test` (`node --test`).
+  - docs/MAPA.md: el agente en la tabla de archivos, una sección propia y los comandos nuevos.
+  - CLAUDE.md: la excepción del agente a la regla "sin backend", el estado y el plan de la conexión con impresoras paso a paso.
+- Qué cambió: `npm run agent` arranca un servidor HTTP en `http://127.0.0.1:31415` que, por ahora, solo responde a `/health` con nombre, versión, protocolo, hora de arranque y una lista de impresoras vacía.
+- Por qué:
+  - Las impresoras hablan MQTT sobre TLS y FTPS. El navegador solo habla MQTT por WebSocket y no puede llamar desde una página `https` a una dirección `http` de la red local (mixed content y restricciones de red privada). Hace falta un proceso local que haga de puente. Es el patrón edge → central: el agente cerca de las máquinas y la web consumiendo sus datos.
+  - Node y no Python: un solo lenguaje en todo el proyecto, y en el paso 5 el agente reutilizará `parseSliceInfo` de src/slicerFile.js en vez de reescribir el parser del 3MF. Sin dependencias en este paso: `node:http`, `node:test` y `node:assert` vienen con Node.
+  - Sin package.json propio en agent/: la raíz ya declara `"type": "module"` y comparte `node_modules`. Descartado por ahora un paquete separado; tendrá sentido cuando haya que empaquetar el agente para gente sin Node instalado.
+  - `127.0.0.1` y no `0.0.0.0`: con todas las interfaces, cualquiera en la misma Wi-Fi podría leerlo, y más adelante guardará los códigos de acceso de las impresoras.
+  - Comprobación del `Host`: defensa contra DNS rebinding. Una web maliciosa puede hacer que su dominio resuelva a 127.0.0.1; entonces el navegador considera el agente parte de ese mismo origen y CORS ya no protege. Esas peticiones siguen llevando el dominio del atacante en `Host`, y por eso se rechazan con 403.
+  - `Origin` desconocido rechazado en el servidor, no solo con CORS: CORS impide que la página lea la respuesta, pero la petición se ejecuta igual. Hoy da igual porque `/health` solo lee; los endpoints futuros harán más.
+  - Preflight con `Access-Control-Allow-Private-Network: true`: es lo que pide la Private Network Access de Chrome cuando una página pública llama a una dirección local. Solo se envía si el navegador lo pregunta.
+  - `PROTOCOL` en `/health`: la web se actualiza en cada despliegue, pero el agente de cada persona no. Con ese número, la web podrá decir "actualiza el agente" en vez de fallar sin explicación.
+  - Puerto fijo 31415: la web necesita saber dónde buscar. Está por debajo de 32768, fuera de los rangos de puertos efímeros de Linux, macOS y Windows, así que ninguna conexión saliente lo ocupará por casualidad.
+  - `handler.js` no abre puertos, solo responde: así los tests usan el mismo código en un puerto aleatorio (el 0 le pide uno libre al sistema) sin chocar con un agente real.
+- Concepto nuevo:
+  - CORS: el navegador deja que una página lea la respuesta de otro origen solo si esa respuesta trae `Access-Control-Allow-Origin` con su origen. Lo aplica el navegador, no el servidor: curl lo ignora.
+  - Preflight: antes de ciertas peticiones entre orígenes, el navegador envía un `OPTIONS` preguntando si puede hacerla, y solo sigue si la respuesta lo permite.
+  - `node:test`: el test runner que trae Node. `npm test` ejecuta `node --test`, que busca los archivos `*.test.js` del proyecto.
+- Cómo probarlo:
+  1. `npm run agent`: sale "layercents agent 0.1.0 listening on http://127.0.0.1:31415".
+  2. Abre `http://127.0.0.1:31415/health` en el navegador: sale el JSON.
+  3. En otra terminal, `curl -i -H "Origin: https://evil.example" http://127.0.0.1:31415/health` devuelve 403.
+  4. Con el agente en marcha, `npm run agent` en otra terminal dice que el puerto ya está en uso.
+  5. `npm test`: 9 tests en verde.
+
 ### 2026-10-22, Mapa del código (docs/MAPA.md)
 - Archivo y sitio: docs/MAPA.md (nuevo). En CLAUDE.md, la regla de mantenerlo al día y una línea en el estado.
 - Qué cambió: un documento para orientarse antes de leer el código: arquitectura, orden de lectura, qué hace cada archivo, diagrama del flujo de datos, monedas, claves de localStorage con quién las lee y las escribe, la forma de un presupuesto guardado, las fórmulas de `calculate`, los patrones que se repiten y dónde tocar para cada cambio.
