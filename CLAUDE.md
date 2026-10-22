@@ -28,6 +28,7 @@ No hagas ningún cambio sin dejar su entrada.
 - Git usa el email noreply de GitHub; no lo cambies.
 - Mantén el estilo actual: oscuro con el oro de la marca (`--oro`), colores definidos como variables en index.css. El logo está en src/Logo.jsx; no uses el verde de Bambu Lab.
 - Si una petición es ambigua o crece demasiado, para y pregunta antes de construir.
+- docs/MAPA.md es el mapa del código para que Julen se oriente: actualízalo en cada PR que añada archivos o claves de localStorage o que cambie el flujo de datos.
 - Si añades una clave nueva a localStorage o un campo nuevo a los presupuestos, añádelo también a src/backup.js (copia y validación). Si el cambio rompe el formato del archivo, sube `BACKUP_SCHEMA_VERSION` y añade una migración: los archivos que la gente ya ha descargado se tienen que seguir restaurando.
 
 ## Estado actual
@@ -48,6 +49,7 @@ Hecho el 2026-10-16 (ver DEV_LOG.md):
 - Portada de GitHub: README con logo y capturas (carpeta screenshots/) y el paquete se llama layercents. Los ajustes del repositorio (nombre, About, temas, imagen para compartir) no se pueden cambiar desde Claude: los cambia Julen en GitHub.
 Hecho el 2026-10-22 (ver DEV_LOG.md), no publicado todavía:
 - Copia de seguridad (src/backup.js y src/BackupPanel.jsx): "Download backup" baja un JSON versionado (`schemaVersion`) con `savedQuotes`, `business` y `quoteCounter`; "Restore from file" lo valida, enseña un resumen y deja elegir Merge o Replace. El contador de presupuestos nunca baja. Aviso en History y punto en la pestaña cuando toca copia (clave `lastBackupAt`, propia de cada dispositivo y fuera del archivo).
+- Mapa del código en docs/MAPA.md: archivos, flujo de datos, claves de localStorage, fórmulas y dónde tocar para cada cambio.
 
 ## Pendiente, por orden
 Plan acordado tras analizar la competencia (MakerQuote, 3DPCC, CraftersQuote): una función cada vez, cada una con su post en Reddit.
