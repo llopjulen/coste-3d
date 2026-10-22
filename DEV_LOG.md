@@ -2,6 +2,56 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-22, Mapa del código (docs/MAPA.md)
+- Archivo y sitio: docs/MAPA.md (nuevo). En CLAUDE.md, la regla de mantenerlo al día y una línea en el estado.
+- Qué cambió: un documento para orientarse antes de leer el código: arquitectura, orden de lectura, qué hace cada archivo, diagrama del flujo de datos, monedas, claves de localStorage con quién las lee y las escribe, la forma de un presupuesto guardado, las fórmulas de `calculate`, los patrones que se repiten y dónde tocar para cada cambio.
+- Por qué: con unas 2.900 líneas que Julen no ha escrito, leer archivo por archivo sin un mapa obliga a reconstruir la arquitectura en la cabeza cada vez. El DEV_LOG cuenta la historia en orden cronológico; el mapa cuenta cómo está hecho ahora. Va dentro del repo, y no en notas aparte, para que cambie junto con el código: CLAUDE.md obliga a actualizarlo. No se usan números de línea porque cambian en cada PR: se citan funciones y secciones.
+- Dos cosas encontradas al hacerlo, que no se tocan en este PR:
+  - `failures` usa `base × p`, cuando el coste esperado con una tasa de fallos `p` es `base / (1 − p)`. Con el 8 % casi no cambia; con el 30 % sí. Está explicado en el mapa.
+  - `src/assets/` y `public/icons.svg` son restos de la plantilla de Vite que nada usa.
+- Cómo probarlo: abre docs/MAPA.md en GitHub (pinta las tablas y el diagrama) y sigue el "Orden recomendado de lectura". La app no cambia: `npm run build` funciona igual.
+
+### 2026-10-22, CLAUDE.md: explicaciones a nivel de ingeniero y trabajo por pull request
+- Archivo y sitio: CLAUDE.md, en "Sobre el dueño", en el formato de este registro ("Por qué") y en "Reglas de trabajo".
+- Qué cambió: las explicaciones pasan a nivel de ingeniero (término técnico y porqué de cada decisión) y el flujo de trabajo queda por escrito: rama `feature/...` y pull request contra `main`. Push a `main` y `npm run deploy` siguen siendo solo de Julen.
+- Por qué: Julen lo quiere así, y el archivo seguía diciendo "lenguaje de principiante" y "no hagas git push". Cada sesión nueva de Claude Code empieza leyendo CLAUDE.md, así que habría vuelto al estilo anterior. Va en un commit aparte para poder revertirlo sin tocar la copia de seguridad.
+- Cómo probarlo: no cambia la app; `npm run build` sigue funcionando.
+
+### 2026-10-22, Copia de seguridad: descargar y restaurar todo en un JSON versionado
+- Archivo y sitio:
+  - src/backup.js (nuevo): toda la lógica. Arriba, funciones puras sin DOM ni localStorage (`buildBackup`, `parseBackup`, `sanitizeQuote`, `sanitizeBusiness`, `mergeQuotes`, `planRestore`, `backupStatus`); abajo, la capa de almacenamiento (`readSettings`, `readLastBackup`, `writeAtomically`, `applyRestore`, `downloadBackup`, `readBackupFile`), que recibe `storage` como parámetro.
+  - src/BackupPanel.jsx (nuevo): `BackupPanel` (panel al final de History: descargar, restaurar y caja de confirmación) y `BackupReminder` (aviso encima de History).
+  - src/App.jsx: imports; dentro de App, justo después de `deleteQuote`, el estado `lastBackupAt`, las funciones `backupNow` y `restoreBackup` y `backupDue`; el punto en la pestaña History; en la vista `history`, `<BackupReminder>` encima de `<History>` y `<BackupPanel>` debajo. En `saveQuote`, un comentario que remite a `sanitizeQuote`.
+  - src/index.css, al final: sección "Copia de seguridad".
+  - README.md: la función en "What it does"; "Private by design" ya no recomienda exportar a Excel para no perder datos.
+  - CLAUDE.md: estado, regla sobre claves de localStorage e ideas futuras.
+- Qué cambió: History tiene un panel "Backup". "Download backup" baja un `.json` con los presupuestos, los datos del negocio (logo incluido) y el contador de presupuestos. "Restore from file" valida el archivo y enseña un resumen antes de escribir nada; si el navegador ya tiene datos, se elige Merge o Replace. Cuando toca hacer copia sale un aviso encima de History y un punto en la pestaña.
+- Por qué:
+  - Lo pidió un usuario en Reddit, y con razón: localStorage está ligado al origen y al navegador, así que limpiar los datos del sitio o cambiar de equipo lo borra todo. El Excel es un informe y no sirve para restaurar: reimportarlo pierde tipos, depende del formato regional de los números y no lleva el negocio ni el contador. Sin una copia restaurable, nadie confía la app a su trabajo con clientes.
+  - JSON porque es la misma serialización que ya hay en localStorage: el round-trip es exacto (en los tests, lo restaurado es idéntico a lo guardado).
+  - Esquema versionado (`app`, `kind`, `schemaVersion`) con una tabla de migraciones, vacía por ahora: cualquier archivo descargado hoy se seguirá restaurando cuando cambie el formato. Un archivo de una versión más nueva se rechaza en vez de interpretarse mal. Los cambios aditivos (una clave opcional nueva) no suben la versión, porque el parser ignora lo que no conoce.
+  - El archivo es entrada no confiable, así que se valida antes de tocar nada. Campo obligatorio inválido (id entero positivo, `cost` y `price` finitos): la entrada se descarta y se cuenta, y el resumen lo dice antes de restaurar. Campo opcional con tipo incorrecto: se elimina ese campo, no el presupuesto. Campos desconocidos: se conservan, porque la primera obligación de una copia es no perder datos. `inputs` y `parts` solo admiten números finitos (un `"20"` en texto convierte una suma en concatenación). El logo solo se acepta como data URL raster (png, jpeg, webp, gif), así un archivo no puede apuntar a una URL remota que haría una petición a un tercero cada vez que se abre un presupuesto.
+  - Merge es una unión por id. Mismo id y mismo contenido (comparando una forma canónica con las claves ordenadas): es el mismo presupuesto y se queda una vez. Mismo id y distinto contenido (dos `Date.now()` iguales en dos equipos): se guardan los dos; el entrante pasa al siguiente id libre, y antes se fija su `createdAt`, porque History usa el id como fecha cuando falta. En los datos del negocio gana lo de este navegador y solo se rellenan los campos vacíos. Replace deja el navegador igual que el archivo y pide confirmación si va a borrar presupuestos que solo están aquí.
+  - El contador de presupuestos toma el máximo en los dos modos. Es una secuencia que ven los clientes (2026-007): si bajara, se repetirían números de presupuesto. Invariante: nunca decrece.
+  - `writeAtomically`: localStorage no tiene transacciones. Se hace un snapshot de las claves, se escribe y, si una escritura falla (QuotaExceededError, SecurityError), se deshace todo y se informa de si el rollback funcionó. Se escribe primero el almacenamiento y después el estado de React, así la pantalla nunca enseña un restore que no ha ocurrido.
+  - Recordatorio: `lastBackupAt` es de cada dispositivo y no va dentro del archivo. Un presupuesto está pendiente si su `createdAt` es posterior a la última copia. El aviso sale si hay algo pendiente y no hay copia o tiene 7 días o más. Después de restaurar, `lastBackupAt` pasa a la fecha del archivo solo si el navegador no tiene nada que no esté en él, y nunca retrocede.
+  - El panel va fuera de `<History>` porque History hace un return temprano cuando está vacío, y un History vacío (un equipo nuevo) es justo donde hace falta "Restore from file".
+- Concepto nuevo:
+  - Blob + `URL.createObjectURL` + `<a download>`: crea y descarga un archivo en el cliente, sin servidor. La URL se revoca al cabo de un minuto, porque revocarla en el mismo tick puede cancelar la descarga en algunos navegadores.
+  - `File.text()`: lee de forma asíncrona el archivo elegido. Antes se mira `file.size` (máximo 10 MB) para no bloquear la pestaña si alguien elige un archivo enorme por error.
+  - Live region (`role="status"`): el elemento está siempre en la página y solo cambia su texto, porque los lectores de pantalla no anuncian de forma fiable una región que aparece ya con contenido.
+  - Gestión del foco: la caja de confirmación tiene `tabIndex={-1}` y un `useEffect` le hace `focus()` al abrirse, así el foco de teclado llega a la pregunta.
+- Cómo se probó:
+  - 14 tests con `node:test` sobre las funciones puras y la capa de almacenamiento, con un storage falso que tiene cuota: round-trip exacto; rechazo de JSON ajeno, truncado y de versión nueva; entradas dañadas; colisiones de id; contador que no baja; rollback con la cuota llena y con el almacenamiento bloqueado; `lastBackupAt` que no retrocede.
+  - Recorrido completo en Chromium headless sobre el build de producción (`vite preview`): aviso y punto con 3 presupuestos sin copia; descarga y contenido del archivo; navegador vacío → restore → historial, negocio y contador recuperados; "Load" sobre un presupuesto restaurado; Merge del mismo archivo (nada nuevo); Replace con diálogo y contador que no baja; archivos erróneos (Excel, JSON ajeno, truncado, versión nueva); entrada dañada anunciada y Cancel sin escribir nada; presupuesto de cliente con el negocio y el número restaurados; aviso de copia de hace más de una semana; móvil de 390 px sin scroll lateral.
+  - Los tests se ejecutaron fuera del repositorio para no añadir dependencias (Vitest, Playwright) sin preguntarlo.
+- Cómo probarlo:
+  1. `npm run dev`, guarda 2 presupuestos y abre History: arriba sale "No backup yet" y la pestaña tiene un punto.
+  2. "Download backup": baja `layercents-backup-AAAA-MM-DD-HHMM.json`. El aviso y el punto desaparecen y el panel dice "Up to date".
+  3. Abre una ventana de incógnito (tiene su propio localStorage) en `localhost:5173`, History → "Restore from file" → el archivo → "Restore". Salen los presupuestos, y en "Customer quote" están tu negocio y el número siguiente.
+  4. En la ventana normal, guarda otro presupuesto y restaura el mismo archivo: "Merge" no duplica nada; "Replace" avisa de que va a borrar 1.
+  5. Elige el .xlsx de "Export Excel": dice que es un informe y que no se puede restaurar.
+
 ### 2026-10-16, Portada de GitHub: README con capturas y nombre layercents
 - Archivo y sitio:
   - README.md: reescrito entero.

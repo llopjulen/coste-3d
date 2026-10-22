@@ -3,7 +3,7 @@
 Calculadora web del coste real de una pieza impresa en 3D y presupuestos para el cliente. La marca es layercents. React + Vite, desplegada en GitHub Pages con dominio propio: https://layercents.com (comprado en Cloudflare; en su DNS hay 4 registros A a GitHub Pages y un CNAME `www` a llopjulen.github.io, con el proxy de Cloudflare activado, la nube naranja, que es quien pone el candado HTTPS. En Cloudflare tiene que estar activado "Always Use HTTPS", para que nadie use la versión http y se le separen los datos guardados). El archivo public/CNAME le dice a GitHub qué dominio usar: no lo borres. Todo el código y los textos de interfaz están en inglés.
 
 ## Sobre el dueño
-Julen, 21 años, estudia Ingeniería Informática a distancia y trabaja a jornada completa. Tiene poco tiempo y quiere entender lo que hace el proyecto aunque no lo escriba él. Todo lo que explique tiene que estar en español, en lenguaje de principiante: qué se hizo y por qué.
+Julen, 21 años, estudia Ingeniería Informática a distancia y trabaja a jornada completa. Tiene poco tiempo y quiere entender lo que hace el proyecto aunque no lo escriba él. Se defiende programando: explícale en español y a nivel de ingeniero, con el término técnico correcto y el porqué de cada decisión, sin simplificar ni tratarle como a un principiante.
 
 ## Regla principal: registro de cambios
 Después de CADA cambio en el código, añade una entrada al principio de DEV_LOG.md con este formato:
@@ -11,7 +11,7 @@ Después de CADA cambio en el código, añade una entrada al principio de DEV_LO
 ### AAAA-MM-DD, título corto
 - Archivo y sitio: ruta del archivo y zona (por ejemplo "src/App.jsx, dentro de la función App, junto a saveQuote")
 - Qué cambió: una o dos frases
-- Por qué: el motivo, en lenguaje de principiante
+- Por qué: el motivo técnico de cada decisión y las alternativas descartadas
 - Concepto nuevo: si usa algo que Julen no ha visto (por ejemplo .filter, Blob), explícalo en 2-3 líneas con un ejemplo mínimo
 - Cómo probarlo: pasos concretos para ver que funciona
 
@@ -20,13 +20,16 @@ No hagas ningún cambio sin dejar su entrada.
 ## Reglas de trabajo
 - Cambios pequeños, uno por tarea, y un commit por cada uno con mensaje claro en inglés.
 - Antes de dar algo por terminado, ejecuta `npm run build`. Si falla, arréglalo.
-- NO ejecutes `npm run deploy` ni `git push` sin que Julen lo pida expresamente. Al acabar cada tarea, dile que está listo para publicar.
+- Cada tarea llega como pull request: rama `feature/...` contra `main`, con el código comentado explicando el porqué. Julen lo revisa, lo cambia o lo acepta.
+- Nunca hagas push a `main` ni `npm run deploy`: eso lo hace Julen después del merge. Al abrir el PR, dile qué probar.
 - No añadas dependencias nuevas sin explicar por qué hacen falta.
 - No metas backend, cuentas de usuario ni bases de datos. La app guarda datos en localStorage y así se queda por ahora.
 - Nunca escribas claves, tokens ni emails personales en el código.
 - Git usa el email noreply de GitHub; no lo cambies.
 - Mantén el estilo actual: oscuro con el oro de la marca (`--oro`), colores definidos como variables en index.css. El logo está en src/Logo.jsx; no uses el verde de Bambu Lab.
 - Si una petición es ambigua o crece demasiado, para y pregunta antes de construir.
+- docs/MAPA.md es el mapa del código para que Julen se oriente: actualízalo en cada PR que añada archivos o claves de localStorage o que cambie el flujo de datos.
+- Si añades una clave nueva a localStorage o un campo nuevo a los presupuestos, añádelo también a src/backup.js (copia y validación). Si el cambio rompe el formato del archivo, sube `BACKUP_SCHEMA_VERSION` y añade una migración: los archivos que la gente ya ha descargado se tienen que seguir restaurando.
 
 ## Estado actual
 Hecho: desglose de costes con gráfica por capas, precio recomendado, toggle "Show cost only", selector de moneda con tipos de cambio en vivo (api.frankfurter.dev/v1, ahora en la barra superior), README.
@@ -44,6 +47,9 @@ Hecho el 2026-10-16 (ver DEV_LOG.md):
 - Publicado todo lo anterior en layercents.com el 2026-10-16. La versión vieja no guardaba nada en el navegador, así que con el cambio de dirección nadie perdió datos.
 - Repaso visual (publicado el mismo día): barra de arriba en dos filas en el móvil, barra fija con coste y precio en el móvil, tres pasos bajo el título, títulos con la letra del logo, pie de página con enlace a GitHub y fechas tipo "12 Oct 2026". Quitada la frase "Filament is only X%".
 - Portada de GitHub: README con logo y capturas (carpeta screenshots/) y el paquete se llama layercents. Los ajustes del repositorio (nombre, About, temas, imagen para compartir) no se pueden cambiar desde Claude: los cambia Julen en GitHub.
+Hecho el 2026-10-22 (ver DEV_LOG.md), no publicado todavía:
+- Copia de seguridad (src/backup.js y src/BackupPanel.jsx): "Download backup" baja un JSON versionado (`schemaVersion`) con `savedQuotes`, `business` y `quoteCounter`; "Restore from file" lo valida, enseña un resumen y deja elegir Merge o Replace. El contador de presupuestos nunca baja. Aviso en History y punto en la pestaña cuando toca copia (clave `lastBackupAt`, propia de cada dispositivo y fuera del archivo).
+- Mapa del código en docs/MAPA.md: archivos, flujo de datos, claves de localStorage, fórmulas y dónde tocar para cada cambio.
 
 ## Pendiente, por orden
 Plan acordado tras analizar la competencia (MakerQuote, 3DPCC, CraftersQuote): una función cada vez, cada una con su post en Reddit.
@@ -55,3 +61,4 @@ Plan acordado tras analizar la competencia (MakerQuote, 3DPCC, CraftersQuote): u
 
 ## Ideas futuras, no tocar sin pedirlo
 Gráficas, comparativas mes a mes, cuentas de usuario, versión de pago. Sincronizar presupuestos entre móvil y PC e inventario de filamento (serían "Pro" y necesitan backend: pedirlo antes). Quitar "Quote made with layercents" del presupuesto como función de pago.
+Recordar los datos de la calculadora entre visitas (ahora vuelven a los valores por defecto al recargar) y meterlos en la copia de seguridad. Conectar impresoras (Bambu, Klipper/Moonraker, OctoPrint, PrusaLink) para que tiempo, gramos y fallos se rellenen solos: necesita un agente local o un backend, pedirlo antes.

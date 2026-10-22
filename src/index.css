@@ -503,3 +503,54 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
   .quote-title dt,.quote-title dd{text-align:left}
   .line-edit{grid-template-columns:minmax(0,1fr) 56px 92px 30px}
 }
+
+/* ---------------------- Copia de seguridad (History) ----------------
+   Aviso arriba cuando toca hacer copia, panel abajo con descargar y
+   restaurar, y el punto de la pestana History. Todo con los tokens de
+   arriba: oro para "atencion", nunca rojo, porque no ha pasado nada malo. */
+
+/* Aviso: fondo y borde de oro muy suaves, para que se vea sin parecer un error */
+.backup-reminder{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;
+  margin-top:18px;padding:11px 15px;
+  background:rgba(242,179,61,.07);
+  border:1px solid rgba(242,179,61,.42);border-radius:var(--radio);
+  font-size:.88rem;
+}
+.backup-reminder p{flex:1 1 320px;max-width:46em}
+
+/* Panel de abajo: el texto limitado a 46em para que no se lea en lineas eternas */
+.backup{margin-top:22px}
+.backup-body{display:flex;flex-direction:column;gap:10px;padding:13px 15px 15px;font-size:.88rem}
+.backup-body > p{max-width:46em}
+.backup-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+/* El label hace de boton: el cursor tiene que decirlo */
+.backup .file-label{cursor:pointer}
+.backup .file-label[aria-busy="true"]{opacity:.6;cursor:wait}
+
+/* Caja de "Restore this backup?": borde de oro a la izquierda, como las ayudas (i) */
+.backup-confirm{
+  display:flex;flex-direction:column;gap:9px;max-width:46em;
+  padding:12px 14px;
+  background:var(--panel-alto);
+  border:1px solid var(--borde);border-left:2px solid var(--oro);border-radius:5px;
+}
+/* Recibe el foco desde el codigo: anillo solo si se llega con teclado */
+.backup-confirm:focus{outline:none}
+.backup-confirm:focus-visible{outline:2px solid var(--oro);outline-offset:2px}
+.backup-confirm h3{font-size:.92rem;font-weight:600}
+.backup-facts{display:flex;flex-direction:column;gap:2px;padding-left:18px}
+.backup-facts li{overflow-wrap:anywhere}  /* nombres de archivo largos en el movil */
+
+/* Mensaje despues de restaurar. Vacio sigue en la pagina (los lectores de
+   pantalla solo anuncian cambios en zonas que ya existian), pero sin ocupar
+   sitio: el margen negativo anula el hueco (gap) que le deja el flex. */
+.backup-done{font-size:.84rem;color:var(--oro-vivo)}
+.backup-body .form-error{font-size:.84rem}
+.backup-body [role="status"]:empty{margin-top:-10px}
+
+/* Punto en la pestana History cuando toca copia: se ve desde la calculadora */
+.tab-dot{
+  display:inline-block;width:7px;height:7px;margin-left:5px;
+  border-radius:50%;background:var(--oro);vertical-align:middle;
+}
