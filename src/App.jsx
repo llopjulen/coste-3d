@@ -104,13 +104,17 @@ function calculate(d) {
   const f = Math.min(Math.max(d.fee, 0) / 100, 0.95)
   const recommendedPrice = (cost * (1 + d.margin / 100)) / (1 - f)
 
+  // What you keep per part at the RECOMMENDED price, once the platform
+  // has taken its fee. (The "profit" below is at your CURRENT price.)
+  const recommendedProfit = recommendedPrice * (1 - f) - cost
+
   const currentNet = d.currentPrice * (1 - f)
   const profit = currentNet - cost
   const perHour = d.hours > 0 ? profit / d.hours : 0
   const units = Math.max(Math.floor(d.quantity), 1)
 
   return {
-    parts, cost, recommendedPrice, profit, perHour, currentNet, units,
+    parts, cost, recommendedPrice, recommendedProfit, profit, perHour, currentNet, units,
     orderPrice: recommendedPrice * units,
     materialPct: cost > 0 ? (material / cost) * 100 : 0,
   }
@@ -338,11 +342,19 @@ export default function App({ agentOptIn = false }) {
 
   const[rates, setRates] = useState({ EUR: 1})
 
+  // The amount split in three, so the big price can show the cents and
+  // the currency smaller. formatMoney below is built on top of it, so
+  // the whole app keeps formatting money in exactly one place.
+  const moneyParts = (n) => {
+    const rate = rates[currency] || 1
+    const value = (isFinite(n) ? n : 0) * rate
+    const [whole, cents] = value.toFixed(2).split('.')
+    return { whole, cents, currency }
+  }
   const formatMoney = (n) => {
-  const rate = rates[currency] || 1
-  const value = (isFinite(n) ? n : 0) * rate
-  return `${value.toFixed(2)} ${currency}`
-}
+    const { whole, cents } = moneyParts(n)
+    return `${whole}.${cents} ${currency}`
+  }
 
   useEffect(() => {
     fetch('https://api.frankfurter.dev/v1/latest?from=EUR')
@@ -404,6 +416,8 @@ export default function App({ agentOptIn = false }) {
 
   // The result isn't stored in state, it's recalculated on every render.
   const r = calculate(d)
+  // The big price at the top of the result, split to style its cents.
+  const price = moneyParts(r.recommendedPrice)
 
   return (
     <>
@@ -511,36 +525,6 @@ export default function App({ agentOptIn = false }) {
           <button className="controls" onClick={botonApagarCalculo}>{showFullBreakdown ? 'Show cost only' : 'Show Full Breakdown'}</button>
         </div>
 
-        <form className="save-bar" onSubmit={saveQuote}>
-          <input
-            className="text-input"
-            type="text"
-            placeholder="Part name, e.g. Phone stand"
-            aria-label="Part name"
-            value={quoteName}
-            onChange={e => setQuoteName(e.target.value)}
-          />
-          <input
-            className="text-input"
-            type="text"
-            placeholder="Client (optional)"
-            aria-label="Client"
-            value={quoteClient}
-            onChange={e => setQuoteClient(e.target.value)}
-          />
-          <button type="submit" className="controls">Save quote</button>
-        </form>
-
-        {/* role="status" makes screen readers announce the message */}
-        <p className="saved-note" role="status">
-          {justSaved && (
-            <>
-              Saved “{justSaved}” ·{' '}
-              <button type="button" className="link" onClick={() => setView('history')}>View history</button>
-            </>
-          )}
-        </p>
-
         <div className="columns">
           {/* --- Form: drawn by looping over SECTIONS --- */}
           <div>
@@ -571,10 +555,32 @@ export default function App({ agentOptIn = false }) {
             ))}
           </div>
 
-          {/* --- Result --- */}
+          {/* --- Result: the price first, because it's the answer the
+               person came for; then why (the symbol), then what happens
+               at their current price, then saving it. --- */}
           <div className="result" ref={resultRef}>
+            <div className="panel hero">
+              <span className="hero-label">Recommended price</span>
+              <div className="hero-price">
+                <span className="hero-whole">{price.whole}</span>
+                <span className="hero-cents">.{price.cents}</span>
+                <span className="hero-currency">{price.currency}</span>
+              </div>
+              <p className="hero-sub">
+                You keep <strong>{formatMoney(r.recommendedProfit)}</strong> per part after fees.
+              </p>
+              {r.units > 1 && (
+                <p className="hero-sub">
+                  Order total ({r.units} pcs): <strong>{formatMoney(r.orderPrice)}</strong>
+                </p>
+              )}
+            </div>
+
             <div className="panel">
-              <h2>Breakdown</h2>
+              <h2 className="with-value">
+                <span>Cost to make it</span>
+                <strong>{formatMoney(r.cost)}</strong>
+              </h2>
               <div className="cross-section">
                 {/* The chart is the layercents mark itself, "printed" with the
                     costs. The text label is what a screen reader reads; the
@@ -597,27 +603,6 @@ export default function App({ agentOptIn = false }) {
             </div>
 
             <div className="panel">
-              <div className="figure main">
-                <span className="label">Cost per part</span>
-                <span className="value">{formatMoney(r.cost)}</span>
-              </div>
-              <div className="figure highlight">
-                <span className="label">Recommended price</span>
-                <span className="value">{formatMoney(r.recommendedPrice)}</span>
-              </div>
-              <div className="figure">
-                <span className="label">Profit per printer hour</span>
-                <span className="value">{formatMoney(r.perHour)}</span>
-              </div>
-              {r.units > 1 && (
-                <div className="figure">
-                  <span className="label">Order total ({r.units} pcs)</span>
-                  <span className="value">{formatMoney(r.orderPrice)}</span>
-                </div>
-              )}
-            </div>
-
-            <div className="panel">
               <div className="verdict">
                 <span className="context">At your current selling price</span>
                 <div className={`sentence ${r.profit < 0 ? 'loss' : 'gain'}`}>
@@ -629,7 +614,49 @@ export default function App({ agentOptIn = false }) {
                   After fees you keep {formatMoney(r.currentNet)} out of {formatMoney(d.currentPrice)}.
                 </span>
               </div>
+              {/* This figure is computed from the CURRENT price, so it lives
+                  here and not next to the recommended price, where it
+                  looked like the profit of the price shown above it. */}
+              <div className="figure">
+                <span className="label">Profit per printer hour</span>
+                <span className="value">{formatMoney(r.perHour)}</span>
+              </div>
             </div>
+
+            {/* Saving comes after the result: you save what you've just seen. */}
+            <form className="panel" onSubmit={saveQuote}>
+              <h2>Save this quote</h2>
+              <div className="body">
+                <div className="save-bar">
+                  <input
+                    className="text-input"
+                    type="text"
+                    placeholder="Part name, e.g. Phone stand"
+                    aria-label="Part name"
+                    value={quoteName}
+                    onChange={e => setQuoteName(e.target.value)}
+                  />
+                  <input
+                    className="text-input"
+                    type="text"
+                    placeholder="Client (optional)"
+                    aria-label="Client"
+                    value={quoteClient}
+                    onChange={e => setQuoteClient(e.target.value)}
+                  />
+                  <button type="submit" className="controls">Save quote</button>
+                </div>
+                {/* role="status" makes screen readers announce the message */}
+                <p className="saved-note" role="status">
+                  {justSaved && (
+                    <>
+                      Saved “{justSaved}” ·{' '}
+                      <button type="button" className="link" onClick={() => setView('history')}>View history</button>
+                    </>
+                  )}
+                </p>
+              </div>
+            </form>
           </div>
         </div>
 

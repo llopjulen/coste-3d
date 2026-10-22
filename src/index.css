@@ -159,6 +159,10 @@ h1{font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;font-size:clam
 
 /* ---------------------------- Resultado --------------------------- */
 .result{position:sticky;top:18px;display:flex;flex-direction:column;gap:12px}
+/* La columna ya mide ~820 px (precio, grafica, veredicto y guardar). En una
+   pantalla mas baja, pegada arriba taparia el boton de guardar sin forma de
+   llegar a el: ahi mejor que se desplace con la pagina. */
+@media(max-height:880px){.result{position:static}}
 
 .cross-section{display:flex;gap:15px;padding:16px 15px}
 
@@ -179,6 +183,28 @@ h1{font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;font-size:clam
 .swatch{width:10px;height:10px;flex:none;border-radius:2px}
 .row-legend .name{flex:1;color:var(--tenue)}
 .row-legend .value{font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* La respuesta: el precio recomendado, grande y en oro, arriba del todo
+   de la columna de resultados. Los centimos y la moneda van mas pequenos
+   para que se lea primero el numero entero. */
+.hero{padding:20px 20px 18px;border-color:rgba(242,179,61,.35)}
+.hero-label{display:block;font-size:.78rem;font-weight:600;color:var(--tenue)}
+.hero-price{
+  display:flex;align-items:baseline;gap:3px;margin-top:2px;
+  font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;
+  font-weight:700;letter-spacing:-.04em;color:var(--oro-vivo);
+  font-variant-numeric:tabular-nums;
+}
+.hero-whole{font-size:4.6rem;line-height:1}
+.hero-cents{font-size:2rem}
+.hero-currency{margin-left:6px;font-size:1rem;letter-spacing:0;color:var(--tenue)}
+.hero-sub{margin-top:8px;font-size:.88rem;color:var(--tenue)}
+.hero-sub strong{color:var(--texto);font-weight:600;font-variant-numeric:tabular-nums}
+@media(max-width:560px){.hero-whole{font-size:3.6rem}}
+
+/* Titulo de panel con una cifra a la derecha (Cost to make it) */
+.panel > h2.with-value{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.panel > h2.with-value strong{font-size:.95rem;font-weight:600;color:var(--texto);font-variant-numeric:tabular-nums}
 
 .figure{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:9px 15px}
 .figure + .figure{border-top:1px solid var(--borde)}
@@ -243,7 +269,7 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
 
 /* Formulario para guardar: nombre de la pieza, cliente y boton */
-.save-bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.save-bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .text-input{
   flex:1 1 180px;min-width:0;
   font-family:inherit;font-size:.89rem;

@@ -2,6 +2,33 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-22, El precio recomendado pasa a ser lo primero que se ve
+- Archivo y sitio:
+  - src/App.jsx, dentro de `calculate`: nuevo campo `recommendedProfit` en lo que devuelve (la fórmula del coste y del precio no cambia).
+  - src/App.jsx, dentro de la función App: `moneyParts` junto a `formatMoney` (que ahora se apoya en ella), y `price` justo después de `const r = calculate(d)`.
+  - src/App.jsx, bloque `{/* --- Result --- */}`: ahora son cuatro paneles (precio grande, "Cost to make it" con el símbolo, veredicto con el beneficio por hora, y "Save this quote"). El formulario de guardar, que estaba arriba del todo, se mueve al final de esa columna.
+  - src/index.css, sección "Resultado": `.hero*`, `.panel > h2.with-value`, y `.result` deja de ser `sticky` en pantallas de menos de 880 px de alto.
+  - docs/MAPA.md: dónde tocar el resultado.
+- Qué cambió: el precio recomendado es ahora un número grande en oro, con "You keep X per part after fees" debajo. Después viene el coste con su gráfica, luego qué pasa a tu precio actual (con el beneficio por hora) y al final el formulario de guardar.
+- Por qué:
+  - El precio es la respuesta que busca la persona; antes el protagonista era el coste, y el precio era una fila más.
+  - "Profit per printer hour" estaba pegado al precio recomendado, pero se calcula con tu precio ACTUAL (`profit / hours`). Parecía el beneficio del precio de arriba y no lo era. Pasa al panel del veredicto, que habla del precio actual.
+  - `recommendedProfit = recommendedPrice × (1 − f) − cost`, con la misma `f` (comisión ya acotada) que usa el precio: así "You keep" es coherente con la fórmula del precio, y por álgebra sale igual a `cost × margen`. Alternativa descartada: calcularlo en el JSX, que duplicaría la comisión y su acotado (`Math.min`/`Math.max`) en dos sitios.
+  - `moneyParts` devuelve entero, céntimos y moneda por separado para poder pintar los céntimos más pequeños. `formatMoney` se construye encima, así que sigue habiendo un único sitio que decide cómo se escribe el dinero y el resto de la web no cambia (se sigue viendo `7.94 EUR`). Alternativa descartada por ahora: pasar a `Intl.NumberFormat` con el símbolo (`7,94 €`); cambiaría el texto de History, informe y presupuestos y es un cambio aparte.
+  - Guardar va después del resultado: guardas lo que acabas de ver. En escritorio la columna es `sticky`, pero con todo lo anterior mide unos 820 px; en una pantalla baja (menos de 880 px) se quedaría pegada tapando el botón de guardar, así que ahí se desplaza con la página.
+  - No se toca localStorage ni backup.js: el presupuesto guardado es exactamente el mismo (nombre, cliente, entradas, partes, coste, precio).
+- Concepto nuevo:
+  - `String.prototype.split` con desestructuración: `const [whole, cents] = '7.94'.split('.')` da `whole = '7'` y `cents = '94'` en una línea.
+  - `@media (max-height: …)`: igual que `max-width`, pero mira el alto de la ventana; sirve para decidir el diseño según cuánto cabe en vertical.
+- Cómo probarlo:
+  1. `npm test` y `npm run build`.
+  2. `npm run dev`. En Calculator, arriba a la derecha: "Recommended price" 7.94 EUR en grande y "You keep 2.09 EUR per part after fees".
+  3. Cambia "Target margin" a 60: el precio sube y "You keep" sube; si lo pones a 0, "You keep" es 0.00 EUR.
+  4. Pon "Order quantity" a 10: debajo del precio sale "Order total (10 pcs)".
+  5. Escribe un nombre y pulsa "Save quote" (ahora está al final de la columna de la derecha): sale "Saved … · View history" y el presupuesto aparece en History igual que antes.
+  6. Con la ventana de menos de 880 px de alto, la columna ya no se queda pegada: baja con la página y se llega al botón.
+  7. En 390 px de ancho: el precio no se corta y el resto de la pantalla sigue igual.
+
 ### 2026-10-22, La gráfica de costes pasa a ser el símbolo de layercents
 - Archivo y sitio:
   - src/logoGeometry.js (nuevo): las coordenadas de las capas del logo (`FULL`, `SMALL`) y su altura. Antes estaban dentro de Logo.jsx.
