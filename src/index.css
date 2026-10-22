@@ -256,7 +256,8 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
     transition:transform .2s ease,visibility .2s;
   }
   .mobile-total strong{display:block;font-size:1.05rem;color:var(--texto);font-variant-numeric:tabular-nums}
-  .mobile-total .price strong{color:var(--oro-vivo)}
+  /* El precio es la respuesta: mas grande y en oro; el coste, segundo */
+  .mobile-total .price strong{color:var(--oro-vivo);font-size:1.3rem;font-weight:700;letter-spacing:-.02em}
   .mobile-total .controls{margin-left:auto}
   .mobile-total.away{transform:translateY(110%);visibility:hidden}
 }
