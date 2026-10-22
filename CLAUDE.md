@@ -51,11 +51,12 @@ Hecho el 2026-10-22 (ver DEV_LOG.md), no publicado todavía:
 - Copia de seguridad (src/backup.js y src/BackupPanel.jsx): "Download backup" baja un JSON versionado (`schemaVersion`) con `savedQuotes`, `business` y `quoteCounter`; "Restore from file" lo valida, enseña un resumen y deja elegir Merge o Replace. El contador de presupuestos nunca baja. Aviso en History y punto en la pestaña cuando toca copia (clave `lastBackupAt`, propia de cada dispositivo y fuera del archivo).
 - Mapa del código en docs/MAPA.md: archivos, flujo de datos, claves de localStorage, fórmulas y dónde tocar para cada cambio.
 - Agente local, paso 1 de la conexión con impresoras: servidor HTTP en agent/ (`npm run agent`, puerto 31415, solo `/health`) con tests en `node:test` (`npm test`).
+- Paso 2: la web detecta el agente (src/agent.js, src/Printers.jsx). Pestaña Printers solo si la persona la activa con `layercents.com/?agent` (clave `agentEnabled`); sin activarla, la web no hace ninguna petición a 127.0.0.1.
 
 ## Conexión con impresoras: en curso, un PR por paso
 Empieza por Bambu, con la P1S de Julen. Él prueba cada PR con su impresora; Claude no puede verla.
 1. Servidor del agente (hecho, ver arriba).
-2. La web detecta el agente, solo cuando la persona lo activa: un sondeo automático a 127.0.0.1 le saltaría un aviso de permisos de Chrome a todo el mundo.
+2. La web detecta el agente, solo cuando la persona lo activa: un sondeo automático a 127.0.0.1 le saltaría un aviso de permisos de Chrome a todo el mundo (hecho, ver arriba).
 3. Conexión MQTT con la P1S y estado en vivo. Antes de nada, comprobar qué deja leer sin Developer Mode.
 4. Registro de trabajos (inicio, fin, fallo) en un JSON en disco: la impresora no guarda historial.
 5. Gramos y tiempo reales: el 3MF por FTPS, leído con `parseSliceInfo` de src/slicerFile.js.

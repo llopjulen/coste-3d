@@ -20,7 +20,7 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | Archivo | Qué hace |
 |---|---|
 | `index.html` | El shell: metadatos para buscadores y para compartir (Open Graph), fuentes de Google, Cloudflare Web Analytics y el `<div id="root">` donde React pinta todo. |
-| `src/main.jsx` | Punto de entrada. Importa `index.css` y monta `<App>` dentro de `<StrictMode>`. En desarrollo, StrictMode ejecuta dos veces renders y efectos para destapar efectos secundarios mal hechos; en producción no hace nada. |
+| `src/main.jsx` | Punto de entrada. Importa `index.css`, lee y quita el `?agent` de la dirección (una vez por carga) y monta `<App>` dentro de `<StrictMode>`. En desarrollo, StrictMode ejecuta dos veces renders y efectos para destapar efectos secundarios mal hechos; en producción no hace nada. |
 | `src/App.jsx` | Estado global, cálculo y navegación. Cuatro secciones: 1) campos (`SECTIONS`, `INITIAL`) y colores de las capas (`LAYERS`); 2) `calculate(d)`; 3) componentes pequeños (`Field`, `SiteFooter`); 4) `App`. |
 | `src/History.jsx` | Lista de presupuestos: tarjetas resumen, buscador, tabla agrupada por mes, marcar piezas para el presupuesto de cliente, Load y borrar. No es dueño de ningún dato. |
 | `src/Report.jsx` | Informe imprimible (KPIs y 3 gráficas hechas con `div` y porcentajes, sin librería de gráficas). El PDF sale de `window.print()`. |
@@ -30,6 +30,9 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/exportExcel.js` | Export `.xlsx` con formato y fórmulas `SUM`. Se carga solo al pulsar el botón. |
 | `src/backup.js` | Copia de seguridad: funciones puras (construir, validar, fusionar, planificar, recordatorio) y capa de almacenamiento (`writeAtomically`, `applyRestore`, `downloadBackup`). |
 | `src/BackupPanel.jsx` | Panel "Backup" al final de History y aviso `BackupReminder` encima. |
+| `src/agent.js` | Cliente del agente local: `checkAgent()` (¿está corriendo y habla nuestro protocolo?) y la activación por enlace (`?agent`). Sin React. |
+| `src/agent.test.js` | Tests de contrato entre la web y el agente: `checkAgent` contra el código real de `agent/handler.js`. |
+| `src/Printers.jsx` | Pestaña Printers (beta): estado del agente. Solo existe si la persona la activó. |
 | `src/Logo.jsx` | El logo en SVG; los colores salen del CSS. |
 | `src/index.css` | Todos los estilos. Arriba los tokens (`--fondo`, `--oro`…) en `:root`; luego una sección por pantalla, con comentarios en español. `@media print` decide qué sale en los PDF. |
 | `public/` | Se copia tal cual a la web: `CNAME` (el dominio para GitHub Pages: no se borra), iconos e imagen para compartir. |
@@ -51,8 +54,8 @@ Restos de la plantilla de Vite que nada usa y se pueden borrar: `src/assets/` (h
                  │   d ──► calculate(d) ──► r (se recalcula en  │
                  │                            cada render)      │
                  │   saveQuote: {…d, …r} ──► savedQuotes ──► useEffect ──► localStorage
-                 │   view decide la pantalla:                   │
-                 │     calculator │ history │ report │ quote    │
+                 │   view decide la pantalla: calculator │      │
+                 │     history │ report │ quote │ printers     │
                  └───────┬──────────────┬───────────┬───────────┘
                          ▼              ▼           ▼
              History (quotes,      Report       CustomerQuote ◄──► localStorage
@@ -60,11 +63,12 @@ Restos de la plantilla de Vite que nada usa y se pueden borrar: `src/assets/` (h
              onExport, onReport,                                    quoteCounter
              onCustomerQuote)
              BackupPanel / BackupReminder ──► backup.js ◄──► localStorage
+             Printers ──► agent.js ──fetch──► agente en 127.0.0.1:31415
 ```
 
 - `r` es estado derivado: no se guarda en `useState`, se recalcula con `calculate(d)` en cada render. Calcular es barato, y así nunca puede quedar desincronizado de `d`.
 - `savedQuotes` se escribe en `localStorage` desde un `useEffect` con `[savedQuotes]` como dependencias: se ejecuta después de cada render en el que la lista cambió.
-- `view` sustituye a un router: no hay una URL por pantalla. Por eso recargar la página vuelve siempre a la calculadora y el botón Atrás del navegador no cambia de pantalla.
+- `view` sustituye a un router: no hay una URL por pantalla (salvo `?agent`, que abre Printers y se borra de la dirección nada más leerse). Por eso recargar la página vuelve siempre a la calculadora y el botón Atrás del navegador no cambia de pantalla.
 
 ## El agente local (conexión con impresoras, en construcción)
 
@@ -83,6 +87,12 @@ La web no puede hablar con una impresora: el navegador solo habla MQTT por WebSo
   3. El preflight (`OPTIONS`) responde a la Private Network Access de Chrome con `Access-Control-Allow-Private-Network: true`.
 - `/health` devuelve `protocol`: la web se actualiza en cada despliegue, pero el agente de cada persona no, así que la web compara ese número para saber si el agente es compatible.
 
+En la web (`src/agent.js` y `src/Printers.jsx`):
+
+- La pestaña Printers solo existe si la persona la activa: con el enlace `layercents.com/?agent`, o en su navegador si ya la activó antes (clave `agentEnabled`). El motivo es que pedir algo a 127.0.0.1 desde una web pública hace que Chrome pregunte por permisos ("acceder a otras apps y servicios de este dispositivo"); si se comprobara en cada visita, ese aviso le saldría a todo el mundo. Sin activar la pestaña, la web no hace ni una sola petición al agente.
+- `checkAgent()` nunca lanza: devuelve `connected`, `outdated`, `wrong` (otro programa en el puerto) u `offline`. Desde el código de la página no se puede distinguir un puerto cerrado de un CORS rechazado o de un permiso denegado: todo es un `fetch` que falla.
+- Printers comprueba el agente al abrirse y con "Check again", no con un temporizador. Si dos comprobaciones se solapan, gana la última (un contador en `useRef`).
+
 ## Dinero y monedas
 
 Todo se guarda en EUR. Al arrancar, `App` pide los tipos de cambio a `api.frankfurter.dev/v1` (datos del BCE) y los guarda en `rates`. `formatMoney` multiplica por `rates[currency]` solo al pintar. Si la API no responde, `rates` se queda en `{ EUR: 1 }` y la app funciona en euros. `CustomerQuote` convierte a céntimos enteros de la moneda en pantalla antes de sumar, para que las líneas sumen exactamente el total (con decimales binarios, `0.1 + 0.2 !== 0.3`).
@@ -95,6 +105,7 @@ Todo se guarda en EUR. Al arrancar, `App` pide los tipos de cambio a `api.frankf
 | `business` | `{ name, contact, logo, notes, tax, validDays }`; `logo` es un data URL PNG de 480 × 200 px como mucho | `CustomerQuote.saveBusiness`, `applyRestore` | `CustomerQuote` al abrirse |
 | `quoteCounter` | Entero: el siguiente número de presupuesto (2026-007) | `CustomerQuote.savePdf`, `applyRestore` (nunca lo baja) | `CustomerQuote` |
 | `lastBackupAt` | Fecha ISO de la última copia en este dispositivo; no va dentro de la copia | `downloadBackup`, `applyRestore` | `App` |
+| `agentEnabled` | `'1'` si este navegador enseña la pestaña Printers; tampoco va en la copia | `agent.js` (`setAgentEnabled`, `consumeAgentOptIn`) | `App` al arrancar |
 
 Forma de un presupuesto guardado:
 

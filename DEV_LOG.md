@@ -2,6 +2,36 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-22, Agente local, paso 2: la web detecta el agente (pestaña Printers, opt-in)
+- Archivo y sitio:
+  - src/agent.js (nuevo): `checkAgent`, `isAgentEnabled`, `setAgentEnabled` y `consumeAgentOptIn`, más las constantes `AGENT_URL` y `AGENT_PROTOCOL`.
+  - src/agent.test.js (nuevo): 8 tests, entre ellos los de contrato contra el código real de agent/handler.js.
+  - src/Printers.jsx (nuevo): la pantalla, con cinco estados (comprobando, conectado, desactualizado, otro programa en el puerto y apagado), "Check again" y "Hide this tab".
+  - src/main.jsx: lee y quita `?agent` antes de arrancar React y pasa `agentOptIn` a App.
+  - src/App.jsx: imports; la prop `agentOptIn`; `view` puede empezar en `'printers'`; estado `agentOn` y `turnOffAgent` junto a `view`; la pestaña Printers; History se marca activa solo en sus pantallas (`history`, `report`, `quote`); la rama `view === 'printers'` del render.
+  - src/backup.js: `KEYS.agentEnabled`, por dispositivo y fuera de las copias.
+  - src/index.css, al final: sección "Impresoras (beta)".
+  - docs/MAPA.md y CLAUDE.md: archivos, clave nueva, flujo y estado.
+- Qué cambió: `layercents.com/?agent` activa en ese navegador una pestaña Printers que dice si el agente está corriendo, con su versión y desde cuándo. Si no lo está, explica cómo arrancarlo. Para quien no la activa, la web es exactamente igual que antes.
+- Por qué:
+  - Opt-in y no detección automática: desde una web pública, una petición a 127.0.0.1 hace que Chrome pida permiso para acceder a apps y servicios del dispositivo (Local Network Access, la evolución de Private Network Access). Sondear en cada visita le enseñaría ese aviso a todo el mundo, y casi nadie tiene el agente. Además el agente aún no se puede instalar sin Node, así que la pestaña no se anuncia: se llega por enlace.
+  - `?agent` se lee en main.jsx y no en un inicializador de `useState`: cambia la URL y el almacenamiento, y StrictMode llama dos veces a los inicializadores en desarrollo; la segunda llamada ya no vería el parámetro. Después se borra con `history.replaceState`, para que un enlace copiado de la página no active la pestaña a quien lo reciba.
+  - `checkAgent` nunca lanza y separa cuatro casos. `offline` agrupa puerto cerrado, timeout, CORS rechazado y permiso denegado, porque desde el código de la página todos son el mismo `TypeError` de `fetch`. `wrong` comprueba el nombre `layercents-agent` para no confundir el agente con otro programa en el 31415. `outdated` compara `protocol`.
+  - Timeout de 2 s con `AbortSignal.timeout`: un servidor local responde en milisegundos, pero si un firewall descarta el paquete en vez de rechazarlo, el navegador esperaría alrededor de un minuto.
+  - En Printers, comprobación al abrir y con un botón, no con temporizador: sondear sin que nadie mire es tráfico inútil a 127.0.0.1. Un contador en `useRef` hace que gane la última comprobación si dos se solapan (doble clic, o el doble efecto de StrictMode en desarrollo).
+  - El `setState` de "comprobando" está en el manejador del botón y no dentro del efecto: oxlint (`set-state-in-effect`) avisa porque un `setState` síncrono dentro de un efecto provoca un render extra. Al abrir, el estado ya empieza en `checking`.
+  - Tests de contrato: `checkAgent` se prueba contra el handler real del agente en un puerto aleatorio, y hay un test que exige que `AGENT_PROTOCOL` y `PROTOCOL` coincidan. Si un lado cambia el contrato sin el otro, `npm test` falla antes de llegar al navegador.
+- Concepto nuevo:
+  - `history.replaceState(state, '', url)`: cambia la dirección de la barra sin recargar ni añadir un paso al botón Atrás.
+  - `AbortSignal.timeout(ms)`: una señal que cancela el `fetch` sola al pasar ese tiempo, sin tener que crear un `AbortController` a mano.
+  - `useCallback(fn, [])`: devuelve la misma función en cada render, así un efecto que depende de ella no se repite en cada render.
+- Cómo se probó: los 17 tests de `npm test` (9 del agente y 8 de la web) y un recorrido en Chromium sobre el build de producción con el agente real. Comprobado: una visita normal no hace ninguna petición al agente; `?agent` abre Printers, borra el parámetro y sale "Agent connected"; al recargar la pestaña sigue; con el agente parado salen los pasos y "Check again" vuelve a conectar al arrancarlo; "Hide this tab" la quita, borra la clave y no hay más peticiones; en un móvil de 390 px caben las tres pestañas. También se repitió el recorrido de la copia de seguridad, sin cambios. Falta probar en Safari y en la web publicada, que es https: Chrome puede pedir el permiso.
+- Cómo probarlo:
+  1. Terminal 1: `npm run agent`. Terminal 2: `npm run dev`.
+  2. Abre `http://localhost:5173/?agent`: sale Printers con "Agent connected" y la dirección queda sin `?agent`.
+  3. Para el agente con Ctrl+C y pulsa "Check again": salen los pasos para arrancarlo.
+  4. "Hide this tab": la pestaña desaparece y, en las herramientas del navegador (pestaña Network), no hay más peticiones a 127.0.0.1.
+
 ### 2026-10-22, Agente local, paso 1: servidor HTTP en 127.0.0.1
 - Archivo y sitio:
   - agent/handler.js (nuevo): `createHandler`, que decide la respuesta a cada petición, y las constantes `PROTOCOL`, `VERSION` y `ALLOWED_ORIGINS`.

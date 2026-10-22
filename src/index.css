@@ -554,3 +554,26 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
   display:inline-block;width:7px;height:7px;margin-left:5px;
   border-radius:50%;background:var(--oro);vertical-align:middle;
 }
+
+/* ------------------------- Impresoras (beta) -------------------------
+   Pestana Printers: por ahora solo el estado del agente local. */
+.printers h1{display:flex;align-items:center;gap:10px}
+/* Etiqueta "Beta" al lado del titulo: avisa de que es una funcion a medias */
+.beta{
+  font-family:'Inter',system-ui,sans-serif;font-size:.7rem;font-weight:600;letter-spacing:.02em;
+  padding:2px 8px;border-radius:9px;
+  background:rgba(242,179,61,.15);color:var(--oro);
+}
+.printers .panel{margin-top:22px}
+.agent-body{display:flex;flex-direction:column;gap:9px;padding:13px 15px 15px;font-size:.88rem}
+.agent-body p,.agent-steps{max-width:46em}
+/* Conectado: punto de oro, como el de la pestana History, y texto destacado */
+.agent-ok{display:flex;align-items:center;gap:8px;font-weight:600;color:var(--oro-vivo)}
+.agent-dot{width:8px;height:8px;border-radius:50%;background:var(--oro)}
+.agent-steps{display:flex;flex-direction:column;gap:3px;padding-left:20px}
+.agent-actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:2px}
+/* Comandos para copiar en la terminal: letra monoespaciada sobre un fondo algo mas claro */
+.printers code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.84em;
+  padding:1px 6px;border-radius:4px;background:var(--panel-alto);border:1px solid var(--borde);
+}

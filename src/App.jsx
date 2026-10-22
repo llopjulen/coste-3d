@@ -6,6 +6,8 @@ import CustomerQuote from './CustomerQuote.jsx'
 import Logo from './Logo.jsx'
 import BackupPanel, { BackupReminder } from './BackupPanel.jsx'
 import { applyRestore, backupStatus, downloadBackup, readLastBackup } from './backup.js'
+import Printers from './Printers.jsx'
+import { isAgentEnabled, setAgentEnabled } from './agent.js'
 
 /* ==================================================================
    1) FIELDS
@@ -166,7 +168,8 @@ function SiteFooter() {
 /* ==================================================================
    4) APP
 ================================================================== */
-export default function App() {
+// agentOptIn: true when this page load came from layercents.com/?agent (see main.jsx).
+export default function App({ agentOptIn = false }) {
   const [d, setD] = useState(INITIAL)
 
   /* =========================
@@ -279,8 +282,19 @@ export default function App() {
   
   const [showFullBreakdown, setShowFullBreakdown] = useState(true)
 
-  // Which screen is shown: 'calculator', 'history', 'report' or 'quote'.
-  const [view, setView] = useState('calculator')
+  // Which screen is shown: 'calculator', 'history', 'report', 'quote' or
+  // 'printers'. Arriving through the ?agent link opens Printers directly.
+  const [view, setView] = useState(agentOptIn ? 'printers' : 'calculator')
+
+  // Whether this browser shows the Printers tab (opt-in, see agent.js).
+  // State, not just storage, so hiding the tab takes effect at once.
+  const [agentOn, setAgentOn] = useState(() => agentOptIn || isAgentEnabled())
+  const turnOffAgent = () => {
+    setAgentEnabled(false)
+    setAgentOn(false)
+    // The Printers screen is about to disappear: go somewhere that exists.
+    setView('calculator')
+  }
 
   // The report shows whatever History was showing when the button was
   // pressed (all quotes, or only the ones matching the search).
@@ -400,16 +414,29 @@ export default function App() {
           >
             Calculator
           </button>
+          {/* History stays lit on its sub-screens (report, customer quote),
+              which are reached from it; Printers is a tab of its own. */}
           <button
             type="button"
-            className={`tab ${view !== 'calculator' ? 'active' : ''}`}
-            aria-current={view !== 'calculator' ? 'page' : undefined}
+            className={`tab ${['history', 'report', 'quote'].includes(view) ? 'active' : ''}`}
+            aria-current={['history', 'report', 'quote'].includes(view) ? 'page' : undefined}
             onClick={() => setView('history')}
           >
             History <span className="count">{savedQuotes.length}</span>
             {/* The dot is decoration; the hidden text gives screen readers the same news. */}
             {backupDue && <><span className="tab-dot" aria-hidden="true" /><span className="sr-only">, backup due</span></>}
           </button>
+          {/* Only for those who turned it on: nobody else ever calls 127.0.0.1. */}
+          {agentOn && (
+            <button
+              type="button"
+              className={`tab ${view === 'printers' ? 'active' : ''}`}
+              aria-current={view === 'printers' ? 'page' : undefined}
+              onClick={() => setView('printers')}
+            >
+              Printers
+            </button>
+          )}
         </nav>
         <select
           className="currency"
@@ -423,7 +450,10 @@ export default function App() {
         </select>
       </div>
 
-      {view === 'quote' ? (
+      {/* agentOn is checked again here: if the tab was hidden, the screen goes too. */}
+      {view === 'printers' && agentOn ? (
+        <Printers onTurnOff={turnOffAgent} />
+      ) : view === 'quote' ? (
         <CustomerQuote
           quotes={quoteParts}
           currency={currency}

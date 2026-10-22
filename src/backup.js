@@ -35,6 +35,9 @@ export const KEYS = {
   // Per-device bookkeeping, deliberately NOT inside the backup: it says
   // when THIS browser was last backed up, which is meaningless elsewhere.
   lastBackup: 'lastBackupAt',
+  // Per-device too, also left out of backups: whether this browser shows
+  // the Printers tab (agent.js). Another computer may not run the agent.
+  agentEnabled: 'agentEnabled',
 }
 
 // A real backup weighs a few hundred KB (the logo is the biggest thing in
