@@ -4,6 +4,8 @@ import Report from './Report.jsx'
 import ImportFile from './ImportFile.jsx'
 import CustomerQuote from './CustomerQuote.jsx'
 import Logo from './Logo.jsx'
+import BackupPanel, { BackupReminder } from './BackupPanel.jsx'
+import { applyRestore, backupStatus, downloadBackup, readLastBackup } from './backup.js'
 
 /* ==================================================================
    1) FIELDS
@@ -193,6 +195,8 @@ export default function App() {
       // A <form> reloads the page when submitted; this stops it.
       e.preventDefault()
       const now = new Date()
+      // A field added here must also be type-checked in sanitizeQuote
+      // (backup.js), or restoring a backup won't validate it.
       const quote = {
         id: now.getTime(),
         createdAt: now.toISOString(),
@@ -235,6 +239,41 @@ export default function App() {
     const deleteQuote = (id) => {
       setSavedQuotes(savedQuotes.filter( q => q.id !== id))
     }
+
+  /* =========================
+    ·Backup & restore (logic in backup.js, screen in BackupPanel.jsx)
+    =========================*/
+  // When this browser was last backed up (ISO string) or null. It lives in
+  // state, not only in storage, so the reminder, the tab dot and the "Last
+  // backup" line all update the moment a backup is downloaded or restored.
+  const [lastBackupAt, setLastBackupAt] = useState(readLastBackup)
+
+  const backupNow = () => {
+    try {
+      // The list on screen is what gets saved: it's the source of truth,
+      // and the effect above copies it to storage only after each render.
+      setLastBackupAt(downloadBackup(savedQuotes))
+    } catch (err) {
+      console.error(err)
+      alert('Could not create the backup file. Please try again.')
+    }
+  }
+
+  // Storage is written first and React state after: if the write fails it
+  // throws before setSavedQuotes, so the screen never shows a restore that
+  // didn't happen. Business details and the quote counter live only in
+  // storage (CustomerQuote reads them when it opens), so only the quotes
+  // need state. Returns the stats for BackupPanel's message.
+  const restoreBackup = (backup, mode) => {
+    const result = applyRestore(backup, mode, savedQuotes)
+    setSavedQuotes(result.quotes)
+    if (result.lastBackupAt) setLastBackupAt(result.lastBackupAt)
+    return result.stats
+  }
+
+  // Drives the dot on the History tab, so the reminder is visible from the
+  // calculator too, where people spend most of their time.
+  const backupDue = backupStatus(savedQuotes, lastBackupAt).due
 
 
   
@@ -368,6 +407,8 @@ export default function App() {
             onClick={() => setView('history')}
           >
             History <span className="count">{savedQuotes.length}</span>
+            {/* The dot is decoration; the hidden text gives screen readers the same news. */}
+            {backupDue && <><span className="tab-dot" aria-hidden="true" /><span className="sr-only">, backup due</span></>}
           </button>
         </nav>
         <select
@@ -401,6 +442,8 @@ export default function App() {
         <div className="wrap">
           <h1>Quote history</h1>
           <p className="subtitle">Every quote you saved on this device, newest first.</p>
+          {/* Above the list, so it's seen; renders nothing unless a backup is due. */}
+          <BackupReminder quotes={savedQuotes} lastBackupAt={lastBackupAt} onBackup={backupNow} />
           <History
             quotes={savedQuotes}
             formatMoney={formatMoney}
@@ -412,6 +455,10 @@ export default function App() {
             onCustomerQuote={openCustomerQuote}
             onGoToCalculator={() => setView('calculator')}
           />
+          {/* Outside History on purpose: History returns early when it's
+              empty, and an empty History (a new computer) is exactly
+              where "Restore from file" is needed most. */}
+          <BackupPanel quotes={savedQuotes} lastBackupAt={lastBackupAt} onBackup={backupNow} onRestore={restoreBackup} />
           <SiteFooter />
         </div>
       ) : (

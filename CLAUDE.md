@@ -27,6 +27,7 @@ No hagas ningún cambio sin dejar su entrada.
 - Git usa el email noreply de GitHub; no lo cambies.
 - Mantén el estilo actual: oscuro con el oro de la marca (`--oro`), colores definidos como variables en index.css. El logo está en src/Logo.jsx; no uses el verde de Bambu Lab.
 - Si una petición es ambigua o crece demasiado, para y pregunta antes de construir.
+- Si añades una clave nueva a localStorage o un campo nuevo a los presupuestos, añádelo también a src/backup.js (copia y validación). Si el cambio rompe el formato del archivo, sube `BACKUP_SCHEMA_VERSION` y añade una migración: los archivos que la gente ya ha descargado se tienen que seguir restaurando.
 
 ## Estado actual
 Hecho: desglose de costes con gráfica por capas, precio recomendado, toggle "Show cost only", selector de moneda con tipos de cambio en vivo (api.frankfurter.dev/v1, ahora en la barra superior), README.
@@ -44,6 +45,8 @@ Hecho el 2026-10-16 (ver DEV_LOG.md):
 - Publicado todo lo anterior en layercents.com el 2026-10-16. La versión vieja no guardaba nada en el navegador, así que con el cambio de dirección nadie perdió datos.
 - Repaso visual (publicado el mismo día): barra de arriba en dos filas en el móvil, barra fija con coste y precio en el móvil, tres pasos bajo el título, títulos con la letra del logo, pie de página con enlace a GitHub y fechas tipo "12 Oct 2026". Quitada la frase "Filament is only X%".
 - Portada de GitHub: README con logo y capturas (carpeta screenshots/) y el paquete se llama layercents. Los ajustes del repositorio (nombre, About, temas, imagen para compartir) no se pueden cambiar desde Claude: los cambia Julen en GitHub.
+Hecho el 2026-10-22 (ver DEV_LOG.md), no publicado todavía:
+- Copia de seguridad (src/backup.js y src/BackupPanel.jsx): "Download backup" baja un JSON versionado (`schemaVersion`) con `savedQuotes`, `business` y `quoteCounter`; "Restore from file" lo valida, enseña un resumen y deja elegir Merge o Replace. El contador de presupuestos nunca baja. Aviso en History y punto en la pestaña cuando toca copia (clave `lastBackupAt`, propia de cada dispositivo y fuera del archivo).
 
 ## Pendiente, por orden
 Plan acordado tras analizar la competencia (MakerQuote, 3DPCC, CraftersQuote): una función cada vez, cada una con su post en Reddit.
@@ -55,3 +58,4 @@ Plan acordado tras analizar la competencia (MakerQuote, 3DPCC, CraftersQuote): u
 
 ## Ideas futuras, no tocar sin pedirlo
 Gráficas, comparativas mes a mes, cuentas de usuario, versión de pago. Sincronizar presupuestos entre móvil y PC e inventario de filamento (serían "Pro" y necesitan backend: pedirlo antes). Quitar "Quote made with layercents" del presupuesto como función de pago.
+Recordar los datos de la calculadora entre visitas (ahora vuelven a los valores por defecto al recargar) y meterlos en la copia de seguridad. Conectar impresoras (Bambu, Klipper/Moonraker, OctoPrint, PrusaLink) para que tiempo, gramos y fallos se rellenen solos: necesita un agente local o un backend, pedirlo antes.

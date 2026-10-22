@@ -23,6 +23,7 @@
 - **History.** Save each quote with the part and the customer. Search them, see monthly totals and load any of them back into the calculator.
 - **Excel and PDF.** Export every quote to a formatted `.xlsx` file, or print a PDF report with charts.
 - **Customer quotes.** Tick the parts for one customer and get a quote with your logo, shipping, tax and notes, ready to save as a PDF. Your costs and margins never appear on it.
+- **Backup and restore.** Download one file with your quotes, business details and logo, and restore it on another computer or browser. layercents reminds you when it's been a while.
 - **Your currency**, with live exchange rates. It works on a phone too.
 
 ## A quote for your customer
@@ -37,7 +38,7 @@
 
 There is no account and no server. Your files are read inside your browser and your quotes are kept in your browser's storage, so nothing you type or drop is uploaded anywhere.
 
-The flip side: clearing your browser data deletes your quotes, so export them to Excel now and then.
+The flip side: clearing your browser data deletes your quotes. Download a backup from History now and then: it restores everything on any computer or browser.
 
 ## What's next
 
