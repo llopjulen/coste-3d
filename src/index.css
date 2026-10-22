@@ -162,26 +162,23 @@ h1{font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;font-size:clam
 
 .cross-section{display:flex;gap:15px;padding:16px 15px}
 
-/* Seccion transversal de la pieza: cada coste es un tramo de capas */
-.stack{
-  width:70px;flex:none;height:258px;
-  display:flex;flex-direction:column-reverse;
-  border:1px solid var(--borde);
-  border-radius:3px;
-  background:var(--fondo);
-  overflow:hidden;
-}
-.layer{
-  width:100%;
-  background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 5px);
-  transition:height .2s ease;
-}
+/* Grafica de costes: el simbolo de layercents (src/CostSymbol.jsx), con
+   cada coste en su color. Va de abajo arriba, como se imprime. */
+.cost-symbol{width:176px;height:176px;flex:none;display:block}
+/* In a phone the legend needs the room: the amounts must not wrap */
+@media (max-width:560px){.cost-symbol{width:118px;height:118px}}
+/* Barra vacia bajo los colores: la forma se lee aunque un coste sea 0 */
+.cost-symbol-empty{fill:var(--panel-alto)}
+/* Al cambiar un numero, las fronteras entre colores se deslizan en vez
+   de saltar. Si el sistema pide menos movimiento, no se anima. */
+.cost-symbol-piece{transition:x .35s ease,width .35s ease}
+@media (prefers-reduced-motion:reduce){.cost-symbol-piece{transition:none}}
 
-.legend{flex:1;display:flex;flex-direction:column-reverse;justify-content:flex-start}
+.legend{flex:1;display:flex;flex-direction:column-reverse;justify-content:center}
 .row-legend{display:flex;align-items:baseline;gap:9px;font-size:.86rem;padding:3px 0}
 .swatch{width:10px;height:10px;flex:none;border-radius:2px}
 .row-legend .name{flex:1;color:var(--tenue)}
-.row-legend .value{font-weight:500;font-variant-numeric:tabular-nums}
+.row-legend .value{font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
 
 .figure{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:9px 15px}
 .figure + .figure{border-top:1px solid var(--borde)}

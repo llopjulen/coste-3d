@@ -4,6 +4,7 @@ import Report from './Report.jsx'
 import ImportFile from './ImportFile.jsx'
 import CustomerQuote from './CustomerQuote.jsx'
 import Logo from './Logo.jsx'
+import CostSymbol from './CostSymbol.jsx'
 import BackupPanel, { BackupReminder } from './BackupPanel.jsx'
 import { applyRestore, backupStatus, downloadBackup, readLastBackup } from './backup.js'
 import Printers from './Printers.jsx'
@@ -61,15 +62,18 @@ const INITIAL = Object.fromEntries(
   SECTIONS.flatMap(s => s.fields.map(f => [f.key, f.initial]))
 )
 
-/* Stack colors: material is gold, the brand colour, because it's the
-   filament; the rest are the costs nobody sees. */
+/* Chart colors, in the order the symbol is printed (bottom to top):
+   material is gold, the brand colour, because it's the filament; the
+   rest are the costs nobody sees. The two greys are lighter than the
+   old ones: on the dark panel the darkest grey nearly vanished, and
+   since packaging is the top layer, the mark lost its shape. */
 const LAYERS = [
   { key: 'material',      name: 'Material',      color: '#F2B33D' },
   { key: 'power',         name: 'Power',         color: '#12A594' },
   { key: 'depreciation',  name: 'Depreciation',  color: '#3E8FD0' },
   { key: 'failures',      name: 'Failures',      color: '#6E74C4' },
-  { key: 'labor',         name: 'Labor',         color: '#7E7E8C' },
-  { key: 'packaging',     name: 'Packaging',     color: '#4E4E58' },
+  { key: 'labor',         name: 'Labor',         color: '#A3A3B1' },
+  { key: 'packaging',     name: 'Packaging',     color: '#6C6C7A' },
 ]
 
 
@@ -572,18 +576,14 @@ export default function App({ agentOptIn = false }) {
             <div className="panel">
               <h2>Breakdown</h2>
               <div className="cross-section">
-                <div className="stack" aria-hidden="true">
-                  {LAYERS.map(layer => (
-                    <div
-                      key={layer.key}
-                      className="layer"
-                      style={{
-                        height: `${r.cost > 0 ? (r.parts[layer.key] / r.cost) * 100 : 0}%`,
-                        backgroundColor: layer.color,
-                      }}
-                    />
-                  ))}
-                </div>
+                {/* The chart is the layercents mark itself, "printed" with the
+                    costs. The text label is what a screen reader reads; the
+                    legend next to it carries the exact amounts. */}
+                <CostSymbol
+                  parts={r.parts}
+                  layers={LAYERS}
+                  label={`Cost breakdown: ${LAYERS.map(l => `${l.name} ${formatMoney(r.parts[l.key])}`).join(', ')}`}
+                />
                 <div className="legend">
                   {LAYERS.map(layer => (
                     <div className="row-legend" key={layer.key}>
