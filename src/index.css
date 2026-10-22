@@ -202,6 +202,17 @@ h1{font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;font-size:clam
 .hero-sub strong{color:var(--texto);font-weight:600;font-variant-numeric:tabular-nums}
 @media(max-width:560px){.hero-whole{font-size:3.6rem}}
 
+/* "Your setup": lo que se escribe una vez y el navegador recuerda */
+.setup-note{padding:10px 15px 0;font-size:.82rem;color:var(--tenue)}
+.setup-group h3{margin:10px 0 0;font-size:.74rem;font-weight:600;letter-spacing:.02em;color:var(--tenue)}
+.setup-actions{padding:0 15px 12px}
+/* Plegado: una linea por dato, solo lectura */
+.setup-summary{padding:8px 15px 12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px}
+.setup-summary div{display:flex;justify-content:space-between;gap:8px;font-size:.84rem;min-width:0}
+.setup-summary dt{color:var(--tenue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.setup-summary dd{font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+@media(max-width:560px){.setup-summary{grid-template-columns:1fr}}
+
 /* Titulo de panel con una cifra a la derecha (Cost to make it) */
 .panel > h2.with-value{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .panel > h2.with-value strong{font-size:.95rem;font-weight:600;color:var(--texto);font-variant-numeric:tabular-nums}
@@ -265,8 +276,6 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .save-bar button[type="submit"]{background:var(--oro);border-color:var(--oro);color:var(--sobre-oro)}
 .save-bar button[type="submit"]:hover{background:var(--oro-vivo);border-color:var(--oro-vivo);color:var(--sobre-oro)}
 
-/* ----------------------------- Barra de botones -------------------- */
-.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
 
 /* Formulario para guardar: nombre de la pieza, cliente y boton */
 .save-bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}

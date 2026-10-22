@@ -2,6 +2,40 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-22, "Your setup": lo que se escribe una vez se queda guardado
+- Archivo y sitio:
+  - src/backup.js: `KEYS.setup`, `sanitizeSetup`, `readSetup`, `saveSetupField`, `clearSetup`; `setup` en `buildBackup`, `parseBackup`, `planRestore` (con `mergeSetup`), `readSettings`, `hasStoredSettings`, `applyRestore` y `downloadBackup`.
+  - src/backup.test.js (nuevo): 16 tests.
+  - src/BackupPanel.jsx: una línea más en el resumen de la restauración ("Your setup") y el texto "saved settings".
+  - src/App.jsx: `SECTIONS` reagrupado (Material, This print, This sale y las dos de "Your setup" con `setup: true`), `SETUP_FIELDS`, `pickSetup`, el estado `d` con inicializador perezoso, `hasSavedSetup`, `setupOpen`, `set` ahora guarda, `resetSetup`, `renderField`, `restoreBackup` actualiza `d`, y el bloque de formulario del render.
+  - src/index.css: `.setup-*`; se quita `.toolbar`.
+  - docs/MAPA.md y CLAUDE.md: clave nueva, flujo y estado.
+- Qué cambió: los números que se escriben una sola vez (precio, vida y consumo de la impresora, luz, fallos, tu tarifa por hora, comisión y margen) están en un bloque "Your setup" que el navegador recuerda campo a campo. Una vez guardado, el bloque aparece plegado con un resumen y botón "Edit"; "Reset to defaults" lo borra. Va también en la copia de seguridad. El botón "Show cost only" desaparece: plegar el bloque hace lo mismo con más sentido.
+- Por qué:
+  - Qué es "setup" lo decide `SECTIONS` (`setup: true`) y `backup.js` solo valida que sean números no negativos (`sanitizeSetup`): así no hay una segunda lista de nombres que se desincronice del formulario. `App` descarta los nombres que no conoce (`pickSetup`).
+  - Se guarda desde el manejador `set`, no desde un `useEffect` sobre `d`: "Load" de un presupuesto viejo y la importación de un laminador llaman a `setD` directamente, así que nunca pisan lo guardado con números antiguos. Con un efecto sobre `d`, cargar un presupuesto de hace un mes sobrescribiría tu configuración actual.
+  - Se guarda solo el campo editado, fusionado con lo que ya había (`{ ...guardado, [key]: value }`): un campo que nunca se tocó sigue los valores por defecto de la app, y si algún día cambia un valor por defecto, no se queda fijado un número que la persona nunca escribió.
+  - `Field` entrega `0` cuando se vacía el campo (ya era así), por lo que siempre llega un número finito; `saveSetupField` igualmente rechaza negativos y no finitos.
+  - Copia de seguridad: `data.setup` es un campo opcional nuevo y por eso `BACKUP_SCHEMA_VERSION` sigue en 1 (el propio backup.js dice que añadir una clave opcional no la sube, porque `parseBackup` ignora lo que no conoce). Un test fija el caso de un archivo v1 de la versión anterior: se restaura con `setup` a `null`.
+  - Merge y Replace: Merge rellena, nunca pisa (como `mergeBusiness`). Replace usa el `setup` del archivo, pero si el archivo no tiene (uno anterior a esta función) conserva el de aquí: Replace significa "que este navegador quede como el archivo", y un archivo que no habla de la configuración no debe borrarla.
+  - `applyRestore` devuelve `setup` y `restoreBackup` lo vuelca en `d`: el formulario guarda sus números en estado, así que sin eso la restauración solo se vería al recargar.
+  - `readSetup`, `saveSetupField` y `clearSetup` buscan `localStorage` dentro de su `try`: con almacenamiento bloqueado, solo leer `window.localStorage` ya lanza una excepción, y como valor por defecto de un parámetro se evaluaría fuera de cualquier `try`. Si falla, la calculadora funciona igual y el número simplemente no se recuerda.
+  - Se quita "Show cost only" (escondía las secciones Labor y Selling, aunque seguían contando en el precio). Reorganizar el formulario por "esta pieza" y "tu configuración", con la segunda plegable, resuelve lo mismo sin un botón que nadie entiende. Es un cambio de producto: se puede recuperar si prefieres tenerlo.
+  - Alternativa descartada: guardar todo el formulario entre visitas. Los datos de una pieza (gramos, horas) son de esa pieza, y recordar los del último trabajo es más molesto que útil.
+- Concepto nuevo:
+  - Inicializador perezoso de `useState`: `useState(() => ({ ...INITIAL, ...pickSetup(readSetup()) }))` ejecuta la función una sola vez, en el primer render, en lugar de leer `localStorage` en cada render.
+  - Parámetro por defecto que lanza: `function f(x = algo())` evalúa `algo()` en la llamada, antes de entrar en el cuerpo; un `try` dentro de la función no lo cubre. Por eso `storage ?? browserStorage()` va dentro del `try`.
+  - `Array.prototype.some`: `[a, b, c].some(key => storage.getItem(key) !== null)` es `true` en cuanto uno cumple, y deja de mirar.
+- Cómo probarlo:
+  1. `npm test` (44 tests, 16 nuevos) y `npm run build`.
+  2. `npm run dev`. Primera visita: "Your setup" aparece abierto. Cambia "Power draw" a 300 y "Hourly rate" a 30: cambia el precio.
+  3. Recarga: el bloque sale plegado con "Power draw 300 W" y el precio es el mismo. En DevTools, Application > Local Storage, la clave `setup` vale `{"watts":300,"hourlyRate":30}`: solo lo editado.
+  4. Guarda un presupuesto, cambia "Power draw" a 50, ve a History y pulsa "Load": el formulario muestra los números del presupuesto (300) pero `setup` sigue en 50.
+  5. History > "Download backup": el JSON lleva `data.setup` y `schemaVersion` sigue siendo 1.
+  6. En una ventana de incógnito: History > Restore from file con ese archivo > Merge. En Calculator, "Edit" enseña los números del archivo sin recargar.
+  7. Restaura un archivo antiguo (de antes de este PR) con Replace: tu "Your setup" no se borra.
+  8. "Reset to defaults": vuelve 110 W y el precio original; la clave `setup` desaparece.
+
 ### 2026-10-22, El precio recomendado pasa a ser lo primero que se ve
 - Archivo y sitio:
   - src/App.jsx, dentro de `calculate`: nuevo campo `recommendedProfit` en lo que devuelve (la fórmula del coste y del precio no cambia).

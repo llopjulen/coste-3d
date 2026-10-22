@@ -1,8 +1,8 @@
 /* ==================================================================
    BACKUP & RESTORE
    One JSON file with everything layercents keeps in this browser:
-   saved quotes, business details (logo included) and the quote
-   counter. The Excel export is a report for people to read; this file
+   saved quotes, business details (logo included), the quote counter
+   and "Your setup" (printer, electricity, hourly rate...). The Excel export is a report for people to read; this file
    is the format that round-trips, so it can be restored on another
    computer, in another browser or after clearing site data.
 
@@ -32,6 +32,11 @@ export const KEYS = {
   quotes: 'savedQuotes',
   business: 'business',
   counter: 'quoteCounter',
+  // "Your setup" in the calculator: the numbers a person types once
+  // (printer price, power, electricity, hourly rate, fee, margin).
+  // A map of field name -> number. It came after the first backup format
+  // and is optional in the file, so it needed no schemaVersion bump.
+  setup: 'setup',
   // Per-device bookkeeping, deliberately NOT inside the backup: it says
   // when THIS browser was last backed up, which is meaningless elsewhere.
   lastBackup: 'lastBackupAt',
@@ -169,13 +174,24 @@ export function sanitizeBusiness(raw) {
 // be a positive whole number.
 export const sanitizeCounter = v => (Number.isSafeInteger(v) && v >= 1 ? v : null)
 
+/* "Your setup" -> a clean map of numbers, or null if nothing usable is left.
+   Only the TYPE is checked here (a finite number, never negative: no cost,
+   percentage or duration in the form makes sense below 0). WHICH fields
+   count as setup is App.jsx's decision, so this file keeps no second list
+   that could drift from the form: App ignores names it doesn't know. */
+export function sanitizeSetup(raw) {
+  if (!isPlainObject(raw)) return null
+  const clean = Object.fromEntries(Object.entries(numericRecord(raw)).filter(([, v]) => v >= 0))
+  return Object.keys(clean).length > 0 ? clean : null
+}
+
 /* ------------------------------------------------------------------
    Build and parse
 ------------------------------------------------------------------ */
 
 /* The backup object. `exportedAt` lets the restore screen (and the
    person, opening the file) tell two backups apart. */
-export function buildBackup({ quotes, business, counter, now = new Date() }) {
+export function buildBackup({ quotes, business, counter, setup, now = new Date() }) {
   return {
     app: APP_ID,
     kind: KIND,
@@ -187,6 +203,7 @@ export function buildBackup({ quotes, business, counter, now = new Date() }) {
       savedQuotes: quotes,
       business: business ?? null,
       quoteCounter: counter ?? null,
+      setup: setup ?? null,
     },
   }
 }
@@ -253,6 +270,8 @@ export function parseBackup(text) {
     // == null covers both a missing key and an explicit null.
     business: data.business == null ? null : sanitizeBusiness(data.business),
     counter: data.quoteCounter == null ? null : sanitizeCounter(data.quoteCounter),
+    // Files made before "Your setup" existed simply don't have the key: null.
+    setup: data.setup == null ? null : sanitizeSetup(data.setup),
   }
 }
 
@@ -329,11 +348,24 @@ function mergeBusiness(current, incoming) {
   return next
 }
 
+/* Same rule as mergeBusiness: fill in, never overwrite. A field this
+   browser already has is what the person last typed here. */
+function mergeSetup(current, incoming) {
+  if (!incoming) return current
+  if (!current) return incoming
+  // incoming first, current on top: current wins every key it has.
+  return { ...incoming, ...current }
+}
+
 /* What a restore would do, without doing it: the next value of every
    stored key, plus the numbers for the summary.
-   - merge:   union of quotes; business details filled in, not overwritten.
+   - merge:   union of quotes; business details and setup filled in, not
+              overwritten.
    - replace: this browser ends up with exactly the file's quotes and
-              business details.
+              business details. Setup too, unless the file has none: a
+              backup made before "Your setup" existed says nothing about
+              it, and wiping numbers the person typed would be a loss
+              they didn't ask for.
    In BOTH modes the quote counter takes the higher of the two: quote
    numbers go out to customers, and going back would hand out the same
    number twice. */
@@ -349,6 +381,7 @@ export function planRestore(current, backup, mode) {
     return {
       quotes: backup.quotes,
       business: backup.business,
+      setup: backup.setup ?? current.setup ?? null,
       counter,
       // After a replace, this browser holds exactly what's in the file.
       coveredByFile: true,
@@ -360,6 +393,7 @@ export function planRestore(current, backup, mode) {
   return {
     quotes: merged.quotes,
     business: mergeBusiness(current.business, backup.business),
+    setup: mergeSetup(current.setup ?? null, backup.setup),
     counter,
     // Only if nothing here is missing from the file does that file count
     // as a backup of this browser (e.g. restoring the same file twice).
@@ -411,7 +445,8 @@ function readJson(storage, key) {
   }
 }
 
-/* Business details and quote counter, as CustomerQuote stored them. */
+/* Business details and quote counter, as CustomerQuote stored them, plus
+   the calculator's saved setup. */
 export function readSettings(storage = browserStorage()) {
   let counter = null
   try {
@@ -420,14 +455,57 @@ export function readSettings(storage = browserStorage()) {
   } catch {
     // Blocked storage: same as having no counter.
   }
-  return { business: sanitizeBusiness(readJson(storage, KEYS.business)), counter }
+  return {
+    business: sanitizeBusiness(readJson(storage, KEYS.business)),
+    counter,
+    setup: sanitizeSetup(readJson(storage, KEYS.setup)),
+  }
 }
 
 /* True if anything besides quotes is stored, without parsing it (cheap
    enough to call while rendering). */
 export function hasStoredSettings(storage = browserStorage()) {
   try {
-    return storage.getItem(KEYS.business) !== null || storage.getItem(KEYS.counter) !== null
+    return [KEYS.business, KEYS.counter, KEYS.setup].some(key => storage.getItem(key) !== null)
+  } catch {
+    return false
+  }
+}
+
+/* The saved setup as { field: number }, or null if there is none.
+   `storage` is looked up INSIDE the try: merely reading
+   window.localStorage throws in some privacy modes, and a default
+   parameter would evaluate it outside any try/catch. */
+export function readSetup(storage) {
+  try {
+    return sanitizeSetup(readJson(storage ?? browserStorage(), KEYS.setup))
+  } catch {
+    return null
+  }
+}
+
+/* Remembers ONE edited setup field. Only fields the person actually edited
+   are stored, merged into what's already there: a field never touched keeps
+   following the app's default, and an edit never rewrites the others.
+   Returns false when the value isn't storable or storage is blocked or
+   full: the screen keeps working, the number just won't be remembered. */
+export function saveSetupField(key, value, storage) {
+  if (!isFiniteNumber(value) || value < 0) return false
+  try {
+    const store = storage ?? browserStorage()
+    const next = { ...readSetup(store), [key]: value }
+    store.setItem(KEYS.setup, JSON.stringify(next))
+    return true
+  } catch {
+    return false
+  }
+}
+
+/* "Reset to defaults": forgets the saved setup. */
+export function clearSetup(storage) {
+  try {
+    (storage ?? browserStorage()).removeItem(KEYS.setup)
+    return true
   } catch {
     return false
   }
@@ -506,11 +584,14 @@ export function applyRestore(backup, mode, currentQuotes, storage = browserStora
     // null removes the key, which is how "no business details" looks to CustomerQuote.
     [KEYS.business]: plan.business ? JSON.stringify(plan.business) : null,
     [KEYS.counter]: plan.counter ? String(plan.counter) : null,
+    [KEYS.setup]: plan.setup ? JSON.stringify(plan.setup) : null,
     // Only written when it changes; otherwise the key isn't touched at all.
     ...(lastBackupAt ? { [KEYS.lastBackup]: lastBackupAt } : {}),
   }, storage)
 
-  return { quotes: plan.quotes, stats: plan.stats, lastBackupAt }
+  // `setup` goes back too: the calculator holds its numbers in React state,
+  // so after a restore it has to be told what is now stored.
+  return { quotes: plan.quotes, setup: plan.setup, stats: plan.stats, lastBackupAt }
 }
 
 // Two digits, for dates and times in file names.
@@ -524,11 +605,11 @@ export function backupFileName(now) {
 }
 
 /* Builds the file from what's on screen (quotes) and in storage
-   (business, counter), hands it to the browser as a download and
+   (business, counter, setup), hands it to the browser as a download and
    records when. Returns that time as an ISO string. */
 export function downloadBackup(quotes, { storage = browserStorage(), now = new Date() } = {}) {
-  const { business, counter } = readSettings(storage)
-  const backup = buildBackup({ quotes, business, counter, now })
+  const { business, counter, setup } = readSettings(storage)
+  const backup = buildBackup({ quotes, business, counter, setup, now })
   // Indented so anyone can open it in a text editor and see their data;
   // the extra size is irrelevant at a few hundred KB.
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
