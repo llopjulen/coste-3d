@@ -11,27 +11,13 @@
    so the printed report can draw it darker on white paper.
 ================================================================== */
 
-// [x, y, width] of each layer. The layers that cross the stroke are
-// split in two, leaving a small gap on each side of it.
-const FULL = [
-  [29.4, 12.11, 15.5], [55.1, 12.11, 15.5],
-  [17.18, 23.54, 27.72], [55.1, 23.54, 20.29],
-  [11.67, 34.97, 19.53],
-  [10, 46.4, 18],
-  [11.67, 57.83, 19.53],
-  [17.18, 69.26, 27.72], [55.1, 69.26, 20.29],
-  [29.4, 80.69, 15.5], [55.1, 80.69, 15.5],
-]
-const SMALL = [
-  [22, 10, 20], [62, 10, 22],
-  [10, 32, 26],
-  [10, 54, 26],
-  [22, 76, 20], [62, 76, 22],
-]
+// The layer coordinates live in logoGeometry.js, shared with the cost
+// chart (src/CostSymbol.jsx) so the two can never drift apart.
+import { FULL, SMALL, FULL_HEIGHT, SMALL_HEIGHT } from './logoGeometry.js'
 
 export default function Logo({ size = 24, small = false }) {
   const layers = small ? SMALL : FULL
-  const height = small ? 14 : 7.2
+  const height = small ? SMALL_HEIGHT : FULL_HEIGHT
   return (
     <svg className="logo" viewBox="0 0 100 100" width={size} height={size} aria-hidden="true" focusable="false">
       <g className="logo-layers">

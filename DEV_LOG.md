@@ -2,6 +2,41 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-22, La gráfica de costes pasa a ser el símbolo de layercents
+- Archivo y sitio:
+  - src/logoGeometry.js (nuevo): las coordenadas de las capas del logo (`FULL`, `SMALL`) y su altura. Antes estaban dentro de Logo.jsx.
+  - src/symbolChart.js (nuevo): `printOrder` y `symbolPieces`, funciones puras que reparten los costes sobre las capas.
+  - src/symbolChart.test.js (nuevo): 11 tests.
+  - src/CostSymbol.jsx (nuevo): el componente SVG.
+  - src/Logo.jsx: ahora importa la geometría de logoGeometry.js (mismo dibujo).
+  - src/App.jsx: import de `CostSymbol`; en `LAYERS` los dos grises se aclaran; en el panel "Breakdown", `<CostSymbol>` sustituye al pilar vertical `.stack`.
+  - src/index.css, sección "Resultado": se quitan `.stack` y `.layer`; entran `.cost-symbol`, `.cost-symbol-empty` y `.cost-symbol-piece`; el importe de la leyenda no parte línea.
+  - docs/MAPA.md: archivos nuevos y dónde tocar.
+- Qué cambió: la gráfica de "Breakdown" ya no es una barra vertical, sino el símbolo ¢ "impreso" con los costes: el material llena las capas de abajo y el embalaje las de arriba, cada coste con su color. Al cambiar un número, las fronteras entre colores se deslizan.
+- Por qué:
+  - Reparto por longitud: las 11 capas miden lo mismo de alto, así que su largo total (215,08 unidades) es proporcional a su superficie. A cada coste le toca `(coste / total) × 215,08`, y se recorre capa a capa, la de abajo primero y de izquierda a derecha. Es el mismo reparto que una barra apilada, pero desenrollado sobre el símbolo.
+  - Función pura aparte (`symbolChart.js`) y componente que solo pinta: es la única parte que puede mentir (si falla una cuenta, la gráfica enseña un reparto falso sin que nada se rompa). Por eso tiene tests: proporciones, que llene el símbolo sin dejar una línea vacía al final, el orden, el hueco entre colores y entradas raras (NaN de un campo vacío, negativos, todo a 0).
+  - Una capa compartida por dos costes: se dibuja la barra redondeada como `clipPath` y encima rectángulos de color. Así los extremos siguen redondos y el corte entre colores es recto. Alternativa descartada: calcular el contorno de cada trozo (arco más recta), mucho más código para el mismo resultado.
+  - Siempre 6 rectángulos por capa, aunque midan 0: React mueve el mismo elemento en lugar de crear y destruir elementos, y eso es lo que permite que CSS anime `x` y `width` (sin elemento estable no hay transición). Con `prefers-reduced-motion` no se anima.
+  - Hueco de 0,6 entre dos colores de una misma capa, quitado a los trozos (no pintado con el color del panel): no depende del fondo. Los extremos de la capa no se recortan.
+  - `logoGeometry.js` aparte: el logo y la gráfica necesitan las mismas coordenadas, y con dos copias, cambiar el logo rompería la gráfica sin avisar.
+  - `useId` para los `clipPath`: si hay dos símbolos en la misma página, un `id` repetido haría que `url(#id)` cogiera el recorte equivocado.
+  - Accesibilidad: el SVG lleva `role="img"` y un `aria-label` con los importes, y la leyenda con las cifras exactas sigue visible. Los colores solos no dicen nada a quien no los ve.
+  - Los grises de mano de obra y embalaje se aclaran (`#7E7E8C`→`#A3A3B1`, `#4E4E58`→`#6C6C7A`): el embalaje es la capa de arriba y con el gris oscuro se perdía sobre el panel, y el símbolo perdía la forma.
+  - Límite que hay que conocer: un coste muy pequeño (la luz, un 1 %) se queda en una rayita. Por eso la leyenda lleva el importe exacto: el símbolo dice qué domina; la leyenda, cuánto.
+  - No se toca `calculate()` ni se guarda nada nuevo: no hay claves de localStorage ni cambios en backup.js.
+- Concepto nuevo:
+  - `clipPath` (SVG): recorta lo que se dibuja dentro de él a una forma. `<clipPath id="a"><rect .../></clipPath>` y luego `<g clip-path="url(#a)">` pinta solo lo que cae dentro del rectángulo.
+  - Transición CSS sobre atributos SVG: en un `<rect>`, `x` y `width` son propiedades CSS en los navegadores modernos, así que `transition: x .35s, width .35s` las anima. Si un navegador no lo soporta, simplemente salta, sin romperse.
+  - Ordenar una copia: `[...layers].sort(...)` ordena sin cambiar el array original (`sort` modifica el array sobre el que se llama).
+- Cómo probarlo:
+  1. `npm test` (28 tests, 11 nuevos) y `npm run build`.
+  2. `npm run dev`. En Calculator, el panel "Breakdown" muestra el símbolo: abajo oro (material) y arriba gris (embalaje).
+  3. Cambia "Print time" a 30: la depreciación (azul) crece y las fronteras se deslizan. Pon "Part weight" a 0: el oro casi desaparece.
+  4. Vacía algún campo: no debe salir ningún error ni un trozo raro.
+  5. En el móvil (o con el navegador a 390 px), la leyenda no parte "0.80 EUR" en dos líneas.
+  6. Con "reducir movimiento" activado en el sistema, las fronteras saltan sin deslizar.
+
 ### 2026-10-22, Agente local, paso 2: la web detecta el agente (pestaña Printers, opt-in)
 - Archivo y sitio:
   - src/agent.js (nuevo): `checkAgent`, `isAgentEnabled`, `setAgentEnabled` y `consumeAgentOptIn`, más las constantes `AGENT_URL` y `AGENT_PROTOCOL`.

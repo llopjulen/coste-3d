@@ -21,7 +21,7 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 |---|---|
 | `index.html` | El shell: metadatos para buscadores y para compartir (Open Graph), fuentes de Google, Cloudflare Web Analytics y el `<div id="root">` donde React pinta todo. |
 | `src/main.jsx` | Punto de entrada. Importa `index.css`, lee y quita el `?agent` de la dirección (una vez por carga) y monta `<App>` dentro de `<StrictMode>`. En desarrollo, StrictMode ejecuta dos veces renders y efectos para destapar efectos secundarios mal hechos; en producción no hace nada. |
-| `src/App.jsx` | Estado global, cálculo y navegación. Cuatro secciones: 1) campos (`SECTIONS`, `INITIAL`) y colores de las capas (`LAYERS`); 2) `calculate(d)`; 3) componentes pequeños (`Field`, `SiteFooter`); 4) `App`. |
+| `src/App.jsx` | Estado global, cálculo y navegación. Cuatro secciones: 1) campos (`SECTIONS`, `INITIAL`) y colores del gráfico (`LAYERS`, en el orden en que se imprime: de abajo arriba); 2) `calculate(d)`; 3) componentes pequeños (`Field`, `SiteFooter`); 4) `App`. |
 | `src/History.jsx` | Lista de presupuestos: tarjetas resumen, buscador, tabla agrupada por mes, marcar piezas para el presupuesto de cliente, Load y borrar. No es dueño de ningún dato. |
 | `src/Report.jsx` | Informe imprimible (KPIs y 3 gráficas hechas con `div` y porcentajes, sin librería de gráficas). El PDF sale de `window.print()`. |
 | `src/CustomerQuote.jsx` | Presupuesto para el cliente: formulario arriba, hoja abajo. Lee y escribe `business` y `quoteCounter`. Calcula en céntimos enteros. |
@@ -34,6 +34,10 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/agent.test.js` | Tests de contrato entre la web y el agente: `checkAgent` contra el código real de `agent/handler.js`. |
 | `src/Printers.jsx` | Pestaña Printers (beta): estado del agente. Solo existe si la persona la activó. |
 | `src/Logo.jsx` | El logo en SVG; los colores salen del CSS. |
+| `src/logoGeometry.js` | Las coordenadas de las capas del logo, como datos. Las leen el logo y la gráfica de costes, para que no se descuadren. |
+| `src/symbolChart.js` | Función pura `symbolPieces`: reparte los costes sobre las 11 capas del símbolo (cada coste ocupa un trozo del largo total proporcional a su parte del coste). Sin React. |
+| `src/symbolChart.test.js` | Tests de `symbolChart.js`: proporciones, orden, huecos entre colores, entradas raras (NaN, negativos, todo a 0). |
+| `src/CostSymbol.jsx` | La gráfica "Breakdown": dibuja el símbolo con un `clipPath` por capa y un rectángulo por coste. Solo pinta; las cuentas están en `symbolChart.js`. |
 | `src/index.css` | Todos los estilos. Arriba los tokens (`--fondo`, `--oro`…) en `:root`; luego una sección por pantalla, con comentarios en español. `@media print` decide qué sale en los PDF. |
 | `public/` | Se copia tal cual a la web: `CNAME` (el dominio para GitHub Pages: no se borra), iconos e imagen para compartir. |
 | `screenshots/` | Capturas del README. |
@@ -157,6 +161,8 @@ Simplificación a tener en cuenta: con una tasa de fallos `p`, el coste esperado
 |---|---|
 | Añadir o cambiar un campo del formulario, su ayuda o su valor por defecto | `SECTIONS` en `App.jsx` (y `calculate` si interviene en el coste) |
 | Cambiar una fórmula | `calculate` en `App.jsx` |
+| Cambiar los colores o el orden de la gráfica de costes | `LAYERS` en `App.jsx` (el orden es de abajo arriba) |
+| Cambiar la forma del símbolo (logo y gráfica a la vez) | `logoGeometry.js` |
 | Cambiar colores o espaciado | tokens de `:root` en `index.css` |
 | Soportar otro laminador | `parseSlicerText` en `slicerFile.js` |
 | Añadir una columna al Excel | `buildColumns` en `exportExcel.js` |
