@@ -161,6 +161,7 @@ Simplificación a tener en cuenta: con una tasa de fallos `p`, el coste esperado
 |---|---|
 | Añadir o cambiar un campo del formulario, su ayuda o su valor por defecto | `SECTIONS` en `App.jsx` (y `calculate` si interviene en el coste) |
 | Cambiar una fórmula | `calculate` en `App.jsx` |
+| Cambiar el orden o el contenido de lo que se ve en el resultado | el bloque `{/* --- Result --- */}` de `App` (precio grande, gráfica, veredicto, guardar) |
 | Cambiar los colores o el orden de la gráfica de costes | `LAYERS` en `App.jsx` (el orden es de abajo arriba) |
 | Cambiar la forma del símbolo (logo y gráfica a la vez) | `logoGeometry.js` |
 | Cambiar colores o espaciado | tokens de `:root` en `index.css` |
