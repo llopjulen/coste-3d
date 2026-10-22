@@ -33,6 +33,7 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/agent.js` | Cliente del agente local: `checkAgent()` (¿está corriendo y habla nuestro protocolo?) y la activación por enlace (`?agent`). Sin React. |
 | `src/agent.test.js` | Tests de contrato entre la web y el agente: `checkAgent` contra el código real de `agent/handler.js`. |
 | `src/Printers.jsx` | Pestaña Printers (beta): estado del agente. Solo existe si la persona la activó. |
+| `src/backup.test.js` | Tests de la parte "Your setup" de `backup.js`: ida y vuelta, copias antiguas sin `setup`, Merge/Replace, almacenamiento bloqueado. |
 | `src/Logo.jsx` | El logo en SVG; los colores salen del CSS. |
 | `src/logoGeometry.js` | Las coordenadas de las capas del logo, como datos. Las leen el logo y la gráfica de costes, para que no se descuadren. |
 | `src/symbolChart.js` | Función pura `symbolPieces`: reparte los costes sobre las 11 capas del símbolo (cada coste ocupa un trozo del largo total proporcional a su parte del coste). Sin React. |
@@ -67,10 +68,12 @@ Restos de la plantilla de Vite que nada usa y se pueden borrar: `src/assets/` (h
              onExport, onReport,                                    quoteCounter
              onCustomerQuote)
              BackupPanel / BackupReminder ──► backup.js ◄──► localStorage
+  App.set (campos de "Your setup") ──► saveSetupField ──► localStorage `setup`
              Printers ──► agent.js ──fetch──► agente en 127.0.0.1:31415
 ```
 
 - `r` es estado derivado: no se guarda en `useState`, se recalcula con `calculate(d)` en cada render. Calcular es barato, y así nunca puede quedar desincronizado de `d`.
+- "Your setup" (impresora, luz, tarifa, comisión, margen) se recuerda en el dispositivo: los campos de las secciones con `setup: true` en `SECTIONS`. Se guarda desde el manejador `set` (no desde un efecto), campo a campo y solo cuando la persona lo edita; así "Load" de un presupuesto viejo o importar un laminador, que llaman a `setD` directamente, nunca pisan lo guardado.
 - `savedQuotes` se escribe en `localStorage` desde un `useEffect` con `[savedQuotes]` como dependencias: se ejecuta después de cada render en el que la lista cambió.
 - `view` sustituye a un router: no hay una URL por pantalla (salvo `?agent`, que abre Printers y se borra de la dirección nada más leerse). Por eso recargar la página vuelve siempre a la calculadora y el botón Atrás del navegador no cambia de pantalla.
 
@@ -108,6 +111,7 @@ Todo se guarda en EUR. Al arrancar, `App` pide los tipos de cambio a `api.frankf
 | `savedQuotes` | Array de presupuestos (forma abajo) | `App` (efecto tras cada cambio) y `applyRestore` | `App` al arrancar |
 | `business` | `{ name, contact, logo, notes, tax, validDays }`; `logo` es un data URL PNG de 480 × 200 px como mucho | `CustomerQuote.saveBusiness`, `applyRestore` | `CustomerQuote` al abrirse |
 | `quoteCounter` | Entero: el siguiente número de presupuesto (2026-007) | `CustomerQuote.savePdf`, `applyRestore` (nunca lo baja) | `CustomerQuote` |
+| `setup` | `{ campo: número }` con solo los campos de "Your setup" que la persona ha editado (`printerPrice`, `watts`, `hourlyRate`, `fee`…) | `App.set` (vía `saveSetupField`), `resetSetup`, `applyRestore` | `App` al arrancar (`readSetup`) |
 | `lastBackupAt` | Fecha ISO de la última copia en este dispositivo; no va dentro de la copia | `downloadBackup`, `applyRestore` | `App` |
 | `agentEnabled` | `'1'` si este navegador enseña la pestaña Printers; tampoco va en la copia | `agent.js` (`setAgentEnabled`, `consumeAgentOptIn`) | `App` al arrancar |
 
@@ -161,6 +165,7 @@ Simplificación a tener en cuenta: con una tasa de fallos `p`, el coste esperado
 |---|---|
 | Añadir o cambiar un campo del formulario, su ayuda o su valor por defecto | `SECTIONS` en `App.jsx` (y `calculate` si interviene en el coste) |
 | Cambiar una fórmula | `calculate` en `App.jsx` |
+| Decidir qué campos se recuerdan entre visitas | `setup: true` en la sección de `SECTIONS` (App.jsx); `backup.js` solo valida que sean números |
 | Cambiar el orden o el contenido de lo que se ve en el resultado | el bloque `{/* --- Result --- */}` de `App` (precio grande, gráfica, veredicto, guardar) |
 | Cambiar los colores o el orden de la gráfica de costes | `LAYERS` en `App.jsx` (el orden es de abajo arriba) |
 | Cambiar la forma del símbolo (logo y gráfica a la vez) | `logoGeometry.js` |

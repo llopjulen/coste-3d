@@ -48,6 +48,7 @@ Hecho el 2026-10-16 (ver DEV_LOG.md):
 - Repaso visual (publicado el mismo día): barra de arriba en dos filas en el móvil, barra fija con coste y precio en el móvil, tres pasos bajo el título, títulos con la letra del logo, pie de página con enlace a GitHub y fechas tipo "12 Oct 2026". Quitada la frase "Filament is only X%".
 - Portada de GitHub: README con logo y capturas (carpeta screenshots/) y el paquete se llama layercents. Los ajustes del repositorio (nombre, About, temas, imagen para compartir) no se pueden cambiar desde Claude: los cambia Julen en GitHub.
 Hecho el 2026-10-22 (ver DEV_LOG.md), no publicado todavía:
+- Rediseño de la calculadora (PRs #10 a #13, apilados): gráfica de costes con el símbolo ¢ (src/symbolChart.js, src/CostSymbol.jsx), precio recomendado como protagonista, y "Your setup" (impresora, luz, tarifa, comisión y margen) guardado en el dispositivo (clave `setup`, también dentro de la copia de seguridad sin subir `schemaVersion`). Sustituye al botón "Show cost only".
 - Copia de seguridad (src/backup.js y src/BackupPanel.jsx): "Download backup" baja un JSON versionado (`schemaVersion`) con `savedQuotes`, `business` y `quoteCounter`; "Restore from file" lo valida, enseña un resumen y deja elegir Merge o Replace. El contador de presupuestos nunca baja. Aviso en History y punto en la pestaña cuando toca copia (clave `lastBackupAt`, propia de cada dispositivo y fuera del archivo).
 - Mapa del código en docs/MAPA.md: archivos, flujo de datos, claves de localStorage, fórmulas y dónde tocar para cada cambio.
 - Agente local, paso 1 de la conexión con impresoras: servidor HTTP en agent/ (`npm run agent`, puerto 31415, solo `/health`) con tests en `node:test` (`npm test`).
@@ -73,4 +74,4 @@ Plan acordado tras analizar la competencia (MakerQuote, 3DPCC, CraftersQuote): u
 
 ## Ideas futuras, no tocar sin pedirlo
 Gráficas, comparativas mes a mes, cuentas de usuario, versión de pago. Sincronizar presupuestos entre móvil y PC e inventario de filamento (serían "Pro" y necesitan backend: pedirlo antes). Quitar "Quote made with layercents" del presupuesto como función de pago.
-Recordar los datos de la calculadora entre visitas (ahora vuelven a los valores por defecto al recargar) y meterlos en la copia de seguridad. Más impresoras en el agente (Klipper/Moonraker, OctoPrint, PrusaLink) cuando Bambu funcione.
+Recordar también los datos por pieza entre visitas (ahora solo se recuerda "Your setup"; el resto vuelve a los valores por defecto al recargar). Más impresoras en el agente (Klipper/Moonraker, OctoPrint, PrusaLink) cuando Bambu funcione.

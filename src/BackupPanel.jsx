@@ -189,12 +189,13 @@ export default function BackupPanel({ quotes, lastBackupAt, onBackup, onRestore 
               </li>
               {backup.business && <li>Business details{backup.business.logo ? ' and logo' : ''}</li>}
               {backup.counter && <li>Next quote number {quoteNumber(backup.counter)}</li>}
+              {backup.setup && <li>Your setup (printer, electricity, rates)</li>}
             </ul>
 
             {pending.hasLocalData ? (
               <>
                 <p className="muted">
-                  {quotes.length > 0 ? `This browser already has ${quotesText(quotes.length)}.` : 'This browser already has business details.'}{' '}
+                  {quotes.length > 0 ? `This browser already has ${quotesText(quotes.length)}.` : 'This browser already has saved settings.'}{' '}
                   <strong>Merge</strong> keeps everything here and adds what’s missing. <strong>Replace</strong> makes this browser match the file.
                 </p>
                 <div className="backup-actions">
