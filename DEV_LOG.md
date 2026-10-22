@@ -2,6 +2,12 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-22, CLAUDE.md: explicaciones a nivel de ingeniero y trabajo por pull request
+- Archivo y sitio: CLAUDE.md, en "Sobre el dueño", en el formato de este registro ("Por qué") y en "Reglas de trabajo".
+- Qué cambió: las explicaciones pasan a nivel de ingeniero (término técnico y porqué de cada decisión) y el flujo de trabajo queda por escrito: rama `feature/...` y pull request contra `main`. Push a `main` y `npm run deploy` siguen siendo solo de Julen.
+- Por qué: Julen lo quiere así, y el archivo seguía diciendo "lenguaje de principiante" y "no hagas git push". Cada sesión nueva de Claude Code empieza leyendo CLAUDE.md, así que habría vuelto al estilo anterior. Va en un commit aparte para poder revertirlo sin tocar la copia de seguridad.
+- Cómo probarlo: no cambia la app; `npm run build` sigue funcionando.
+
 ### 2026-10-22, Copia de seguridad: descargar y restaurar todo en un JSON versionado
 - Archivo y sitio:
   - src/backup.js (nuevo): toda la lógica. Arriba, funciones puras sin DOM ni localStorage (`buildBackup`, `parseBackup`, `sanitizeQuote`, `sanitizeBusiness`, `mergeQuotes`, `planRestore`, `backupStatus`); abajo, la capa de almacenamiento (`readSettings`, `readLastBackup`, `writeAtomically`, `applyRestore`, `downloadBackup`, `readBackupFile`), que recibe `storage` como parámetro.

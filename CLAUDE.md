@@ -3,7 +3,7 @@
 Calculadora web del coste real de una pieza impresa en 3D y presupuestos para el cliente. La marca es layercents. React + Vite, desplegada en GitHub Pages con dominio propio: https://layercents.com (comprado en Cloudflare; en su DNS hay 4 registros A a GitHub Pages y un CNAME `www` a llopjulen.github.io, con el proxy de Cloudflare activado, la nube naranja, que es quien pone el candado HTTPS. En Cloudflare tiene que estar activado "Always Use HTTPS", para que nadie use la versión http y se le separen los datos guardados). El archivo public/CNAME le dice a GitHub qué dominio usar: no lo borres. Todo el código y los textos de interfaz están en inglés.
 
 ## Sobre el dueño
-Julen, 21 años, estudia Ingeniería Informática a distancia y trabaja a jornada completa. Tiene poco tiempo y quiere entender lo que hace el proyecto aunque no lo escriba él. Todo lo que explique tiene que estar en español, en lenguaje de principiante: qué se hizo y por qué.
+Julen, 21 años, estudia Ingeniería Informática a distancia y trabaja a jornada completa. Tiene poco tiempo y quiere entender lo que hace el proyecto aunque no lo escriba él. Se defiende programando: explícale en español y a nivel de ingeniero, con el término técnico correcto y el porqué de cada decisión, sin simplificar ni tratarle como a un principiante.
 
 ## Regla principal: registro de cambios
 Después de CADA cambio en el código, añade una entrada al principio de DEV_LOG.md con este formato:
@@ -11,7 +11,7 @@ Después de CADA cambio en el código, añade una entrada al principio de DEV_LO
 ### AAAA-MM-DD, título corto
 - Archivo y sitio: ruta del archivo y zona (por ejemplo "src/App.jsx, dentro de la función App, junto a saveQuote")
 - Qué cambió: una o dos frases
-- Por qué: el motivo, en lenguaje de principiante
+- Por qué: el motivo técnico de cada decisión y las alternativas descartadas
 - Concepto nuevo: si usa algo que Julen no ha visto (por ejemplo .filter, Blob), explícalo en 2-3 líneas con un ejemplo mínimo
 - Cómo probarlo: pasos concretos para ver que funciona
 
@@ -20,7 +20,8 @@ No hagas ningún cambio sin dejar su entrada.
 ## Reglas de trabajo
 - Cambios pequeños, uno por tarea, y un commit por cada uno con mensaje claro en inglés.
 - Antes de dar algo por terminado, ejecuta `npm run build`. Si falla, arréglalo.
-- NO ejecutes `npm run deploy` ni `git push` sin que Julen lo pida expresamente. Al acabar cada tarea, dile que está listo para publicar.
+- Cada tarea llega como pull request: rama `feature/...` contra `main`, con el código comentado explicando el porqué. Julen lo revisa, lo cambia o lo acepta.
+- Nunca hagas push a `main` ni `npm run deploy`: eso lo hace Julen después del merge. Al abrir el PR, dile qué probar.
 - No añadas dependencias nuevas sin explicar por qué hacen falta.
 - No metas backend, cuentas de usuario ni bases de datos. La app guarda datos en localStorage y así se queda por ahora.
 - Nunca escribas claves, tokens ni emails personales en el código.
