@@ -34,6 +34,9 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/index.css` | Todos los estilos. Arriba los tokens (`--fondo`, `--oro`…) en `:root`; luego una sección por pantalla, con comentarios en español. `@media print` decide qué sale en los PDF. |
 | `public/` | Se copia tal cual a la web: `CNAME` (el dominio para GitHub Pages: no se borra), iconos e imagen para compartir. |
 | `screenshots/` | Capturas del README. |
+| `agent/server.js` | Arranque del agente local (`npm run agent`): abre el puerto 31415 solo en `127.0.0.1` y pasa cada petición a `handler.js`. |
+| `agent/handler.js` | Qué responde el agente a cada petición: seguridad (Host, Origin, CORS, preflight) y rutas. Hoy solo `/health`. |
+| `agent/handler.test.js` | Tests del agente con `node:test` (`npm test`), sin dependencias. |
 | `docs/MAPA.md` | Este archivo. |
 | `CLAUDE.md`, `DEV_LOG.md` | Instrucciones del proyecto y registro de cada cambio con su porqué. |
 
@@ -62,6 +65,23 @@ Restos de la plantilla de Vite que nada usa y se pueden borrar: `src/assets/` (h
 - `r` es estado derivado: no se guarda en `useState`, se recalcula con `calculate(d)` en cada render. Calcular es barato, y así nunca puede quedar desincronizado de `d`.
 - `savedQuotes` se escribe en `localStorage` desde un `useEffect` con `[savedQuotes]` como dependencias: se ejecuta después de cada render en el que la lista cambió.
 - `view` sustituye a un router: no hay una URL por pantalla. Por eso recargar la página vuelve siempre a la calculadora y el botón Atrás del navegador no cambia de pantalla.
+
+## El agente local (conexión con impresoras, en construcción)
+
+La web no puede hablar con una impresora: el navegador solo habla MQTT por WebSocket, y la impresora no lo ofrece, y una página `https` no puede llamar a `http://192.168.x.x`. Por eso hay un segundo programa, el agente, que corre en un ordenador de la misma red:
+
+```
+  navegador (layercents.com)  ──HTTP──►  agente (127.0.0.1:31415)  ──MQTT/FTPS──►  impresora
+         la web, sin backend               agent/, Node, sin nube            (PRs siguientes)
+```
+
+- Es otro proceso, no forma parte de la web: Vite no lo empaqueta porque nada de `src/` lo importa. Usa los mismos `node_modules` del proyecto.
+- Solo escucha en `127.0.0.1`: nadie de la red puede llamarlo, solo este ordenador.
+- Antes de responder comprueba tres cosas, por este orden:
+  1. El `Host` tiene que ser `127.0.0.1:31415` o `localhost:31415`. Es la defensa contra DNS rebinding: una web maliciosa podría hacer que su dominio apunte a 127.0.0.1, y entonces el navegador trataría al agente como parte de esa web y se saltaría CORS.
+  2. El `Origin` tiene que estar en `ALLOWED_ORIGINS` (la web publicada y los servidores de desarrollo). Si no, devuelve 403 antes de hacer nada: CORS solo impide que la página lea la respuesta, no que la petición se ejecute.
+  3. El preflight (`OPTIONS`) responde a la Private Network Access de Chrome con `Access-Control-Allow-Private-Network: true`.
+- `/health` devuelve `protocol`: la web se actualiza en cada despliegue, pero el agente de cada persona no, así que la web compara ese número para saber si el agente es compatible.
 
 ## Dinero y monedas
 
@@ -138,4 +158,6 @@ Simplificación a tener en cuenta: con una tasa de fallos `p`, el coste esperado
 - `npm run dev`: servidor de desarrollo con recarga en caliente (HMR) en `localhost:5173`.
 - `npm run build`: compila a `dist/` (JS minificado y separado en trozos).
 - `npm run lint`: oxlint, con las reglas de hooks de React.
+- `npm run agent`: arranca el agente local. Para comprobarlo, abre `http://127.0.0.1:31415/health` en el navegador. Se para con Ctrl+C.
+- `npm test`: `node --test` busca y ejecuta todos los `*.test.js` del proyecto, con el test runner que ya trae Node.
 - `npm run deploy`: `gh-pages` publica `dist/` en la rama `gh-pages`. GitHub Pages sirve esa rama y `public/CNAME` le dice el dominio; Cloudflare va delante y pone el HTTPS.

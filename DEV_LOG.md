@@ -2,6 +2,37 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-22, Agente local, paso 1: servidor HTTP en 127.0.0.1
+- Archivo y sitio:
+  - agent/handler.js (nuevo): `createHandler`, que decide la respuesta a cada petición, y las constantes `PROTOCOL`, `VERSION` y `ALLOWED_ORIGINS`.
+  - agent/server.js (nuevo): arranque, puerto, mensaje si el puerto está ocupado y parada limpia con Ctrl+C.
+  - agent/handler.test.js (nuevo): 9 tests con `node:test`.
+  - package.json: scripts `agent` (`node agent/server.js`) y `test` (`node --test`).
+  - docs/MAPA.md: el agente en la tabla de archivos, una sección propia y los comandos nuevos.
+  - CLAUDE.md: la excepción del agente a la regla "sin backend", el estado y el plan de la conexión con impresoras paso a paso.
+- Qué cambió: `npm run agent` arranca un servidor HTTP en `http://127.0.0.1:31415` que, por ahora, solo responde a `/health` con nombre, versión, protocolo, hora de arranque y una lista de impresoras vacía.
+- Por qué:
+  - Las impresoras hablan MQTT sobre TLS y FTPS. El navegador solo habla MQTT por WebSocket y no puede llamar desde una página `https` a una dirección `http` de la red local (mixed content y restricciones de red privada). Hace falta un proceso local que haga de puente. Es el patrón edge → central: el agente cerca de las máquinas y la web consumiendo sus datos.
+  - Node y no Python: un solo lenguaje en todo el proyecto, y en el paso 5 el agente reutilizará `parseSliceInfo` de src/slicerFile.js en vez de reescribir el parser del 3MF. Sin dependencias en este paso: `node:http`, `node:test` y `node:assert` vienen con Node.
+  - Sin package.json propio en agent/: la raíz ya declara `"type": "module"` y comparte `node_modules`. Descartado por ahora un paquete separado; tendrá sentido cuando haya que empaquetar el agente para gente sin Node instalado.
+  - `127.0.0.1` y no `0.0.0.0`: con todas las interfaces, cualquiera en la misma Wi-Fi podría leerlo, y más adelante guardará los códigos de acceso de las impresoras.
+  - Comprobación del `Host`: defensa contra DNS rebinding. Una web maliciosa puede hacer que su dominio resuelva a 127.0.0.1; entonces el navegador considera el agente parte de ese mismo origen y CORS ya no protege. Esas peticiones siguen llevando el dominio del atacante en `Host`, y por eso se rechazan con 403.
+  - `Origin` desconocido rechazado en el servidor, no solo con CORS: CORS impide que la página lea la respuesta, pero la petición se ejecuta igual. Hoy da igual porque `/health` solo lee; los endpoints futuros harán más.
+  - Preflight con `Access-Control-Allow-Private-Network: true`: es lo que pide la Private Network Access de Chrome cuando una página pública llama a una dirección local. Solo se envía si el navegador lo pregunta.
+  - `PROTOCOL` en `/health`: la web se actualiza en cada despliegue, pero el agente de cada persona no. Con ese número, la web podrá decir "actualiza el agente" en vez de fallar sin explicación.
+  - Puerto fijo 31415: la web necesita saber dónde buscar. Está por debajo de 32768, fuera de los rangos de puertos efímeros de Linux, macOS y Windows, así que ninguna conexión saliente lo ocupará por casualidad.
+  - `handler.js` no abre puertos, solo responde: así los tests usan el mismo código en un puerto aleatorio (el 0 le pide uno libre al sistema) sin chocar con un agente real.
+- Concepto nuevo:
+  - CORS: el navegador deja que una página lea la respuesta de otro origen solo si esa respuesta trae `Access-Control-Allow-Origin` con su origen. Lo aplica el navegador, no el servidor: curl lo ignora.
+  - Preflight: antes de ciertas peticiones entre orígenes, el navegador envía un `OPTIONS` preguntando si puede hacerla, y solo sigue si la respuesta lo permite.
+  - `node:test`: el test runner que trae Node. `npm test` ejecuta `node --test`, que busca los archivos `*.test.js` del proyecto.
+- Cómo probarlo:
+  1. `npm run agent`: sale "layercents agent 0.1.0 listening on http://127.0.0.1:31415".
+  2. Abre `http://127.0.0.1:31415/health` en el navegador: sale el JSON.
+  3. En otra terminal, `curl -i -H "Origin: https://evil.example" http://127.0.0.1:31415/health` devuelve 403.
+  4. Con el agente en marcha, `npm run agent` en otra terminal dice que el puerto ya está en uso.
+  5. `npm test`: 9 tests en verde.
+
 ### 2026-10-22, Mapa del código (docs/MAPA.md)
 - Archivo y sitio: docs/MAPA.md (nuevo). En CLAUDE.md, la regla de mantenerlo al día y una línea en el estado.
 - Qué cambió: un documento para orientarse antes de leer el código: arquitectura, orden de lectura, qué hace cada archivo, diagrama del flujo de datos, monedas, claves de localStorage con quién las lee y las escribe, la forma de un presupuesto guardado, las fórmulas de `calculate`, los patrones que se repiten y dónde tocar para cada cambio.
