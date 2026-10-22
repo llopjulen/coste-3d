@@ -2,6 +2,22 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-22, Casillas de números sin flechitas pegadas al valor
+- Archivo y sitio: src/index.css, en la sección "Formulario" (después de `.field input`, justo antes de `.field input:hover`): reglas para ocultar los botones de subir y bajar, y el relleno horizontal de 9 a 11 px.
+- Qué cambió: las casillas numéricas de la calculadora ya no enseñan las flechitas de subir y bajar, y el número queda con más aire a la derecha.
+- Por qué:
+  - Las flechas (`<input type="number">` las dibuja el navegador al pasar el ratón) se pintan dentro de la casilla y se comían el relleno: el número quedaba pegado a ellas. Se vio en producción, en un Mac.
+  - Casi todos los campos llevan decimales (0.15 €/kWh, 3.5 h, 0.8 €), y el paso por defecto de un `type="number"` es 1, así que las flechas dan saltos que nadie quiere. Ocultarlas no quita nada útil.
+  - Se mantiene el tipo `number` (en el móvil sale el teclado numérico, y el valor llega como número), y las teclas arriba y abajo siguen subiendo y bajando el valor. Comprobado. Alternativa descartada: dejar las flechas y subir el relleno derecho, que deja un hueco vacío a la derecha cuando no se ven.
+  - Dos reglas porque cada motor usa la suya: `::-webkit-*-spin-button` (Chrome, Safari y Edge) y `-moz-appearance: textfield` (Firefox). `appearance: textfield` es la forma estándar.
+  - Solo afecta a `.field input`, o sea la calculadora. No toca lógica, `localStorage` ni `backup.js`.
+- Concepto nuevo: pseudo-elementos de proveedor. `input::-webkit-inner-spin-button` apunta a una pieza interna que el navegador pinta dentro de la casilla; no es un elemento del HTML, y por eso solo se puede cambiar con CSS, y con el prefijo del motor.
+- Cómo probarlo:
+  1. `npm run dev`, abre la calculadora y pasa el ratón por encima de "Part weight": no aparecen flechas.
+  2. Haz clic en la casilla y pulsa la flecha arriba del teclado: el valor sube de 1 en 1.
+  3. Escribe 0.15 en "Price per kWh": se acepta con decimales.
+  4. Comprueba que el número no queda pegado al borde derecho de la casilla.
+
 ### 2026-10-22, Barra de precio fija en el móvil: el precio primero
 - Archivo y sitio:
   - src/App.jsx, al final del render de la calculadora: el bloque `mobile-total` (la barra fija de abajo). Cambia el orden y los textos.

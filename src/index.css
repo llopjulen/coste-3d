@@ -147,12 +147,19 @@ h1{font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;font-size:clam
   font-size:.89rem;
   font-variant-numeric:tabular-nums;
   text-align:right;
-  padding:6px 9px;
+  padding:6px 11px;
   border:1px solid var(--borde);
   border-radius:5px;
   background:var(--fondo);
   color:var(--texto);
 }
+/* Sin flechitas de subir/bajar: se pegaban al numero y le quitaban aire,
+   y casi todos los datos llevan decimales (0.15, 3.5) donde un paso de 1
+   no sirve. Escribir sigue igual, y con el teclado las flechas arriba y
+   abajo siguen funcionando. Chrome, Safari y Edge por un lado, Firefox por otro. */
+.field input::-webkit-outer-spin-button,
+.field input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.field input[type="number"]{-moz-appearance:textfield;appearance:textfield}
 .field input:hover{border-color:#4A4A53}
 .field input:focus-visible{outline:none;border-color:var(--oro);box-shadow:0 0 0 2px rgba(242,179,61,.22)}
 .field .unit{width:28px;font-size:.78rem;color:var(--tenue)}
