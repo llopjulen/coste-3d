@@ -2,6 +2,15 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-22, Mapa del código (docs/MAPA.md)
+- Archivo y sitio: docs/MAPA.md (nuevo). En CLAUDE.md, la regla de mantenerlo al día y una línea en el estado.
+- Qué cambió: un documento para orientarse antes de leer el código: arquitectura, orden de lectura, qué hace cada archivo, diagrama del flujo de datos, monedas, claves de localStorage con quién las lee y las escribe, la forma de un presupuesto guardado, las fórmulas de `calculate`, los patrones que se repiten y dónde tocar para cada cambio.
+- Por qué: con unas 2.900 líneas que Julen no ha escrito, leer archivo por archivo sin un mapa obliga a reconstruir la arquitectura en la cabeza cada vez. El DEV_LOG cuenta la historia en orden cronológico; el mapa cuenta cómo está hecho ahora. Va dentro del repo, y no en notas aparte, para que cambie junto con el código: CLAUDE.md obliga a actualizarlo. No se usan números de línea porque cambian en cada PR: se citan funciones y secciones.
+- Dos cosas encontradas al hacerlo, que no se tocan en este PR:
+  - `failures` usa `base × p`, cuando el coste esperado con una tasa de fallos `p` es `base / (1 − p)`. Con el 8 % casi no cambia; con el 30 % sí. Está explicado en el mapa.
+  - `src/assets/` y `public/icons.svg` son restos de la plantilla de Vite que nada usa.
+- Cómo probarlo: abre docs/MAPA.md en GitHub (pinta las tablas y el diagrama) y sigue el "Orden recomendado de lectura". La app no cambia: `npm run build` funciona igual.
+
 ### 2026-10-22, CLAUDE.md: explicaciones a nivel de ingeniero y trabajo por pull request
 - Archivo y sitio: CLAUDE.md, en "Sobre el dueño", en el formato de este registro ("Por qué") y en "Reglas de trabajo".
 - Qué cambió: las explicaciones pasan a nivel de ingeniero (término técnico y porqué de cada decisión) y el flujo de trabajo queda por escrito: rama `feature/...` y pull request contra `main`. Push a `main` y `npm run deploy` siguen siendo solo de Julen.
