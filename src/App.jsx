@@ -737,10 +737,14 @@ export default function App({ agentOptIn = false }) {
           </div>
         </div>
 
+        {/* Phone only (CSS hides it on wide screens): the answer stays in
+            view while you type. The price leads, because it is the answer;
+            the cost is the second number. It hides itself when the real
+            result is on screen, so the price is never shown twice. */}
         <div className={`mobile-total ${resultInView ? 'away' : ''}`}>
-          <span>Cost per part<strong>{formatMoney(r.cost)}</strong></span>
-          <span className="price">Recommended<strong>{formatMoney(r.recommendedPrice)}</strong></span>
-          <button type="button" className="controls" onClick={showResult}>Breakdown</button>
+          <span className="price">Recommended price<strong>{formatMoney(r.recommendedPrice)}</strong></span>
+          <span>Cost<strong>{formatMoney(r.cost)}</strong></span>
+          <button type="button" className="controls" onClick={showResult}>See details</button>
         </div>
 
         <SiteFooter />

@@ -2,6 +2,25 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-22, Barra de precio fija en el móvil: el precio primero
+- Archivo y sitio:
+  - src/App.jsx, al final del render de la calculadora: el bloque `mobile-total` (la barra fija de abajo). Cambia el orden y los textos.
+  - src/index.css, sección "Barra fija abajo en el movil": el precio, más grande y en oro.
+- Qué cambió: en el móvil, la barra de abajo empieza por "Recommended price" (grande y en oro), después "Cost", y el botón pasa de "Breakdown" a "See details". Los demás comportamientos de la barra no cambian.
+- Por qué:
+  - Va con el PR del precio protagonista: en el móvil el resultado sigue estando debajo de todos los campos, y la barra es lo único que enseña la respuesta mientras escribes. Que coincida con la jerarquía de escritorio (precio primero, coste segundo) evita que la persona lea una cosa en el móvil y otra en el ordenador.
+  - "See details" en lugar de "Breakdown": el panel al que lleva ya no empieza por el desglose sino por el precio con su explicación, y "Breakdown" ya no es el título de ninguna sección.
+  - La barra sigue escondiéndose cuando el panel del resultado entra en pantalla (`IntersectionObserver` sobre `.result`), para no enseñar el precio dos veces. No hizo falta tocar esa lógica: `.result` sigue siendo la columna entera.
+  - Alternativa descartada: una tercera cifra (beneficio) en la barra. En 360 px no cabe sin partir líneas, y la barra se come la pantalla.
+  - Sin cambios en lógica, `localStorage` ni `backup.js`.
+- Concepto nuevo: `position: fixed` con `env(safe-area-inset-bottom)`: la barra se pega al borde de la ventana y el padding inferior respeta la franja de gestos de iPhone y Android, para que el botón no quede bajo ella (ya estaba así; solo se cambia el contenido).
+- Cómo probarlo:
+  1. `npm run build` y `npm run dev`; abre la web con el modo móvil del navegador a 390 px (y a 360 px).
+  2. Arriba de todo, la barra de abajo enseña "Recommended price 7.94 EUR" en grande, "Cost 5.22 EUR" y "See details".
+  3. Pulsa "See details": baja hasta el precio y la barra se esconde.
+  4. Baja hasta el final: el pie de página no queda tapado y no hay desplazamiento horizontal.
+  5. A 360 px los tres elementos de la barra caben en una línea.
+
 ### 2026-10-22, "Your setup": lo que se escribe una vez se queda guardado
 - Archivo y sitio:
   - src/backup.js: `KEYS.setup`, `sanitizeSetup`, `readSetup`, `saveSetupField`, `clearSetup`; `setup` en `buildBackup`, `parseBackup`, `planRestore` (con `mergeSetup`), `readSettings`, `hasStoredSettings`, `applyRestore` y `downloadBackup`.
