@@ -2,6 +2,29 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-23, SEO básico: robots, sitemap, canonical, datos estructurados y contenido sin JavaScript
+- Archivo y sitio:
+  - index.html, dentro de `<head>`: descripción y título nuevos, `<link rel="canonical">`, `og:type`, etiquetas `twitter:*`, un bloque `application/ld+json` y un `<style>` mínimo. Dentro de `<body>`, el `<div id="root">` ya no está vacío: lleva un `<main>` con el `<h1>` y un párrafo.
+  - public/robots.txt (nuevo) y public/sitemap.xml (nuevo): Vite copia `public/` tal cual a la raíz de la web.
+  - docs/MAPA.md: fila de `public/` y de `index.html`.
+- Qué cambió: la web dice a los buscadores quién es y qué páginas tiene, y su HTML ya contiene texto. Cuando React arranca, sustituye ese texto por la aplicación, y no se nota el cambio.
+- Por qué:
+  - La web es una SPA: antes, el HTML que descargaba Google era un `<div id="root">` vacío, y todo el texto aparecía al ejecutar JavaScript. Google ejecuta JS, pero en una segunda pasada, más lenta y menos fiable, y otros buscadores y los generadores de vista previa a veces no. Poner el `<h1>` y una descripción real dentro de `#root` da a cualquiera que lea el HTML sin ejecutar nada el contenido esencial. React reemplaza todo el contenido de `#root` al montar (`createRoot(...).render`), así que no hay texto duplicado: comprobado, solo queda un `<h1>`.
+  - Título (51 caracteres) y descripción (151) dentro de lo que Google suele mostrar entero (unos 60 y 160), con las palabras que la gente busca ("3D print cost calculator", "quote") en lugar de solo la marca.
+  - `canonical`: `layercents.com`, `www.layercents.com` y cualquier dirección con parámetros enseñan la misma página. Sin canonical, Google puede tratarlas como páginas distintas que compiten entre sí.
+  - `robots.txt` deja pasar a todos y apunta al sitemap. `sitemap.xml` tiene una sola dirección ahora; cada guía futura añade la suya.
+  - JSON-LD de tipo `WebApplication` (schema.org): es la forma estándar de decir "esto es una herramienta web gratuita". Solo lleva hechos verdaderos hoy: no hay valoraciones ni reseñas inventadas, que Google penaliza. Descartado `FAQPage`: desde 2023 Google solo enseña esos resultados para webs de salud y de administraciones.
+  - El `<style>` mínimo evita un fogonazo blanco antes de que cargue `index.css`, ahora que hay texto visible en el HTML.
+  - No hay lógica, `localStorage` ni `backup.js` tocados.
+- Concepto nuevo:
+  - Renderizado en cliente (CSR) contra HTML con contenido: en una SPA todo lo que ves lo pinta JavaScript; un buscador ve primero el HTML crudo. Lo que se pone dentro de `#root` en `index.html` se ve antes de que cargue el JS, y React lo reemplaza al arrancar.
+  - JSON-LD: JSON dentro de `<script type="application/ld+json">` que los buscadores leen como datos, sin que se vea en la página.
+- Cómo probarlo:
+  1. `npm run build` y `npm run preview`; abre `/robots.txt` y `/sitemap.xml`: se ven los textos.
+  2. En las herramientas de desarrollador, desactiva JavaScript y recarga: sale el título y el párrafo. Actívalo: sale la calculadora.
+  3. Pega la dirección en la prueba de resultados enriquecidos de Google (search.google.com/test/rich-results) tras desplegar: debe detectar un `WebApplication`.
+  4. Search Console: añade la propiedad de dominio, envía `https://layercents.com/sitemap.xml` y en "Inspección de URLs" pide indexar la portada.
+
 ### 2026-10-22, Casillas de números sin flechitas pegadas al valor
 - Archivo y sitio: src/index.css, en la sección "Formulario" (después de `.field input`, justo antes de `.field input:hover`): reglas para ocultar los botones de subir y bajar, y el relleno horizontal de 9 a 11 px.
 - Qué cambió: las casillas numéricas de la calculadora ya no enseñan las flechitas de subir y bajar, y el número queda con más aire a la derecha.
