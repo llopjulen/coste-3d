@@ -139,12 +139,14 @@ export default function History({ quotes, formatMoney, onLoad, onDelete, onExpor
               <thead>
                 <tr>
                   <th className="check"><span className="sr-only">Select</span></th>
-                  <th>Date</th>
+                  {/* "wide": columns a phone hides (index.css). Client and date
+                      then appear under the part name instead (.row-sub). */}
+                  <th className="wide">Date</th>
                   <th>Part</th>
-                  <th>Client</th>
-                  <th className="num">Qty</th>
-                  <th className="num">Cost / part</th>
-                  <th className="num">Price / part</th>
+                  <th className="wide">Client</th>
+                  <th className="num wide">Qty</th>
+                  <th className="num wide">Cost / part</th>
+                  <th className="num wide">Price / part</th>
                   <th className="num">Order total</th>
                   <th><span className="sr-only">Actions</span></th>
                 </tr>
@@ -160,12 +162,18 @@ export default function History({ quotes, formatMoney, onLoad, onDelete, onExpor
                         onChange={() => toggle(item.id)}
                       />
                     </td>
-                    <td className="muted">{fmtDay(quoteDate(item))}</td>
-                    <td className="strong">{item.name ?? 'Untitled part'}</td>
-                    <td>{item.client || <span className="muted">—</span>}</td>
-                    <td className="num">{item.units ?? 1}</td>
-                    <td className="num">{formatMoney(item.cost)}</td>
-                    <td className="num accent">{formatMoney(item.price)}</td>
+                    <td className="muted wide">{fmtDay(quoteDate(item))}</td>
+                    <td className="strong part">
+                      {item.name ?? 'Untitled part'}
+                      {/* Only visible on a phone, where the Qty, Client and Date
+                          columns are hidden: the same facts, in one line.
+                          filter(Boolean) drops the empty ones (no client, 1 pc). */}
+                      <span className="row-sub">{[(item.units ?? 1) > 1 && `${item.units} pcs`, item.client, fmtDay(quoteDate(item))].filter(Boolean).join(' · ')}</span>
+                    </td>
+                    <td className="wide">{item.client || <span className="muted">—</span>}</td>
+                    <td className="num wide">{item.units ?? 1}</td>
+                    <td className="num wide">{formatMoney(item.cost)}</td>
+                    <td className="num accent wide">{formatMoney(item.price)}</td>
                     <td className="num strong">{formatMoney(orderTotal(item))}</td>
                     <td className="actions">
                       {/* Quotes saved before this version don't have the

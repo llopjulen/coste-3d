@@ -2,6 +2,23 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-25, History en el móvil: el importe de cada presupuesto a la vista
+- Archivo y sitio:
+  - src/History.jsx, en la tabla de cada mes: clase `wide` en las columnas Date, Client, Qty, Cost / part y Price / part (cabecera y celdas), clase `part` en la celda del nombre, y dentro de ella un `<span className="row-sub">` con cantidad, cliente y fecha.
+  - src/index.css, junto a `.history-table .actions`: `.row-sub` oculto por defecto y un bloque `@media(max-width:600px)`.
+- Qué cambió: en un móvil, cada fila enseña el nombre de la pieza, el importe del pedido y los botones, sin barra horizontal. Debajo del nombre aparece "10 pcs · Marc · 25 Oct 2026". En el ordenador la tabla es la misma de siempre.
+- Por qué:
+  - Antes, a 390 px solo se veían fecha, pieza y cliente. Los importes quedaban a la derecha, fuera de la pantalla, dentro de un contenedor con desplazamiento horizontal que no se ve. Justo lo que más importa (cuánto cobraste) era lo que no salía.
+  - Se esconden columnas con CSS en vez de pintar otra lista para el móvil: el HTML es uno solo, así que los botones, las casillas y la accesibilidad (`aria-label` de cada fila) son los mismos en los dos tamaños, y no hay dos versiones que mantener a la vez.
+  - Queda "Order total" y no "Price / part": es lo que vas a cobrar por ese presupuesto. La cantidad aparece en la línea de abajo cuando es más de 1, así se entiende por qué el total es mayor que el precio.
+  - El nombre puede partirse en varias líneas (`white-space: normal` en `td.part`), porque la tabla entera hereda `nowrap` para el escritorio.
+  - `.filter(Boolean)` quita los trozos vacíos (sin cliente, o 1 pieza), así no salen separadores " · " sueltos.
+- Concepto nuevo: `[a, b, c].filter(Boolean).join(' · ')` es una forma corta de unir solo lo que existe. `filter(Boolean)` deja fuera `false`, `''`, `null` y `undefined`; por ejemplo, `[false, 'Marc', '25 Oct'].filter(Boolean)` da `['Marc', '25 Oct']`.
+- Cómo probarlo:
+  1. `npm run dev`, guarda 3 presupuestos (uno con cliente, uno sin cliente y otro con "Order quantity" 10).
+  2. History en modo móvil a 390 y 360 px: cada fila cabe entera, con el importe a la derecha y "10 pcs · Marc · …" bajo el nombre.
+  3. En el ordenador (más de 600 px), la tabla tiene todas sus columnas y la línea de abajo no aparece.
+
 ### 2026-10-25, Presupuesto en el móvil: la tabla de piezas cabe entera
 - Archivo y sitio: src/index.css, sección del presupuesto (`.quote-doc`), dentro de `@media(max-width:700px)`: dos reglas nuevas para `.quote-lines .report-table`.
 - Qué cambió: en un móvil, la tabla de piezas del presupuesto ya no se corta. Antes, la columna "Total" salía como "Tota" y los importes como "7.94 EUF", con una barra horizontal escondida. Ahora el nombre de la pieza puede ocupar dos líneas y los márgenes de cada celda son más pequeños.

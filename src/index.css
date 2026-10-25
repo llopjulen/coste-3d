@@ -340,6 +340,18 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .history-table .strong{font-weight:600}
 .history-table .accent{color:var(--oro-vivo)}
 .history-table .actions{text-align:right;width:1%}
+/* Linea de cliente y fecha bajo el nombre: solo existe en el movil */
+.history-table .row-sub{display:none}
+/* En el movil la tabla no cabe entera y la barra horizontal no se ve:
+   se esconden fecha, cliente, cantidad, coste y precio por pieza, y queda
+   lo que importa (pieza, importe del pedido y botones). Cliente y fecha
+   pasan debajo del nombre. */
+@media(max-width:600px){
+  .history-table .wide{display:none}
+  .history-table th,.history-table td{padding:8px 6px}
+  .history-table td.part{white-space:normal;overflow-wrap:anywhere}
+  .history-table .row-sub{display:block;margin-top:2px;font-size:.76rem;font-weight:400;color:var(--tenue)}
+}
 
 .row-btn{
   font-family:inherit;font-size:.78rem;
