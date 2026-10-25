@@ -13,6 +13,7 @@ Después de CADA cambio en el código, añade una entrada al principio de DEV_LO
 - Qué cambió: una o dos frases
 - Por qué: el motivo técnico de cada decisión y las alternativas descartadas
 - Concepto nuevo: si usa algo que Julen no ha visto (por ejemplo .filter, Blob), explícalo en 2-3 líneas con un ejemplo mínimo
+- De la carrera: si el cambio usa algo que se estudia en Ingeniería Informática, di de qué asignatura viene y dónde se ve en este código (por ejemplo "Sistemas Operativos: la señal SIGINT que captura agent/server.js" o "Bases de datos: transacción con rollback en writeAtomically"). Si no hay ninguna, se omite la línea.
 - Cómo probarlo: pasos concretos para ver que funciona
 
 No hagas ningún cambio sin dejar su entrada.

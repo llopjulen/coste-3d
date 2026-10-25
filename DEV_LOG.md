@@ -2,6 +2,12 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-25, CLAUDE.md: cada cambio dice de qué asignatura de la carrera viene
+- Archivo y sitio: CLAUDE.md, sección "Regla principal: registro de cambios", en el formato de las entradas.
+- Qué cambió: las entradas de este registro tienen una línea nueva, "De la carrera", que dice qué asignatura explica lo que usa el cambio y dónde se ve en el código. Si no hay ninguna, no se pone.
+- Por qué: la carrera enseña los conceptos y el proyecto las herramientas, pero nadie une las dos cosas. Con esta línea, cada PR es un ejemplo práctico del temario: la codificación de longitudes de MQTT es de Sistemas digitales, `writeAtomically` es una transacción de Bases de datos, el Ctrl+C del agente es una señal de Sistemas Operativos, y el arreglo pendiente de las impresiones fallidas (base / (1 − p)) es la esperanza de una distribución geométrica de Estadística. Va en CLAUDE.md porque es lo que lee cada sesión nueva de Claude Code; si solo se dijera en una conversación, se perdería.
+- Cómo probarlo: no cambia la app. En el próximo PR que toque código, su entrada del DEV_LOG debe llevar la línea "De la carrera".
+
 ### 2026-10-25, Pestaña Printers: cada impresora en vivo
 - Archivo y sitio:
   - src/agent.js: `fetchPrinters()`, junto a `checkAgent`.
