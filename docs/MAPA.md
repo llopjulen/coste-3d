@@ -42,9 +42,15 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/index.css` | Todos los estilos. Arriba los tokens (`--fondo`, `--oro`…) en `:root`; luego una sección por pantalla, con comentarios en español. `@media print` decide qué sale en los PDF. |
 | `public/` | Se copia tal cual a la web: `CNAME` (el dominio para GitHub Pages: no se borra), iconos e imagen para compartir, y para los buscadores `robots.txt` y `sitemap.xml` (cada página nueva añade su `<url>`). |
 | `screenshots/` | Capturas del README. |
-| `agent/server.js` | Arranque del agente local (`npm run agent`): abre el puerto 31415 solo en `127.0.0.1` y pasa cada petición a `handler.js`. |
-| `agent/handler.js` | Qué responde el agente a cada petición: seguridad (Host, Origin, CORS, preflight) y rutas. Hoy solo `/health`. |
-| `agent/handler.test.js` | Tests del agente con `node:test` (`npm test`), sin dependencias. |
+| `agent/server.js` | Arranque del agente local. `npm run agent`: lee las impresoras, se conecta a ellas y abre el puerto 31415 solo en `127.0.0.1`. `npm run agent -- add / list / remove`: pasa a `setup.js`. |
+| `agent/setup.js` | Comandos de terminal para añadir, listar y quitar impresoras. `add` pide IP, número de serie y código de acceso, los prueba (`probeBambu`) y los guarda. |
+| `agent/config.js` | Lee y guarda la lista de impresoras en `~/.layercents/printers.json` (fuera del proyecto, permisos 600) y valida cada campo al cargarla. |
+| `agent/printers.js` | Un driver por impresora según su marca; `list()` devuelve el estado común de todas. |
+| `agent/drivers/bambu.js` | Driver de Bambu Lab: TLS con la huella del certificado fijada, MQTT, `pushall`, fusión de las actualizaciones parciales, reconexión con esperas crecientes, y `printerStatus` (de mensaje de Bambu a estado común). |
+| `agent/mqtt.js` | Cliente MQTT 3.1.1 mínimo y sin dependencias: codificar y leer paquetes (`PacketReader`) y una sesión (`MqttSession`) con login, suscripción, publicación y keepalive. |
+| `agent/fakeBroker.js` | Una impresora de mentira para los tests: habla MQTT, graba lo que le mandan y contesta como una Bambu. |
+| `agent/handler.js` | Qué responde el agente a cada petición: seguridad (Host, Origin, CORS, preflight) y rutas: `/health` y `/printers` (solo lectura). `PROTOCOL` es la versión del contrato con la web. |
+| `agent/*.test.js` | Tests del agente con `node:test` (`npm test`), sin dependencias: HTTP (`handler`), MQTT byte a byte (`mqtt`), driver de Bambu con TLS de verdad (`bambu`; se saltan sin openssl) y configuración (`config`). |
 | `docs/MAPA.md` | Este archivo. |
 | `docs/IMPRESORAS.md` | Investigación por marca (Bambu, Klipper/Moonraker, Prusa, Creality, Elegoo, Anycubic, Flashforge, OctoPrint): protocolo, puerto, credenciales, qué se puede leer, y el orden del plan. |
 | `CLAUDE.md`, `DEV_LOG.md` | Instrucciones del proyecto y registro de cada cambio con su porqué. |
@@ -84,8 +90,23 @@ La web no puede hablar con una impresora: el navegador solo habla MQTT por WebSo
 
 ```
   navegador (layercents.com)  ──HTTP──►  agente (127.0.0.1:31415)  ──MQTT/FTPS──►  impresora
-         la web, sin backend               agent/, Node, sin nube            (PRs siguientes)
+         la web, sin backend               agent/, Node, sin nube         MQTT sobre TLS (Bambu)
 ```
+
+Dentro del agente:
+
+```
+  server.js ──► handler.js  ── GET /printers ──►  printers.js ──► drivers/bambu.js ──► mqtt.js ──TLS 8883──► impresora
+                                                        ▲
+                                    config.js (~/.layercents/printers.json, permisos 600)
+                                                        ▲
+                                      setup.js (npm run agent -- add: prueba y guarda)
+```
+
+- Cada impresora tiene su driver, que mantiene la conexión abierta y va guardando el último estado. `/printers` solo lee ese estado de memoria: preguntar no molesta a la impresora.
+- El estado que sale del agente es el mismo para todas las marcas (`printerStatus`) y nunca lleva la IP, el número de serie ni el código de acceso.
+- Las impresoras se añaden desde la terminal (`npm run agent -- add`), no desde la web: así el código de acceso no pasa por el navegador, y el agente no necesita ninguna ruta que cambie cosas.
+- Detalles por marca y fuentes: `docs/IMPRESORAS.md`.
 
 - Es otro proceso, no forma parte de la web: Vite no lo empaqueta porque nada de `src/` lo importa. Usa los mismos `node_modules` del proyecto.
 - Solo escucha en `127.0.0.1`: nadie de la red puede llamarlo, solo este ordenador.
@@ -182,6 +203,7 @@ Simplificación a tener en cuenta: con una tasa de fallos `p`, el coste esperado
 - `npm run dev`: servidor de desarrollo con recarga en caliente (HMR) en `localhost:5173`.
 - `npm run build`: compila a `dist/` (JS minificado y separado en trozos).
 - `npm run lint`: oxlint, con las reglas de hooks de React.
-- `npm run agent`: arranca el agente local. Para comprobarlo, abre `http://127.0.0.1:31415/health` en el navegador. Se para con Ctrl+C.
-- `npm test`: `node --test` busca y ejecuta todos los `*.test.js` del proyecto, con el test runner que ya trae Node.
+- `npm run agent`: arranca el agente local y se conecta a las impresoras guardadas. Para comprobarlo, abre `http://127.0.0.1:31415/health` o `/printers` en el navegador. Se para con Ctrl+C.
+- `npm run agent -- add` (y `list`, `remove <id>`): gestiona las impresoras del agente.
+- `npm test`: `node --test` busca y ejecuta todos los `*.test.js` del proyecto, con el test runner que ya trae Node. `--test-timeout=20000`: un test que se quede colgado falla a los 20 s en vez de bloquear la terminal.
 - `npm run deploy`: `gh-pages` publica `dist/` en la rama `gh-pages`. GitHub Pages sirve esa rama y `public/CNAME` le dice el dominio; Cloudflare va delante y pone el HTTPS.

@@ -7,13 +7,16 @@ import { createServer, request } from 'node:http'
 import { createHandler, PROTOCOL, VERSION } from './handler.js'
 
 const STARTED = new Date('2026-10-22T08:00:00Z')
+// What /printers should hand over: whatever the printer list says, as is.
+const FAKE_STATUS = [{ id: 'p1s', name: 'P1S', brand: 'bambu', connection: 'online', state: 'idle' }]
+const FAKE_PRINTERS = { start() {}, stop() {}, list: () => FAKE_STATUS }
 let server
 let port
 
 // Port 0 asks the operating system for any free port, so the tests never
 // clash with a real agent running on 31415.
 before(async () => {
-  server = createServer(createHandler({ startedAt: STARTED }))
+  server = createServer(createHandler({ startedAt: STARTED, printers: FAKE_PRINTERS }))
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
   port = server.address().port
 })
@@ -45,7 +48,7 @@ test('the live site gets the health answer and may read it (CORS)', async () => 
   assert.equal(res.headers['cache-control'], 'no-store')
   assert.deepEqual(res.json, {
     app: 'layercents-agent', version: VERSION, protocol: PROTOCOL,
-    startedAt: STARTED.toISOString(), printers: [],
+    startedAt: STARTED.toISOString(),
   })
 })
 
@@ -102,4 +105,21 @@ test('unknown paths are 404 and other methods on /health are 405, both as JSON',
 test('a query string does not change the route', async () => {
   const res = await call({ path: '/health?from=test' })
   assert.equal(res.status, 200)
+})
+
+test('/printers returns every printer\'s status, readable by the live site', async () => {
+  const res = await call({ path: '/printers', headers: { origin: 'https://layercents.com' } })
+  assert.equal(res.status, 200)
+  assert.equal(res.headers['access-control-allow-origin'], 'https://layercents.com')
+  assert.equal(res.headers['cache-control'], 'no-store')
+  assert.deepEqual(res.json, { printers: FAKE_STATUS })
+})
+
+test('/printers is read-only and protected like /health', async () => {
+  const post = await call({ method: 'POST', path: '/printers', headers: { origin: 'https://layercents.com' } })
+  assert.equal(post.status, 405)
+  const evil = await call({ path: '/printers', headers: { origin: 'https://evil.example' } })
+  assert.equal(evil.status, 403)
+  const rebinding = await call({ path: '/printers', headers: { host: `evil.example:${port}` } })
+  assert.equal(rebinding.status, 403)
 })

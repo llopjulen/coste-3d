@@ -12,15 +12,17 @@
    does that and hands every request here, so the tests can run the
    same code on a throwaway port.
 ================================================================== */
+import { NO_PRINTERS } from './printers.js'
 
 // Version of the agent's API contract. The web app updates itself on
 // every deploy, but each person's agent only changes when they update
 // it, so the two can disagree. With this number the web app can say
 // "update your agent" instead of failing in strange ways.
-export const PROTOCOL = 1
+// 2: GET /printers added (live printer status); /health no longer lists printers.
+export const PROTOCOL = 2
 
 // The build of the agent, shown in /health and on the web app's screen.
-export const VERSION = '0.1.0'
+export const VERSION = '0.2.0'
 
 // The only web pages allowed to use the agent: the live site and the
 // local dev servers (npm run dev uses 5173, npm run preview uses 4173).
@@ -59,9 +61,10 @@ function hostIsLocal(req) {
   return req.headers.host === `127.0.0.1:${port}` || req.headers.host === `localhost:${port}`
 }
 
-/* Returns the function Node calls for every request. `startedAt` is
-   passed in, not read from the clock here, so tests can fix it. */
-export function createHandler({ startedAt = new Date() } = {}) {
+/* Returns the function Node calls for every request. `startedAt` and
+   `printers` are passed in, not created here, so tests can fix the clock
+   and use fake printers. */
+export function createHandler({ startedAt = new Date(), printers = NO_PRINTERS } = {}) {
   return (req, res) => {
     // Checked before anything else: a rebinding attack must get nothing at all.
     if (!hostIsLocal(req)) return send(res, 403, { error: 'host not allowed' })
@@ -113,9 +116,14 @@ export function createHandler({ startedAt = new Date() } = {}) {
         version: VERSION,
         protocol: PROTOCOL,
         startedAt: startedAt.toISOString(),
-        // Empty for now: the following PRs connect the printers.
-        printers: [],
       }, cors)
+    }
+
+    if (pathname === '/printers') {
+      if (req.method !== 'GET') return send(res, 405, { error: 'method not allowed' }, { ...cors, Allow: 'GET, OPTIONS' })
+      // The common status of each printer (see printerStatus in drivers/bambu.js).
+      // Read-only on purpose: nothing here can change a printer or the config.
+      return send(res, 200, { printers: printers.list() }, cors)
     }
 
     // Any other path: JSON too, so the web app never has to parse an HTML error page.

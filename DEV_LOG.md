@@ -2,6 +2,45 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-25, Agente, paso 3: estado en vivo de las Bambu por MQTT
+- Archivo y sitio:
+  - agent/mqtt.js (nuevo): cliente MQTT 3.1.1 mínimo, sin dependencias.
+  - agent/drivers/bambu.js (nuevo): `openPinnedTls`, `createBambuDriver`, `explain`, `printerStatus` y `probeBambu`.
+  - agent/config.js (nuevo): la lista de impresoras en `~/.layercents/printers.json`.
+  - agent/printers.js (nuevo): un driver por impresora.
+  - agent/setup.js (nuevo): `npm run agent -- add`, `list` y `remove`.
+  - agent/server.js: distingue arrancar el agente de los comandos de `setup.js`; carga las impresoras, las conecta y las para con Ctrl+C.
+  - agent/handler.js: ruta `GET /printers`; `/health` deja de llevar la lista de impresoras; `PROTOCOL` pasa a 2 y `VERSION` a 0.2.0.
+  - src/agent.js: `AGENT_PROTOCOL` pasa a 2, para que la web y el agente sigan hablando la misma versión (el test de contrato lo exige).
+  - agent/fakeBroker.js (nuevo) y agent/mqtt.test.js, agent/bambu.test.js, agent/config.test.js (nuevos): 32 tests. agent/handler.test.js: 2 más.
+  - package.json: `npm test` con `--test-timeout=20000`.
+  - docs/MAPA.md: archivos y flujo del agente.
+- Qué cambió: el agente se conecta a las impresoras Bambu que se le añadan y mantiene su estado en vivo (imprimiendo o no, progreso, minutos restantes, capa, temperaturas). La web puede leerlo en `http://127.0.0.1:31415/printers`. Las impresoras se añaden con `npm run agent -- add`, que prueba la IP, el código y el número de serie antes de guardar nada. La pantalla de la web llega en el PR siguiente.
+- Por qué:
+  - **Solo lectura.** Desde 2025 Bambu exige autorización (o LAN only + Developer Mode) para controlar la impresora, pero leer su estado sigue permitido en modo normal (fuentes en docs/IMPRESORAS.md). El agente solo se suscribe y pide `pushall`; nunca manda órdenes. Así funciona sin que la persona pierda Bambu Handy.
+  - **Un cliente MQTT propio en vez del paquete `mqtt` de npm.** El paquete trae unas 15 dependencias más a un programa que guarda los códigos de acceso de las impresoras, y en 2025 hubo varios ataques a la cadena de suministro de npm (paquetes populares secuestrados para robar secretos). Necesitamos 7 de los 14 tipos de paquete de MQTT 3.1.1: son unas 200 líneas, con cada byte comprobado en los tests contra la especificación. Lo que se pierde: QoS 2, reconexión automática y TLS ya hechos; lo primero no hace falta y lo demás está en el driver.
+  - **El certificado de la impresora, fijado por su huella (como SSH).** Las Bambu presentan un certificado que no firma ninguna autoridad pública, así que la verificación normal de TLS siempre falla. Desactivarla sin más (lo que hacen muchas integraciones) dejaría que cualquiera en la misma red se hiciera pasar por la impresora y se llevara el código de acceso. Al añadir la impresora se guarda la huella SHA-256 de su certificado, y después solo se acepta ese. La comprobación ocurre ANTES de mandar el login MQTT: con un certificado distinto, el código no sale del ordenador (hay un test con TLS de verdad que lo comprueba). Si la huella cambia, el agente para y pide volver a añadirla; no reintenta solo, porque eso sería aceptar el cambio sin que nadie lo vea.
+  - **La configuración fuera del proyecto** (`~/.layercents/printers.json`, carpeta 700 y archivo 600). Dentro del proyecto, un código de acceso podría acabar en un commit por error. Se escribe en un archivo temporal y se renombra (`rename` es atómico): si algo falla a medias, no se pierde la lista. Cada campo se valida al cargarla, porque el archivo se puede editar a mano.
+  - **Añadir impresoras desde la terminal, no desde la web.** El código de acceso va del teclado al archivo sin pasar por una pestaña del navegador, y el agente no necesita ninguna ruta que cambie cosas (una ruta que escribe es una puerta mucho más grande que una que solo lee). Se pregunta en un prompt y no como argumento porque los argumentos quedan en el historial de la terminal. Antes de guardar se prueba todo (`probeBambu`): IP (responde TLS), código (el login MQTT se acepta) y número de serie (llega un estado por ese tema), y si algo falla se dice cuál.
+  - **Actualizaciones parciales.** Las P1 y A1 solo mandan lo que cambia; el driver va fusionando (`{ ...anterior, ...nuevo }`) y pide `pushall` una vez por conexión, porque es pesado para la impresora.
+  - **Reconexión con esperas crecientes** (2, 4, 8… hasta 60 s; 60 s si el código está mal): una impresora apagada toda la noche no recibe un intento cada segundo. El keepalive de MQTT (un PINGREQ cada 30 s) detecta una impresora que desaparece sin cerrar la conexión.
+  - **Un estado común para todas las marcas** (`printerStatus`): la web no sabe qué marca es cada impresora, y añadir Moonraker o Prusa será añadir un archivo de driver. Nunca incluye la IP, el número de serie ni el código (hay un test).
+  - **`PROTOCOL` 2.** La API cambió (ruta nueva y `/health` sin lista), y el test de contrato exige que web y agente digan el mismo número, así que `AGENT_PROTOCOL` sube en el mismo PR. Un agente viejo con la web nueva sale como "desactualizado" en vez de fallar raro.
+  - **`--test-timeout=20000`:** con tests de red, un test que se quedara esperando un evento que nunca llega bloquearía `npm test` para siempre. Así falla a los 20 s con su nombre.
+  - **Tests con una impresora de mentira** (`fakeBroker.js`): habla MQTT de verdad por un puerto aleatorio y graba lo que recibe. Los de TLS crean un certificado temporal con `openssl` y se saltan donde no está instalado (Windows, normalmente).
+- Concepto nuevo:
+  - **TLS y huella de certificado:** TLS cifra la conexión y el servidor enseña un certificado. La huella (`fingerprint256`) es un hash SHA-256 de ese certificado: si cambia un solo bit, cambia la huella. Comparar huellas es como comprobar la matrícula de un coche que ya conoces.
+  - **Trust on first use (TOFU):** la primera vez se confía en lo que hay y se recuerda; después solo se acepta lo mismo. Es lo que hace `ssh` con el "The authenticity of host … can't be established".
+  - **EventEmitter:** un objeto que avisa de cosas (`session.on('message', fn)`). Ojo: si se emite `'error'` y nadie escucha, Node lanza la excepción y para el programa; por eso todo el que usa `MqttSession` escucha `'error'`.
+  - **Framing en TCP:** TCP entrega bytes, no mensajes. Un paquete puede llegar en tres trozos o tres paquetes en uno. `PacketReader` guarda lo que sobra y solo devuelve paquetes completos.
+- Cómo se probó: 78 tests (`npm test`), y un recorrido completo con una impresora de mentira escuchando con TLS en 127.0.0.1:8883: `npm run agent -- add` con un código malo (dice que el código está mal y no guarda nada), con el bueno (guarda, carpeta 700 y archivo 600, número de serie en minúsculas y con espacio corregido), `list`, `npm run agent` y `/printers` devolviendo "printing" con el progreso subiendo, sin código ni serie en la respuesta, y Ctrl+C. Falta lo que solo puede hacer Julen: probarlo con su P1S.
+- Cómo probarlo (con la P1S):
+  1. En la impresora, apunta la IP, el número de serie (Ajustes > Dispositivo) y el código de acceso (Ajustes > WLAN, abajo).
+  2. `npm run agent -- add` y contesta. Debe decir "✓ Connected. The printer says: IDLE" (o lo que esté haciendo).
+  3. `npm run agent` y abre `http://127.0.0.1:31415/printers` en el navegador: tu P1S con `"connection": "online"`.
+  4. Lanza una impresión: `state` pasa a `printing` y `progress` sube. Bambu Handy debe seguir funcionando.
+  5. Si algo falla, copia lo que imprime la terminal del agente (no lleva el código).
+
 ### 2026-10-25, Guía de conexión de impresoras por marca (docs/IMPRESORAS.md)
 - Archivo y sitio:
   - docs/IMPRESORAS.md (nuevo): la investigación completa, con 33 fuentes.

@@ -12,7 +12,8 @@ export const AGENT_URL = 'http://127.0.0.1:31415'
 // The agent API version this web app speaks (PROTOCOL in agent/handler.js).
 // The web updates on every deploy but each person's agent doesn't, so an
 // old agent is detected here instead of failing later in odd ways.
-export const AGENT_PROTOCOL = 1
+// 2: the agent has GET /printers (live printer status).
+export const AGENT_PROTOCOL = 2
 
 // A local server answers in milliseconds and a closed port is refused at
 // once, but some firewalls silently drop the packet, and then the browser
