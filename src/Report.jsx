@@ -65,8 +65,10 @@ export default function Report({ quotes, filter, currency, formatMoney, onBack }
   for (const q of sorted) {
     const dt = quoteDate(q)
     const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`
-    const label = dt.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' })
-    const entry = monthMap.get(key) ?? { label, value: 0, count: 0 }
+    // Month and year apart: "Oct 26" read like the 26th of October. The
+    // bar shows "Oct", and the year only where it starts (see below).
+    const month = dt.toLocaleDateString('en-GB', { month: 'short' })
+    const entry = monthMap.get(key) ?? { key, month, year: dt.getFullYear(), january: dt.getMonth() === 0, value: 0, count: 0 }
     entry.value += orderTotal(q)
     entry.count += 1
     monthMap.set(key, entry)
@@ -138,13 +140,18 @@ export default function Report({ quotes, filter, currency, formatMoney, onBack }
         <section className="report-block">
           <h2>Quoted value per month</h2>
           <div className="columns-chart" role="img" aria-label="Quoted value per month">
-            {months.map(m => (
-              <div className="col" key={m.label} title={`${m.label}: ${formatMoney(m.value)} (${m.count} quotes)`}>
+            {months.map((m, i) => (
+              <div className="col" key={m.key} title={`${m.month} ${m.year}: ${formatMoney(m.value)} (${m.count} quotes)`}>
                 <span className="col-value">{formatMoney(m.value).replace(` ${currency}`, '')}</span>
                 <span className="col-bar-area">
                   <span className="col-bar" style={{ height: `${pct(m.value, maxMonth)}%` }} />
                 </span>
-                <span className="col-label">{m.label}</span>
+                <span className="col-label">
+                  {m.month}
+                  {/* The year under the first bar and under every January:
+                      enough to place every month, without repeating it twelve times. */}
+                  {(i === 0 || m.january) && <span className="col-year">{m.year}</span>}
+                </span>
               </div>
             ))}
           </div>

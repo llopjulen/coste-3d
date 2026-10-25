@@ -415,12 +415,18 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 
 /* Grafica de columnas por mes */
 .columns-chart{display:flex;align-items:flex-end;gap:8px;height:190px;border-bottom:1px solid var(--tinta-suave)}
-.col{flex:1;max-width:72px;height:100%;display:flex;flex-direction:column;align-items:center;min-width:0}
+.col{position:relative;flex:1;max-width:72px;height:100%;display:flex;flex-direction:column;align-items:center;min-width:0}
 .col-value{font-size:.7rem;color:var(--tinta);font-variant-numeric:tabular-nums;margin-bottom:4px;white-space:nowrap}
 .col-bar-area{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center}
 .col-bar{width:70%;min-height:2px;background:var(--oro-papel);border-radius:4px 4px 0 0}
-.col-label{font-size:.7rem;color:var(--tinta-suave);margin:6px 0 -22px;white-space:nowrap}
-.columns-chart{margin-bottom:26px}
+/* La etiqueta cuelga por debajo del eje con position:absolute: asi no
+   ocupa sitio dentro de la columna, y una etiqueta de dos lineas (mes y
+   ano) no empuja su barra hacia arriba respecto a las de una linea. */
+.col-label{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:6px;font-size:.7rem;line-height:1.25;color:var(--tinta-suave);white-space:nowrap;text-align:center}
+/* El ano va debajo del mes, solo en la primera barra y en cada enero */
+.col-year{display:block}
+/* Hueco bajo la grafica para las dos lineas de la etiqueta (mes y ano) */
+.columns-chart{margin-bottom:40px}
 
 /* Barras horizontales (desglose y clientes) */
 .bar-list{display:flex;flex-direction:column;gap:7px}

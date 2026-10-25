@@ -2,6 +2,21 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-25, Informe: el mes de la gráfica ya no parece un día
+- Archivo y sitio:
+  - src/Report.jsx, en "Chart 1: quoted value per month": cada mes guarda `key`, `month` ("Oct"), `year` y si es enero; en el render, el año va debajo del mes en la primera barra y en cada enero.
+  - src/index.css, sección de la gráfica de columnas: `.col` con `position: relative`, `.col-label` colgada por debajo del eje con `position: absolute`, `.col-year` y más margen bajo la gráfica.
+- Qué cambió: las barras ponían "Oct 26", que se lee como "26 de octubre". Ahora pone "Oct" y debajo "2026" en la primera barra; los meses siguientes solo llevan el mes hasta que cambia el año, y en cada enero vuelve a salir el año.
+- Por qué:
+  - Formato `{ month: 'short', year: '2-digit' }` daba "Oct 26": ambiguo justo en un informe que se enseña a otros. Con el año entero en cada barra ("Oct 2026") no caben 12 etiquetas en un móvil ni en el ancho de un A4 sin pisarse. Poner el año solo donde empieza es lo que hacen las gráficas de series temporales: se sitúa cada mes sin repetir el año doce veces.
+  - La etiqueta pasa a `position: absolute` por debajo del eje. Antes ocupaba sitio dentro de la columna (con un margen negativo que lo compensaba para una sola línea): una etiqueta de dos líneas habría subido su barra unos píxeles respecto a las demás. Comprobado: todas las barras acaban a la misma altura.
+  - La `key` de React pasa a ser "2026-10" (año y mes) en vez del texto de la etiqueta: dos barras nunca pueden tener la misma clave, aunque se repita "Oct" en dos años distintos.
+- Concepto nuevo: `position: absolute` dentro de un padre con `position: relative` coloca el elemento respecto a ese padre y lo saca del flujo: no empuja a nadie. `top: 100%` lo pone justo debajo del padre, y `left: 50%` con `transform: translateX(-50%)` lo centra.
+- Cómo probarlo:
+  1. `npm run dev`, guarda presupuestos y ábrelos en History > "PDF report".
+  2. Bajo la gráfica: "Oct" y debajo "2026" en la primera barra. Si tienes presupuestos de varios años, "Jan" lleva el año debajo.
+  3. Todas las barras arrancan del mismo eje, también en un móvil y al imprimir.
+
 ### 2026-10-25, History en el móvil: el importe de cada presupuesto a la vista
 - Archivo y sitio:
   - src/History.jsx, en la tabla de cada mes: clase `wide` en las columnas Date, Client, Qty, Cost / part y Price / part (cabecera y celdas), clase `part` en la celda del nombre, y dentro de ella un `<span className="row-sub">` con cantidad, cliente y fecha.
