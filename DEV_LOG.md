@@ -2,6 +2,19 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-25, Guía de conexión de impresoras por marca (docs/IMPRESORAS.md)
+- Archivo y sitio:
+  - docs/IMPRESORAS.md (nuevo): la investigación completa, con 33 fuentes.
+  - CLAUDE.md, sección "Conexión con impresoras": el plan pasa de 7 a 9 pasos y apunta a la guía. En "Pendiente", la prueba con un 3MF de Bambu queda hecha (la hizo Julen el 22 de octubre).
+  - docs/MAPA.md: el archivo nuevo en la tabla.
+- Qué cambió: hay un documento que explica, marca por marca, cómo se habla con cada impresora (protocolo, puerto, credencial), qué se puede leer sin cambiarle nada a la impresora, si guarda historial, de dónde salen los gramos reales, y en qué orden lo vamos a implementar.
+- Por qué:
+  - El paso 3 del plan decía "antes de nada, comprobar qué deja leer sin Developer Mode". La respuesta: leer el estado de una Bambu está permitido en todos los firmwares; lo restringido desde 2025 es controlarla. Eso decide el diseño: el agente solo lee, y así funciona con la impresora en modo normal sin quitarle a su dueño la app del móvil.
+  - Orden por cuota de mercado y por trabajo: Bambu (la más vendida en 2025 y la de Julen), después Moonraker (un solo driver cubre media docena de marcas y trae el historial hecho), después Prusa (muy común en talleres europeos). Las marcas con protocolos sin documentar, solo cuando alguien que las tenga pueda probarlas.
+  - Va en el repositorio y no en un documento aparte porque es la referencia técnica del agente: el código de cada driver la necesita, y cada sesión de Claude Code la encuentra desde CLAUDE.md. No tiene nada privado; el plan de pago, que sí lo es, no va aquí.
+- Concepto nuevo: MQTT es el protocolo estándar del IoT industrial y doméstico. Un servidor (broker) recibe mensajes publicados en "temas" (`device/123/report`) y los reparte a quien esté suscrito. Ejemplo: la impresora publica su estado en su tema; el agente se suscribe a ese tema y recibe cada cambio sin tener que preguntar.
+- Cómo probarlo: no cambia la app. Léelo en GitHub (se ve con formato) empezando por la tabla "Resumen" y la sección de Bambu.
+
 ### 2026-10-25, Copia de seguridad: un solo botón dorado y un texto que se entiende
 - Archivo y sitio: src/BackupPanel.jsx, dentro de `BackupPanel`: el texto del panel y la clase del botón "Download backup".
 - Qué cambió:

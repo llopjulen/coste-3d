@@ -55,18 +55,21 @@ Hecho el 2026-10-22 (ver DEV_LOG.md), no publicado todavía:
 - Paso 2: la web detecta el agente (src/agent.js, src/Printers.jsx). Pestaña Printers solo si la persona la activa con `layercents.com/?agent` (clave `agentEnabled`); sin activarla, la web no hace ninguna petición a 127.0.0.1.
 
 ## Conexión con impresoras: en curso, un PR por paso
-Empieza por Bambu, con la P1S de Julen. Él prueba cada PR con su impresora; Claude no puede verla.
+Investigación por marca, protocolos, puertos y orden en docs/IMPRESORAS.md: léelo antes de tocar el agente, y corrígelo si un firmware cambia algo. Empieza por Bambu, con la P1S de Julen. Él prueba cada PR con su impresora; Claude no puede verla.
 1. Servidor del agente (hecho, ver arriba).
 2. La web detecta el agente, solo cuando la persona lo activa: un sondeo automático a 127.0.0.1 le saltaría un aviso de permisos de Chrome a todo el mundo (hecho, ver arriba).
-3. Conexión MQTT con la P1S y estado en vivo. Antes de nada, comprobar qué deja leer sin Developer Mode.
-4. Registro de trabajos (inicio, fin, fallo) en un JSON en disco: la impresora no guarda historial.
-5. Gramos y tiempo reales: el 3MF por FTPS, leído con `parseSliceInfo` de src/slicerFile.js.
-6. Pestaña Printers: historial, tasa de fallos y tiempo medio.
-7. "Use real data" en la calculadora.
+3. Bambu: estado en vivo por MQTT en el agente y en la pestaña Printers. Solo lectura, que el firmware permite en modo normal (sin LAN only ni Developer Mode). Julen lo prueba con la checklist de docs/IMPRESORAS.md.
+4. Registro de trabajos de Bambu (inicio, fin, fallo) en un JSON en disco: la impresora no guarda historial.
+5. Gramos reales de Bambu: el 3MF por FTPS, leído con `parseSliceInfo` de src/slicerFile.js. Antes, probar en la P1S si FTPS funciona sin Developer Mode; si no, plan B: arrastrar el 3MF.
+6. Driver Moonraker (Klipper): estado e historial, que ya trae (Creality K2/K1 con Moonraker, Elegoo Neptune 4, Qidi, Sovol, Voron).
+7. Driver PrusaLink.
+8. Pestaña Printers: historial, tasa de fallos y tiempo medio.
+9. "Use real data" en la calculadora.
+Creality por WebSocket 9999, Elegoo SDCP, Anycubic, Flashforge y OctoPrint: solo cuando lo pida alguien que pueda probarlo.
 
 ## Pendiente, por orden
 Plan acordado tras analizar la competencia (MakerQuote, 3DPCC, CraftersQuote): una función cada vez, cada una con su post en Reddit.
-1. Probar con cosas reales: la importación con un .gcode.3mf de Bambu Studio y un G-code de Cura (solo se probó con archivos reales de PrusaSlicer y con muestras del formato de los demás), y en el navegador subir un logo y sacar el PDF del presupuesto.
+1. Probar con cosas reales: un G-code de Cura (solo se probó con muestras del formato), y en el navegador subir un logo y sacar el PDF del presupuesto. La importación de un .gcode.3mf de Bambu Studio la probó Julen con su P1S el 2026-10-22 y va bien.
 2. Varios filamentos por pieza, cada uno con su precio, y perfiles de impresoras y materiales predefinidos.
 3. Mostrar cuántas piezas por semana saca la impresora según el tiempo de impresión (idea de un usuario de Reddit).
 4. Revisar que todo se vea bien en móvil (History, el informe y la calculadora ya están; falta repasar con calma la pantalla del presupuesto en un móvil de verdad).

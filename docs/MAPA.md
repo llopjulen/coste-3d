@@ -46,6 +46,7 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `agent/handler.js` | Qué responde el agente a cada petición: seguridad (Host, Origin, CORS, preflight) y rutas. Hoy solo `/health`. |
 | `agent/handler.test.js` | Tests del agente con `node:test` (`npm test`), sin dependencias. |
 | `docs/MAPA.md` | Este archivo. |
+| `docs/IMPRESORAS.md` | Investigación por marca (Bambu, Klipper/Moonraker, Prusa, Creality, Elegoo, Anycubic, Flashforge, OctoPrint): protocolo, puerto, credenciales, qué se puede leer, y el orden del plan. |
 | `CLAUDE.md`, `DEV_LOG.md` | Instrucciones del proyecto y registro de cada cambio con su porqué. |
 
 Restos de la plantilla de Vite que nada usa y se pueden borrar: `src/assets/` (hero.png, react.svg, vite.svg) y `public/icons.svg`.
