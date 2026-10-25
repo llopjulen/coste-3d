@@ -6,7 +6,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { createHandler, PROTOCOL, VERSION } from '../agent/handler.js'
-import { AGENT_PROTOCOL, checkAgent, consumeAgentOptIn, isAgentEnabled, setAgentEnabled } from './agent.js'
+import { AGENT_PROTOCOL, checkAgent, consumeAgentOptIn, fetchPrinters, isAgentEnabled, setAgentEnabled } from './agent.js'
 
 /* Starts a server with the given handler on a free port; returns its URL and a stop function. */
 async function serve(handler) {
@@ -102,4 +102,29 @@ test('without ?agent nothing changes', () => {
   assert.equal(result, false)
   assert.equal(calls.length, 0)
   assert.equal(storage.map.size, 0)
+})
+
+test('fetchPrinters: reads the list from the REAL agent handler, as the agent sends it', async () => {
+  const status = [{ id: 'p1s', name: 'P1S', brand: 'bambu', connection: 'online', state: 'printing', job: { progress: 0.42 } }]
+  const { url, stop } = await serve(createHandler({ printers: { list: () => status } }))
+  try {
+    assert.deepEqual(await fetchPrinters({ url }), { ok: true, printers: status })
+  } finally {
+    await stop()
+  }
+})
+
+test('fetchPrinters: a stopped agent or a strange answer is { ok: false }, never an exception', async () => {
+  const { url, stop } = await serve(answering(200, {}))
+  await stop()
+  assert.deepEqual(await fetchPrinters({ url }), { ok: false })
+  const odd = await serve(answering(200, { printers: 'nope' }))
+  const broken = await serve(answering(500, '<html>oops</html>'))
+  try {
+    assert.deepEqual(await fetchPrinters({ url: odd.url }), { ok: false })
+    assert.deepEqual(await fetchPrinters({ url: broken.url }), { ok: false })
+  } finally {
+    await odd.stop()
+    await broken.stop()
+  }
 })

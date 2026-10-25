@@ -30,9 +30,10 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/exportExcel.js` | Export `.xlsx` con formato y fórmulas `SUM`. Se carga solo al pulsar el botón. |
 | `src/backup.js` | Copia de seguridad: funciones puras (construir, validar, fusionar, planificar, recordatorio) y capa de almacenamiento (`writeAtomically`, `applyRestore`, `downloadBackup`). |
 | `src/BackupPanel.jsx` | Panel "Backup" al final de History y aviso `BackupReminder` encima. |
-| `src/agent.js` | Cliente del agente local: `checkAgent()` (¿está corriendo y habla nuestro protocolo?) y la activación por enlace (`?agent`). Sin React. |
+| `src/agent.js` | Cliente del agente local: `checkAgent()` (¿está corriendo y habla nuestro protocolo?), `fetchPrinters()` (estado de las impresoras) y la activación por enlace (`?agent`). Sin React. |
 | `src/agent.test.js` | Tests de contrato entre la web y el agente: `checkAgent` contra el código real de `agent/handler.js`. |
-| `src/Printers.jsx` | Pestaña Printers (beta): estado del agente. Solo existe si la persona la activó. |
+| `src/Printers.jsx` | Pestaña Printers (beta): estado del agente y, si está conectado, cada impresora en vivo (pide `/printers` cada 3 s solo mientras la pestaña está abierta y visible). Solo existe si la persona la activó. |
+| `src/printerView.js` | Funciones puras para poner en palabras el estado de una impresora: etiquetas, "1 h 15 min", porcentaje, color de la insignia y la línea de capa y temperaturas. Tests en `printerView.test.js`. |
 | `src/backup.test.js` | Tests de la parte "Your setup" de `backup.js`: ida y vuelta, copias antiguas sin `setup`, Merge/Replace, almacenamiento bloqueado. |
 | `src/Logo.jsx` | El logo en SVG; los colores salen del CSS. |
 | `src/logoGeometry.js` | Las coordenadas de las capas del logo, como datos. Las leen el logo y la gráfica de costes, para que no se descuadren. |
@@ -76,7 +77,7 @@ Restos de la plantilla de Vite que nada usa y se pueden borrar: `src/assets/` (h
              onCustomerQuote)
              BackupPanel / BackupReminder ──► backup.js ◄──► localStorage
   App.set (campos de "Your setup") ──► saveSetupField ──► localStorage `setup`
-             Printers ──► agent.js ──fetch──► agente en 127.0.0.1:31415
+             Printers ──► agent.js ──fetch /health y /printers──► agente en 127.0.0.1:31415
 ```
 
 - `r` es estado derivado: no se guarda en `useState`, se recalcula con `calculate(d)` en cada render. Calcular es barato, y así nunca puede quedar desincronizado de `d`.

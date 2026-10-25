@@ -2,6 +2,33 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-25, Pestaña Printers: cada impresora en vivo
+- Archivo y sitio:
+  - src/agent.js: `fetchPrinters()`, junto a `checkAgent`.
+  - src/printerView.js (nuevo): etiquetas, tiempo restante ("1 h 15 min"), porcentaje, color de la insignia y la línea de capa y temperaturas. src/printerView.test.js (nuevo): 4 tests.
+  - src/Printers.jsx: componente `PrinterCard` y, dentro de `Printers`, el estado `printers` y un efecto que refresca la lista cada 3 s mientras el agente está conectado. El panel "Your printers" va encima del panel del agente.
+  - src/agent.test.js: 2 tests de `fetchPrinters` contra el `handler.js` real del agente.
+  - src/index.css, al final de "Impresoras (beta)": `.printers-body` y `.printer-*`.
+  - docs/MAPA.md y CLAUDE.md: archivos, flujo y estado de hoy.
+- Qué cambió: con el agente conectado, la pestaña Printers enseña cada impresora con su estado (Printing, Idle, Finished…), el nombre del trabajo, una barra de progreso con el %, el tiempo que falta, la capa y las temperaturas. Si la impresora no responde o el código está mal, la tarjeta lo dice con el mensaje del agente. Sin impresoras, explica cómo añadir una.
+- Por qué:
+  - Refresco cada 3 s con `fetch`, no con WebSocket ni Server-Sent Events: el agente contesta de memoria (no pregunta a la impresora en cada petición), así que es barato, y es el mismo `fetch` que ya usa `checkAgent`, con su timeout y su CORS. Un canal abierto sería más inmediato, pero el progreso de una impresión cambia más o menos una vez por minuto: no compensa la complejidad.
+  - Solo pregunta mientras se ve: el efecto se limpia (`clearInterval`) al salir de la pestaña, y cada vuelta se salta si la pestaña del navegador está oculta (`document.visibilityState`). Mantiene la regla del paso 2: nada llama a 127.0.0.1 si nadie está mirando. Comprobado: al salir de la pestaña, cero peticiones.
+  - Si `/printers` falla, se vuelve a comprobar el agente con `checkAgent`: así la pantalla pasa a "The agent isn't running" en vez de quedarse con datos viejos.
+  - `cancelled` en el efecto: si la respuesta llega después de salir de la pestaña, no se toca el estado de un componente que ya no existe.
+  - Las tarjetas no son una "live region": sus números cambian cada pocos segundos y un lector de pantalla no pararía de hablar. La barra sí lleva `role="progressbar"` con su valor, así que se lee bajo demanda.
+  - La insignia lleva texto además de color ("Printing", "Offline", "Access code refused"), porque el color solo no lo distingue todo el mundo. Oro mientras trabaja, rojo si falló o el código está mal, gris si no se sabe; nada de verde, por la regla de la marca.
+  - La lógica de presentación va en `printerView.js`, sin React, como `calculate()`: se prueba sola y el componente solo pinta.
+- Concepto nuevo:
+  - Limpieza de un efecto: la función que devuelve `useEffect` se ejecuta cuando el componente desaparece o cuando cambian sus dependencias. Ahí se paran los temporizadores; si no, seguirían vivos llamando al agente aunque ya no se vea la pestaña.
+  - `document.visibilityState`: vale `'hidden'` cuando la pestaña del navegador no se ve (otra pestaña delante, el móvil bloqueado).
+- Cómo se probó: 84 tests; y en Chromium sobre el build, con el agente real conectado a una impresora de mentira con TLS: la tarjeta pasa de 45 % a 60 % en 3,5 s, enseña "1 h 15 min left" y "Layer 12 of 300 · Nozzle 220 °C · Bed 60 °C", a 1440 y a 390 px; al ir a Calculator no hay más peticiones; al apagar la impresora de mentira, la tarjeta dice "Offline" con el motivo y sin la IP. Y por casualidad salió la prueba del certificado: la impresora de mentira genera uno nuevo cada vez que arranca, así que al reiniciarla la tarjeta dijo "Needs attention" y pidió volver a añadirla, sin mandarle el código. Tras `npm run agent -- add` de nuevo, volvió a conectar.
+- Cómo probarlo:
+  1. Con tu P1S añadida (`npm run agent -- add`), `npm run agent`.
+  2. `npm run dev` y abre `http://localhost:5173/?agent`, pestaña Printers.
+  3. Debe salir "P1S" con su estado. Lanza una impresión corta: la barra avanza sola.
+  4. Apaga la impresora (o desconéctala de la red): en unos segundos la tarjeta dice "Offline" y que está reintentando. Al encenderla, vuelve sola.
+
 ### 2026-10-25, Agente, paso 3: estado en vivo de las Bambu por MQTT
 - Archivo y sitio:
   - agent/mqtt.js (nuevo): cliente MQTT 3.1.1 mínimo, sin dependencias.

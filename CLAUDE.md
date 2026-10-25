@@ -47,18 +47,26 @@ Hecho el 2026-10-16 (ver DEV_LOG.md):
 - Publicado todo lo anterior en layercents.com el 2026-10-16. La versión vieja no guardaba nada en el navegador, así que con el cambio de dirección nadie perdió datos.
 - Repaso visual (publicado el mismo día): barra de arriba en dos filas en el móvil, barra fija con coste y precio en el móvil, tres pasos bajo el título, títulos con la letra del logo, pie de página con enlace a GitHub y fechas tipo "12 Oct 2026". Quitada la frase "Filament is only X%".
 - Portada de GitHub: README con logo y capturas (carpeta screenshots/) y el paquete se llama layercents. Los ajustes del repositorio (nombre, About, temas, imagen para compartir) no se pueden cambiar desde Claude: los cambia Julen en GitHub.
-Hecho el 2026-10-22 (ver DEV_LOG.md), no publicado todavía:
-- Rediseño de la calculadora (PRs #10 a #13, apilados): gráfica de costes con el símbolo ¢ (src/symbolChart.js, src/CostSymbol.jsx), precio recomendado como protagonista, y "Your setup" (impresora, luz, tarifa, comisión y margen) guardado en el dispositivo (clave `setup`, también dentro de la copia de seguridad sin subir `schemaVersion`). Sustituye al botón "Show cost only".
+Hecho el 2026-10-22 (ver DEV_LOG.md), publicado ese mismo día:
+- Rediseño de la calculadora (llegó a main con el PR #14): gráfica de costes con el símbolo ¢ (src/symbolChart.js, src/CostSymbol.jsx), precio recomendado como protagonista, y "Your setup" (impresora, luz, tarifa, comisión y margen) guardado en el dispositivo (clave `setup`, también dentro de la copia de seguridad sin subir `schemaVersion`). Sustituye al botón "Show cost only".
 - Copia de seguridad (src/backup.js y src/BackupPanel.jsx): "Download backup" baja un JSON versionado (`schemaVersion`) con `savedQuotes`, `business` y `quoteCounter`; "Restore from file" lo valida, enseña un resumen y deja elegir Merge o Replace. El contador de presupuestos nunca baja. Aviso en History y punto en la pestaña cuando toca copia (clave `lastBackupAt`, propia de cada dispositivo y fuera del archivo).
 - Mapa del código en docs/MAPA.md: archivos, flujo de datos, claves de localStorage, fórmulas y dónde tocar para cada cambio.
 - Agente local, paso 1 de la conexión con impresoras: servidor HTTP en agent/ (`npm run agent`, puerto 31415, solo `/health`) con tests en `node:test` (`npm test`).
 - Paso 2: la web detecta el agente (src/agent.js, src/Printers.jsx). Pestaña Printers solo si la persona la activa con `layercents.com/?agent` (clave `agentEnabled`); sin activarla, la web no hace ninguna petición a 127.0.0.1.
 
+Hecho el 2026-10-25 (ver DEV_LOG.md), en PRs sin mergear todavía (#16 a #20, todos contra main y construidos uno encima de otro: se mergean en orden):
+- SEO básico (#16): título y descripción, canonical, robots.txt, sitemap.xml, datos estructurados y texto dentro de `#root`.
+- Arreglos del móvil (#17): tabla del presupuesto entera, History con importes, meses del informe con año, un solo botón dorado en la copia.
+- docs/IMPRESORAS.md (#18): cómo se conecta cada marca.
+- Agente, paso 3 (#19): estado en vivo de las Bambu por MQTT, solo lectura (agent/mqtt.js, agent/drivers/bambu.js), impresoras en ~/.layercents/printers.json, `npm run agent -- add`, `GET /printers`, `PROTOCOL` 2.
+- Pestaña Printers en vivo (#20).
+- Plan de pago: documento aparte, privado (no va en el repositorio, que es público). Sin código de pagos.
+
 ## Conexión con impresoras: en curso, un PR por paso
 Investigación por marca, protocolos, puertos y orden en docs/IMPRESORAS.md: léelo antes de tocar el agente, y corrígelo si un firmware cambia algo. Empieza por Bambu, con la P1S de Julen. Él prueba cada PR con su impresora; Claude no puede verla.
 1. Servidor del agente (hecho, ver arriba).
 2. La web detecta el agente, solo cuando la persona lo activa: un sondeo automático a 127.0.0.1 le saltaría un aviso de permisos de Chrome a todo el mundo (hecho, ver arriba).
-3. Bambu: estado en vivo por MQTT en el agente y en la pestaña Printers. Solo lectura, que el firmware permite en modo normal (sin LAN only ni Developer Mode). Julen lo prueba con la checklist de docs/IMPRESORAS.md.
+3. Bambu: estado en vivo por MQTT en el agente y en la pestaña Printers (hecho en #19 y #20, falta que Julen lo pruebe con su P1S con la checklist de docs/IMPRESORAS.md). Solo lectura, que el firmware permite en modo normal (sin LAN only ni Developer Mode).
 4. Registro de trabajos de Bambu (inicio, fin, fallo) en un JSON en disco: la impresora no guarda historial.
 5. Gramos reales de Bambu: el 3MF por FTPS, leído con `parseSliceInfo` de src/slicerFile.js. Antes, probar en la P1S si FTPS funciona sin Developer Mode; si no, plan B: arrastrar el 3MF.
 6. Driver Moonraker (Klipper): estado e historial, que ya trae (Creality K2/K1 con Moonraker, Elegoo Neptune 4, Qidi, Sovol, Voron).
@@ -72,7 +80,7 @@ Plan acordado tras analizar la competencia (MakerQuote, 3DPCC, CraftersQuote): u
 1. Probar con cosas reales: un G-code de Cura (solo se probó con muestras del formato), y en el navegador subir un logo y sacar el PDF del presupuesto. La importación de un .gcode.3mf de Bambu Studio la probó Julen con su P1S el 2026-10-22 y va bien.
 2. Varios filamentos por pieza, cada uno con su precio, y perfiles de impresoras y materiales predefinidos.
 3. Mostrar cuántas piezas por semana saca la impresora según el tiempo de impresión (idea de un usuario de Reddit).
-4. Revisar que todo se vea bien en móvil (History, el informe y la calculadora ya están; falta repasar con calma la pantalla del presupuesto en un móvil de verdad).
+4. Revisar en un móvil de verdad la pantalla del presupuesto (en Chromium a 360 y 390 px ya cabe entera desde #17).
 5. Pensar cómo monetizar (por ejemplo, Excel y PDF como "Pro"). Solo hablarlo; no tocar código de pagos sin pedirlo.
 
 ## Ideas futuras, no tocar sin pedirlo

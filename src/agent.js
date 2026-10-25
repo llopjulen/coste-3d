@@ -49,6 +49,23 @@ export async function checkAgent({ url = AGENT_URL } = {}) {
   return { status: 'connected', info }
 }
 
+/* Asks the agent for the live status of every printer. Never throws:
+   { ok: true, printers }  the list (maybe empty), in the agent's common
+                           shape (printerStatus in agent/drivers/bambu.js)
+   { ok: false }           the agent didn't answer properly; the caller
+                           checks the agent again to say why */
+export async function fetchPrinters({ url = AGENT_URL } = {}) {
+  try {
+    const res = await fetch(`${url}/printers`, { cache: 'no-store', signal: AbortSignal.timeout(TIMEOUT_MS) })
+    if (!res.ok) return { ok: false }
+    const data = await res.json()
+    // Only an array is trusted to be the list; anything else is treated as "no answer".
+    return Array.isArray(data?.printers) ? { ok: true, printers: data.printers } : { ok: false }
+  } catch {
+    return { ok: false }
+  }
+}
+
 /* ------------------------------------------------------------------
    Opt-in. The Printers tab, and with it every call to 127.0.0.1, only
    exists in browsers where the person turned it on. Calling a local
