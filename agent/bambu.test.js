@@ -81,7 +81,12 @@ test('explain: each failure gets a message a person can act on, and only a chang
   const auth = explain({ code: 'CONNECT_REFUSED', returnCode: 4 })
   assert.equal(auth.connection, 'auth-error')
   assert.match(auth.message, /access code/)
-  assert.equal(explain({ code: 'ECONNREFUSED', message: 'connect ECONNREFUSED' }).connection, 'offline')
+  const offline = explain({ code: 'ECONNREFUSED', message: 'connect ECONNREFUSED 192.168.1.50:8883' })
+  assert.equal(offline.connection, 'offline')
+  assert.match(offline.message, /switched on/)
+  // The status goes to the web app: the printer's address must not ride along in the text.
+  assert.equal(offline.message.includes('192.168.1.50'), false)
+  assert.match(explain({ code: 'EWHATEVER', message: 'x 10.0.0.9' }).message, /EWHATEVER/)
 })
 
 test('driver: logs in as bblp, subscribes to its serial, asks for pushall, and merges partial updates', async () => {

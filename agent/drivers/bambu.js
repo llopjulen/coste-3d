@@ -231,8 +231,26 @@ export function explain(err) {
   if (err.code === 'SUBSCRIBE_REFUSED') {
     return { connection: 'error', fatal: false, message: 'The printer refused the subscription: check the serial number.' }
   }
-  // Switched off, wrong IP, Wi-Fi asleep, cable out: all look the same from here.
-  return { connection: 'offline', fatal: false, message: `Can’t reach the printer (${err.message}). Retrying…` }
+  // Switched off, wrong IP, Wi-Fi asleep, cable out: from here they only
+  // differ in the system's error code. Only the code goes into the message,
+  // never err.message: that one includes the printer's IP, and the status
+  // the web app receives must not carry it (see printerStatus).
+  return { connection: 'offline', fatal: false, message: `Can’t reach the printer (${NETWORK_ERRORS[err.code] ?? err.code ?? 'connection failed'}). Retrying…` }
+}
+
+// The usual network failures, in words.
+const NETWORK_ERRORS = {
+  ECONNREFUSED: 'it refused the connection: is it switched on?',
+  TIMEOUT: 'no answer: is it on and on the same network?',
+  ETIMEDOUT: 'no answer: is it on and on the same network?',
+  EHOSTUNREACH: 'not reachable from this computer',
+  ENETUNREACH: 'this computer is not on a network',
+  ENOTFOUND: 'that address does not exist',
+  ECONNRESET: 'the connection was cut',
+  CLOSED: 'the printer closed the connection',
+  CONNECT_TIMEOUT: 'it accepted the connection but did not answer the login',
+  KEEPALIVE_TIMEOUT: 'it stopped answering',
+  PROTOCOL: 'it sent something that is not MQTT',
 }
 
 /* ------------------------------------------------------------------
