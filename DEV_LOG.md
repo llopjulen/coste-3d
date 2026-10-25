@@ -2,6 +2,17 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-25, Copia de seguridad: un solo botón dorado y un texto que se entiende
+- Archivo y sitio: src/BackupPanel.jsx, dentro de `BackupPanel`: el texto del panel y la clase del botón "Download backup".
+- Qué cambió:
+  - El texto decía "Download a backup now and then and keep it somewhere safe", que en inglés se lee a trompicones. Ahora: "Download a backup from time to time and keep it somewhere safe". Además nombra "setup", que va dentro de la copia desde que se guarda "Your setup".
+  - Cuando toca hacer copia, el aviso de arriba ya tiene su botón dorado "Download backup". El del panel de abajo pasa a ser gris en ese caso, y sigue dorado cuando no hay aviso.
+- Por qué: en el móvil se veían dos botones dorados iguales en la misma pantalla, y dos botones idénticos con el mismo peso visual parecen dos acciones distintas. El dorado es "lo que deberías hacer ahora", y solo debe estar en un sitio. Los dos siguen haciendo lo mismo (`onBackup`). Se usa `status.due`, que el panel ya calculaba con `backupStatus`: es exactamente la condición con la que el aviso aparece, así que no hay dos reglas que puedan contradecirse.
+- Cómo probarlo:
+  1. `npm run dev` en un navegador sin datos; guarda un presupuesto y abre History.
+  2. Arriba sale el aviso con su botón dorado; abajo, en "Backup", el mismo botón es gris y el texto dice "from time to time".
+  3. Pulsa cualquiera de los dos: se descarga la copia, el aviso desaparece y el botón de abajo vuelve a ser dorado.
+
 ### 2026-10-25, Informe: el mes de la gráfica ya no parece un día
 - Archivo y sitio:
   - src/Report.jsx, en "Chart 1: quoted value per month": cada mes guarda `key`, `month` ("Oct"), `year` y si es enero; en el render, el año va debajo del mes en la primera barra y en cada enero.
