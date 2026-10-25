@@ -2,6 +2,20 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-25, Presupuesto en el móvil: la tabla de piezas cabe entera
+- Archivo y sitio: src/index.css, sección del presupuesto (`.quote-doc`), dentro de `@media(max-width:700px)`: dos reglas nuevas para `.quote-lines .report-table`.
+- Qué cambió: en un móvil, la tabla de piezas del presupuesto ya no se corta. Antes, la columna "Total" salía como "Tota" y los importes como "7.94 EUF", con una barra horizontal escondida. Ahora el nombre de la pieza puede ocupar dos líneas y los márgenes de cada celda son más pequeños.
+- Por qué:
+  - Es lo que ve un cliente, y se notaba al abrirlo en un móvil. La tabla va dentro de `.table-scroll` (con `overflow-x: auto`): en vez de romperse, se podía desplazar en horizontal, pero nadie lo descubre.
+  - La tabla hereda `white-space: nowrap` de `.report-table`, que el informe necesita para sus columnas. Solo en el presupuesto, y solo en la primera columna (el nombre), se vuelve a permitir el salto de línea, con `overflow-wrap: anywhere` para que una palabra muy larga también pueda partirse. Los importes siguen en una línea: un "12.38" partido en dos sería peor.
+  - Relleno de 6 px × 4 px en vez de 6 px × 8 px: con 4 columnas son 32 px recuperados, justo lo que faltaba a 360 px.
+  - Solo en pantallas de 700 px o menos: el PDF se imprime con el ancho de un A4 (unos 794 px CSS), así que no cambia.
+- Cómo probarlo:
+  1. `npm run dev` con el navegador en modo móvil a 390 px y a 360 px.
+  2. Guarda 3 o 4 presupuestos (uno con un nombre largo), ve a History, marca todos y pulsa "Customer quote".
+  3. La tabla del presupuesto se ve entera sin desplazarla: "Total" completo, los importes enteros, y el nombre largo en dos o tres líneas.
+  4. "Save as PDF" en un ordenador: el PDF se ve igual que antes.
+
 ### 2026-10-23, SEO básico: robots, sitemap, canonical, datos estructurados y contenido sin JavaScript
 - Archivo y sitio:
   - index.html, dentro de `<head>`: descripción y título nuevos, `<link rel="canonical">`, `og:type`, etiquetas `twitter:*`, un bloque `application/ld+json` y un `<style>` mínimo. Dentro de `<body>`, el `<div id="root">` ya no está vacío: lleva un `<main>` con el `<h1>` y un párrafo.

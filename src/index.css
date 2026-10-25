@@ -537,6 +537,11 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 .quote-notes{margin-top:26px;break-inside:avoid}
 .quote-notes p{white-space:pre-line;font-size:.82rem;line-height:1.5}
 @media(max-width:700px){
+  /* Tabla de piezas en el movil: las cuatro columnas tienen que caber sin
+     barra horizontal, o el cliente ve "Tota" y "7.94 EUF" cortados. El
+     nombre de la pieza puede partirse en dos lineas; los importes no. */
+  .quote-lines .report-table th,.quote-lines .report-table td{padding:6px 4px}
+  .quote-lines .report-table td:first-child{white-space:normal;overflow-wrap:anywhere}
   .quote-from{max-width:100%}
   .quote-title{text-align:left}
   .quote-title dl{justify-content:start}
