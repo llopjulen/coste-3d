@@ -2,6 +2,172 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-25, CLAUDE.md: cada cambio dice de qué asignatura de la carrera viene
+- Archivo y sitio: CLAUDE.md, sección "Regla principal: registro de cambios", en el formato de las entradas.
+- Qué cambió: las entradas de este registro tienen una línea nueva, "De la carrera", que dice qué asignatura explica lo que usa el cambio y dónde se ve en el código. Si no hay ninguna, no se pone.
+- Por qué: la carrera enseña los conceptos y el proyecto las herramientas, pero nadie une las dos cosas. Con esta línea, cada PR es un ejemplo práctico del temario: la codificación de longitudes de MQTT es de Sistemas digitales, `writeAtomically` es una transacción de Bases de datos, el Ctrl+C del agente es una señal de Sistemas Operativos, y el arreglo pendiente de las impresiones fallidas (base / (1 − p)) es la esperanza de una distribución geométrica de Estadística. Va en CLAUDE.md porque es lo que lee cada sesión nueva de Claude Code; si solo se dijera en una conversación, se perdería.
+- Cómo probarlo: no cambia la app. En el próximo PR que toque código, su entrada del DEV_LOG debe llevar la línea "De la carrera".
+
+### 2026-10-25, Pestaña Printers: cada impresora en vivo
+- Archivo y sitio:
+  - src/agent.js: `fetchPrinters()`, junto a `checkAgent`.
+  - src/printerView.js (nuevo): etiquetas, tiempo restante ("1 h 15 min"), porcentaje, color de la insignia y la línea de capa y temperaturas. src/printerView.test.js (nuevo): 4 tests.
+  - src/Printers.jsx: componente `PrinterCard` y, dentro de `Printers`, el estado `printers` y un efecto que refresca la lista cada 3 s mientras el agente está conectado. El panel "Your printers" va encima del panel del agente.
+  - src/agent.test.js: 2 tests de `fetchPrinters` contra el `handler.js` real del agente.
+  - src/index.css, al final de "Impresoras (beta)": `.printers-body` y `.printer-*`.
+  - docs/MAPA.md y CLAUDE.md: archivos, flujo y estado de hoy.
+- Qué cambió: con el agente conectado, la pestaña Printers enseña cada impresora con su estado (Printing, Idle, Finished…), el nombre del trabajo, una barra de progreso con el %, el tiempo que falta, la capa y las temperaturas. Si la impresora no responde o el código está mal, la tarjeta lo dice con el mensaje del agente. Sin impresoras, explica cómo añadir una.
+- Por qué:
+  - Refresco cada 3 s con `fetch`, no con WebSocket ni Server-Sent Events: el agente contesta de memoria (no pregunta a la impresora en cada petición), así que es barato, y es el mismo `fetch` que ya usa `checkAgent`, con su timeout y su CORS. Un canal abierto sería más inmediato, pero el progreso de una impresión cambia más o menos una vez por minuto: no compensa la complejidad.
+  - Solo pregunta mientras se ve: el efecto se limpia (`clearInterval`) al salir de la pestaña, y cada vuelta se salta si la pestaña del navegador está oculta (`document.visibilityState`). Mantiene la regla del paso 2: nada llama a 127.0.0.1 si nadie está mirando. Comprobado: al salir de la pestaña, cero peticiones.
+  - Si `/printers` falla, se vuelve a comprobar el agente con `checkAgent`: así la pantalla pasa a "The agent isn't running" en vez de quedarse con datos viejos.
+  - `cancelled` en el efecto: si la respuesta llega después de salir de la pestaña, no se toca el estado de un componente que ya no existe.
+  - Las tarjetas no son una "live region": sus números cambian cada pocos segundos y un lector de pantalla no pararía de hablar. La barra sí lleva `role="progressbar"` con su valor, así que se lee bajo demanda.
+  - La insignia lleva texto además de color ("Printing", "Offline", "Access code refused"), porque el color solo no lo distingue todo el mundo. Oro mientras trabaja, rojo si falló o el código está mal, gris si no se sabe; nada de verde, por la regla de la marca.
+  - La lógica de presentación va en `printerView.js`, sin React, como `calculate()`: se prueba sola y el componente solo pinta.
+- Concepto nuevo:
+  - Limpieza de un efecto: la función que devuelve `useEffect` se ejecuta cuando el componente desaparece o cuando cambian sus dependencias. Ahí se paran los temporizadores; si no, seguirían vivos llamando al agente aunque ya no se vea la pestaña.
+  - `document.visibilityState`: vale `'hidden'` cuando la pestaña del navegador no se ve (otra pestaña delante, el móvil bloqueado).
+- Cómo se probó: 84 tests; y en Chromium sobre el build, con el agente real conectado a una impresora de mentira con TLS: la tarjeta pasa de 45 % a 60 % en 3,5 s, enseña "1 h 15 min left" y "Layer 12 of 300 · Nozzle 220 °C · Bed 60 °C", a 1440 y a 390 px; al ir a Calculator no hay más peticiones; al apagar la impresora de mentira, la tarjeta dice "Offline" con el motivo y sin la IP. Y por casualidad salió la prueba del certificado: la impresora de mentira genera uno nuevo cada vez que arranca, así que al reiniciarla la tarjeta dijo "Needs attention" y pidió volver a añadirla, sin mandarle el código. Tras `npm run agent -- add` de nuevo, volvió a conectar.
+- Cómo probarlo:
+  1. Con tu P1S añadida (`npm run agent -- add`), `npm run agent`.
+  2. `npm run dev` y abre `http://localhost:5173/?agent`, pestaña Printers.
+  3. Debe salir "P1S" con su estado. Lanza una impresión corta: la barra avanza sola.
+  4. Apaga la impresora (o desconéctala de la red): en unos segundos la tarjeta dice "Offline" y que está reintentando. Al encenderla, vuelve sola.
+
+### 2026-10-25, Agente, paso 3: estado en vivo de las Bambu por MQTT
+- Archivo y sitio:
+  - agent/mqtt.js (nuevo): cliente MQTT 3.1.1 mínimo, sin dependencias.
+  - agent/drivers/bambu.js (nuevo): `openPinnedTls`, `createBambuDriver`, `explain`, `printerStatus` y `probeBambu`.
+  - agent/config.js (nuevo): la lista de impresoras en `~/.layercents/printers.json`.
+  - agent/printers.js (nuevo): un driver por impresora.
+  - agent/setup.js (nuevo): `npm run agent -- add`, `list` y `remove`.
+  - agent/server.js: distingue arrancar el agente de los comandos de `setup.js`; carga las impresoras, las conecta y las para con Ctrl+C.
+  - agent/handler.js: ruta `GET /printers`; `/health` deja de llevar la lista de impresoras; `PROTOCOL` pasa a 2 y `VERSION` a 0.2.0.
+  - src/agent.js: `AGENT_PROTOCOL` pasa a 2, para que la web y el agente sigan hablando la misma versión (el test de contrato lo exige).
+  - agent/fakeBroker.js (nuevo) y agent/mqtt.test.js, agent/bambu.test.js, agent/config.test.js (nuevos): 32 tests. agent/handler.test.js: 2 más.
+  - package.json: `npm test` con `--test-timeout=20000`.
+  - docs/MAPA.md: archivos y flujo del agente.
+- Qué cambió: el agente se conecta a las impresoras Bambu que se le añadan y mantiene su estado en vivo (imprimiendo o no, progreso, minutos restantes, capa, temperaturas). La web puede leerlo en `http://127.0.0.1:31415/printers`. Las impresoras se añaden con `npm run agent -- add`, que prueba la IP, el código y el número de serie antes de guardar nada. La pantalla de la web llega en el PR siguiente.
+- Por qué:
+  - **Solo lectura.** Desde 2025 Bambu exige autorización (o LAN only + Developer Mode) para controlar la impresora, pero leer su estado sigue permitido en modo normal (fuentes en docs/IMPRESORAS.md). El agente solo se suscribe y pide `pushall`; nunca manda órdenes. Así funciona sin que la persona pierda Bambu Handy.
+  - **Un cliente MQTT propio en vez del paquete `mqtt` de npm.** El paquete trae unas 15 dependencias más a un programa que guarda los códigos de acceso de las impresoras, y en 2025 hubo varios ataques a la cadena de suministro de npm (paquetes populares secuestrados para robar secretos). Necesitamos 7 de los 14 tipos de paquete de MQTT 3.1.1: son unas 200 líneas, con cada byte comprobado en los tests contra la especificación. Lo que se pierde: QoS 2, reconexión automática y TLS ya hechos; lo primero no hace falta y lo demás está en el driver.
+  - **El certificado de la impresora, fijado por su huella (como SSH).** Las Bambu presentan un certificado que no firma ninguna autoridad pública, así que la verificación normal de TLS siempre falla. Desactivarla sin más (lo que hacen muchas integraciones) dejaría que cualquiera en la misma red se hiciera pasar por la impresora y se llevara el código de acceso. Al añadir la impresora se guarda la huella SHA-256 de su certificado, y después solo se acepta ese. La comprobación ocurre ANTES de mandar el login MQTT: con un certificado distinto, el código no sale del ordenador (hay un test con TLS de verdad que lo comprueba). Si la huella cambia, el agente para y pide volver a añadirla; no reintenta solo, porque eso sería aceptar el cambio sin que nadie lo vea.
+  - **La configuración fuera del proyecto** (`~/.layercents/printers.json`, carpeta 700 y archivo 600). Dentro del proyecto, un código de acceso podría acabar en un commit por error. Se escribe en un archivo temporal y se renombra (`rename` es atómico): si algo falla a medias, no se pierde la lista. Cada campo se valida al cargarla, porque el archivo se puede editar a mano.
+  - **Añadir impresoras desde la terminal, no desde la web.** El código de acceso va del teclado al archivo sin pasar por una pestaña del navegador, y el agente no necesita ninguna ruta que cambie cosas (una ruta que escribe es una puerta mucho más grande que una que solo lee). Se pregunta en un prompt y no como argumento porque los argumentos quedan en el historial de la terminal. Antes de guardar se prueba todo (`probeBambu`): IP (responde TLS), código (el login MQTT se acepta) y número de serie (llega un estado por ese tema), y si algo falla se dice cuál.
+  - **Actualizaciones parciales.** Las P1 y A1 solo mandan lo que cambia; el driver va fusionando (`{ ...anterior, ...nuevo }`) y pide `pushall` una vez por conexión, porque es pesado para la impresora.
+  - **Reconexión con esperas crecientes** (2, 4, 8… hasta 60 s; 60 s si el código está mal): una impresora apagada toda la noche no recibe un intento cada segundo. El keepalive de MQTT (un PINGREQ cada 30 s) detecta una impresora que desaparece sin cerrar la conexión.
+  - **Un estado común para todas las marcas** (`printerStatus`): la web no sabe qué marca es cada impresora, y añadir Moonraker o Prusa será añadir un archivo de driver. Nunca incluye la IP, el número de serie ni el código (hay un test).
+  - **Los mensajes de error tampoco llevan la IP.** El texto de error de Node incluye la dirección (`connect ECONNREFUSED 192.168.1.50:8883`), así que `explain` usa solo el código del sistema (`ECONNREFUSED`) traducido a palabras ("is it switched on?"). Lo vi en la prueba de la pantalla, al apagar la impresora de mentira, y tiene su test.
+  - **`PROTOCOL` 2.** La API cambió (ruta nueva y `/health` sin lista), y el test de contrato exige que web y agente digan el mismo número, así que `AGENT_PROTOCOL` sube en el mismo PR. Un agente viejo con la web nueva sale como "desactualizado" en vez de fallar raro.
+  - **`--test-timeout=20000`:** con tests de red, un test que se quedara esperando un evento que nunca llega bloquearía `npm test` para siempre. Así falla a los 20 s con su nombre.
+  - **Tests con una impresora de mentira** (`fakeBroker.js`): habla MQTT de verdad por un puerto aleatorio y graba lo que recibe. Los de TLS crean un certificado temporal con `openssl` y se saltan donde no está instalado (Windows, normalmente).
+- Concepto nuevo:
+  - **TLS y huella de certificado:** TLS cifra la conexión y el servidor enseña un certificado. La huella (`fingerprint256`) es un hash SHA-256 de ese certificado: si cambia un solo bit, cambia la huella. Comparar huellas es como comprobar la matrícula de un coche que ya conoces.
+  - **Trust on first use (TOFU):** la primera vez se confía en lo que hay y se recuerda; después solo se acepta lo mismo. Es lo que hace `ssh` con el "The authenticity of host … can't be established".
+  - **EventEmitter:** un objeto que avisa de cosas (`session.on('message', fn)`). Ojo: si se emite `'error'` y nadie escucha, Node lanza la excepción y para el programa; por eso todo el que usa `MqttSession` escucha `'error'`.
+  - **Framing en TCP:** TCP entrega bytes, no mensajes. Un paquete puede llegar en tres trozos o tres paquetes en uno. `PacketReader` guarda lo que sobra y solo devuelve paquetes completos.
+- Cómo se probó: 78 tests (`npm test`), y un recorrido completo con una impresora de mentira escuchando con TLS en 127.0.0.1:8883: `npm run agent -- add` con un código malo (dice que el código está mal y no guarda nada), con el bueno (guarda, carpeta 700 y archivo 600, número de serie en minúsculas y con espacio corregido), `list`, `npm run agent` y `/printers` devolviendo "printing" con el progreso subiendo, sin código ni serie en la respuesta, y Ctrl+C. Falta lo que solo puede hacer Julen: probarlo con su P1S.
+- Cómo probarlo (con la P1S):
+  1. En la impresora, apunta la IP, el número de serie (Ajustes > Dispositivo) y el código de acceso (Ajustes > WLAN, abajo).
+  2. `npm run agent -- add` y contesta. Debe decir "✓ Connected. The printer says: IDLE" (o lo que esté haciendo).
+  3. `npm run agent` y abre `http://127.0.0.1:31415/printers` en el navegador: tu P1S con `"connection": "online"`.
+  4. Lanza una impresión: `state` pasa a `printing` y `progress` sube. Bambu Handy debe seguir funcionando.
+  5. Si algo falla, copia lo que imprime la terminal del agente (no lleva el código).
+
+### 2026-10-25, Guía de conexión de impresoras por marca (docs/IMPRESORAS.md)
+- Archivo y sitio:
+  - docs/IMPRESORAS.md (nuevo): la investigación completa, con 33 fuentes.
+  - CLAUDE.md, sección "Conexión con impresoras": el plan pasa de 7 a 9 pasos y apunta a la guía. En "Pendiente", la prueba con un 3MF de Bambu queda hecha (la hizo Julen el 22 de octubre).
+  - docs/MAPA.md: el archivo nuevo en la tabla.
+- Qué cambió: hay un documento que explica, marca por marca, cómo se habla con cada impresora (protocolo, puerto, credencial), qué se puede leer sin cambiarle nada a la impresora, si guarda historial, de dónde salen los gramos reales, y en qué orden lo vamos a implementar.
+- Por qué:
+  - El paso 3 del plan decía "antes de nada, comprobar qué deja leer sin Developer Mode". La respuesta: leer el estado de una Bambu está permitido en todos los firmwares; lo restringido desde 2025 es controlarla. Eso decide el diseño: el agente solo lee, y así funciona con la impresora en modo normal sin quitarle a su dueño la app del móvil.
+  - Orden por cuota de mercado y por trabajo: Bambu (la más vendida en 2025 y la de Julen), después Moonraker (un solo driver cubre media docena de marcas y trae el historial hecho), después Prusa (muy común en talleres europeos). Las marcas con protocolos sin documentar, solo cuando alguien que las tenga pueda probarlas.
+  - Va en el repositorio y no en un documento aparte porque es la referencia técnica del agente: el código de cada driver la necesita, y cada sesión de Claude Code la encuentra desde CLAUDE.md. No tiene nada privado; el plan de pago, que sí lo es, no va aquí.
+- Concepto nuevo: MQTT es el protocolo estándar del IoT industrial y doméstico. Un servidor (broker) recibe mensajes publicados en "temas" (`device/123/report`) y los reparte a quien esté suscrito. Ejemplo: la impresora publica su estado en su tema; el agente se suscribe a ese tema y recibe cada cambio sin tener que preguntar.
+- Cómo probarlo: no cambia la app. Léelo en GitHub (se ve con formato) empezando por la tabla "Resumen" y la sección de Bambu.
+
+### 2026-10-25, Copia de seguridad: un solo botón dorado y un texto que se entiende
+- Archivo y sitio: src/BackupPanel.jsx, dentro de `BackupPanel`: el texto del panel y la clase del botón "Download backup".
+- Qué cambió:
+  - El texto decía "Download a backup now and then and keep it somewhere safe", que en inglés se lee a trompicones. Ahora: "Download a backup from time to time and keep it somewhere safe". Además nombra "setup", que va dentro de la copia desde que se guarda "Your setup".
+  - Cuando toca hacer copia, el aviso de arriba ya tiene su botón dorado "Download backup". El del panel de abajo pasa a ser gris en ese caso, y sigue dorado cuando no hay aviso.
+- Por qué: en el móvil se veían dos botones dorados iguales en la misma pantalla, y dos botones idénticos con el mismo peso visual parecen dos acciones distintas. El dorado es "lo que deberías hacer ahora", y solo debe estar en un sitio. Los dos siguen haciendo lo mismo (`onBackup`). Se usa `status.due`, que el panel ya calculaba con `backupStatus`: es exactamente la condición con la que el aviso aparece, así que no hay dos reglas que puedan contradecirse.
+- Cómo probarlo:
+  1. `npm run dev` en un navegador sin datos; guarda un presupuesto y abre History.
+  2. Arriba sale el aviso con su botón dorado; abajo, en "Backup", el mismo botón es gris y el texto dice "from time to time".
+  3. Pulsa cualquiera de los dos: se descarga la copia, el aviso desaparece y el botón de abajo vuelve a ser dorado.
+
+### 2026-10-25, Informe: el mes de la gráfica ya no parece un día
+- Archivo y sitio:
+  - src/Report.jsx, en "Chart 1: quoted value per month": cada mes guarda `key`, `month` ("Oct"), `year` y si es enero; en el render, el año va debajo del mes en la primera barra y en cada enero.
+  - src/index.css, sección de la gráfica de columnas: `.col` con `position: relative`, `.col-label` colgada por debajo del eje con `position: absolute`, `.col-year` y más margen bajo la gráfica.
+- Qué cambió: las barras ponían "Oct 26", que se lee como "26 de octubre". Ahora pone "Oct" y debajo "2026" en la primera barra; los meses siguientes solo llevan el mes hasta que cambia el año, y en cada enero vuelve a salir el año.
+- Por qué:
+  - Formato `{ month: 'short', year: '2-digit' }` daba "Oct 26": ambiguo justo en un informe que se enseña a otros. Con el año entero en cada barra ("Oct 2026") no caben 12 etiquetas en un móvil ni en el ancho de un A4 sin pisarse. Poner el año solo donde empieza es lo que hacen las gráficas de series temporales: se sitúa cada mes sin repetir el año doce veces.
+  - La etiqueta pasa a `position: absolute` por debajo del eje. Antes ocupaba sitio dentro de la columna (con un margen negativo que lo compensaba para una sola línea): una etiqueta de dos líneas habría subido su barra unos píxeles respecto a las demás. Comprobado: todas las barras acaban a la misma altura.
+  - La `key` de React pasa a ser "2026-10" (año y mes) en vez del texto de la etiqueta: dos barras nunca pueden tener la misma clave, aunque se repita "Oct" en dos años distintos.
+- Concepto nuevo: `position: absolute` dentro de un padre con `position: relative` coloca el elemento respecto a ese padre y lo saca del flujo: no empuja a nadie. `top: 100%` lo pone justo debajo del padre, y `left: 50%` con `transform: translateX(-50%)` lo centra.
+- Cómo probarlo:
+  1. `npm run dev`, guarda presupuestos y ábrelos en History > "PDF report".
+  2. Bajo la gráfica: "Oct" y debajo "2026" en la primera barra. Si tienes presupuestos de varios años, "Jan" lleva el año debajo.
+  3. Todas las barras arrancan del mismo eje, también en un móvil y al imprimir.
+
+### 2026-10-25, History en el móvil: el importe de cada presupuesto a la vista
+- Archivo y sitio:
+  - src/History.jsx, en la tabla de cada mes: clase `wide` en las columnas Date, Client, Qty, Cost / part y Price / part (cabecera y celdas), clase `part` en la celda del nombre, y dentro de ella un `<span className="row-sub">` con cantidad, cliente y fecha.
+  - src/index.css, junto a `.history-table .actions`: `.row-sub` oculto por defecto y un bloque `@media(max-width:600px)`.
+- Qué cambió: en un móvil, cada fila enseña el nombre de la pieza, el importe del pedido y los botones, sin barra horizontal. Debajo del nombre aparece "10 pcs · Marc · 25 Oct 2026". En el ordenador la tabla es la misma de siempre.
+- Por qué:
+  - Antes, a 390 px solo se veían fecha, pieza y cliente. Los importes quedaban a la derecha, fuera de la pantalla, dentro de un contenedor con desplazamiento horizontal que no se ve. Justo lo que más importa (cuánto cobraste) era lo que no salía.
+  - Se esconden columnas con CSS en vez de pintar otra lista para el móvil: el HTML es uno solo, así que los botones, las casillas y la accesibilidad (`aria-label` de cada fila) son los mismos en los dos tamaños, y no hay dos versiones que mantener a la vez.
+  - Queda "Order total" y no "Price / part": es lo que vas a cobrar por ese presupuesto. La cantidad aparece en la línea de abajo cuando es más de 1, así se entiende por qué el total es mayor que el precio.
+  - El nombre puede partirse en varias líneas (`white-space: normal` en `td.part`), porque la tabla entera hereda `nowrap` para el escritorio.
+  - `.filter(Boolean)` quita los trozos vacíos (sin cliente, o 1 pieza), así no salen separadores " · " sueltos.
+- Concepto nuevo: `[a, b, c].filter(Boolean).join(' · ')` es una forma corta de unir solo lo que existe. `filter(Boolean)` deja fuera `false`, `''`, `null` y `undefined`; por ejemplo, `[false, 'Marc', '25 Oct'].filter(Boolean)` da `['Marc', '25 Oct']`.
+- Cómo probarlo:
+  1. `npm run dev`, guarda 3 presupuestos (uno con cliente, uno sin cliente y otro con "Order quantity" 10).
+  2. History en modo móvil a 390 y 360 px: cada fila cabe entera, con el importe a la derecha y "10 pcs · Marc · …" bajo el nombre.
+  3. En el ordenador (más de 600 px), la tabla tiene todas sus columnas y la línea de abajo no aparece.
+
+### 2026-10-25, Presupuesto en el móvil: la tabla de piezas cabe entera
+- Archivo y sitio: src/index.css, sección del presupuesto (`.quote-doc`), dentro de `@media(max-width:700px)`: dos reglas nuevas para `.quote-lines .report-table`.
+- Qué cambió: en un móvil, la tabla de piezas del presupuesto ya no se corta. Antes, la columna "Total" salía como "Tota" y los importes como "7.94 EUF", con una barra horizontal escondida. Ahora el nombre de la pieza puede ocupar dos líneas y los márgenes de cada celda son más pequeños.
+- Por qué:
+  - Es lo que ve un cliente, y se notaba al abrirlo en un móvil. La tabla va dentro de `.table-scroll` (con `overflow-x: auto`): en vez de romperse, se podía desplazar en horizontal, pero nadie lo descubre.
+  - La tabla hereda `white-space: nowrap` de `.report-table`, que el informe necesita para sus columnas. Solo en el presupuesto, y solo en la primera columna (el nombre), se vuelve a permitir el salto de línea, con `overflow-wrap: anywhere` para que una palabra muy larga también pueda partirse. Los importes siguen en una línea: un "12.38" partido en dos sería peor.
+  - Relleno de 6 px × 4 px en vez de 6 px × 8 px: con 4 columnas son 32 px recuperados, justo lo que faltaba a 360 px.
+  - Solo en pantallas de 700 px o menos: el PDF se imprime con el ancho de un A4 (unos 794 px CSS), así que no cambia.
+- Cómo probarlo:
+  1. `npm run dev` con el navegador en modo móvil a 390 px y a 360 px.
+  2. Guarda 3 o 4 presupuestos (uno con un nombre largo), ve a History, marca todos y pulsa "Customer quote".
+  3. La tabla del presupuesto se ve entera sin desplazarla: "Total" completo, los importes enteros, y el nombre largo en dos o tres líneas.
+  4. "Save as PDF" en un ordenador: el PDF se ve igual que antes.
+
+### 2026-10-23, SEO básico: robots, sitemap, canonical, datos estructurados y contenido sin JavaScript
+- Archivo y sitio:
+  - index.html, dentro de `<head>`: descripción y título nuevos, `<link rel="canonical">`, `og:type`, etiquetas `twitter:*`, un bloque `application/ld+json` y un `<style>` mínimo. Dentro de `<body>`, el `<div id="root">` ya no está vacío: lleva un `<main>` con el `<h1>` y un párrafo.
+  - public/robots.txt (nuevo) y public/sitemap.xml (nuevo): Vite copia `public/` tal cual a la raíz de la web.
+  - docs/MAPA.md: fila de `public/` y de `index.html`.
+- Qué cambió: la web dice a los buscadores quién es y qué páginas tiene, y su HTML ya contiene texto. Cuando React arranca, sustituye ese texto por la aplicación, y no se nota el cambio.
+- Por qué:
+  - La web es una SPA: antes, el HTML que descargaba Google era un `<div id="root">` vacío, y todo el texto aparecía al ejecutar JavaScript. Google ejecuta JS, pero en una segunda pasada, más lenta y menos fiable, y otros buscadores y los generadores de vista previa a veces no. Poner el `<h1>` y una descripción real dentro de `#root` da a cualquiera que lea el HTML sin ejecutar nada el contenido esencial. React reemplaza todo el contenido de `#root` al montar (`createRoot(...).render`), así que no hay texto duplicado: comprobado, solo queda un `<h1>`.
+  - Título (51 caracteres) y descripción (151) dentro de lo que Google suele mostrar entero (unos 60 y 160), con las palabras que la gente busca ("3D print cost calculator", "quote") en lugar de solo la marca.
+  - `canonical`: `layercents.com`, `www.layercents.com` y cualquier dirección con parámetros enseñan la misma página. Sin canonical, Google puede tratarlas como páginas distintas que compiten entre sí.
+  - `robots.txt` deja pasar a todos y apunta al sitemap. `sitemap.xml` tiene una sola dirección ahora; cada guía futura añade la suya.
+  - JSON-LD de tipo `WebApplication` (schema.org): es la forma estándar de decir "esto es una herramienta web gratuita". Solo lleva hechos verdaderos hoy: no hay valoraciones ni reseñas inventadas, que Google penaliza. Descartado `FAQPage`: desde 2023 Google solo enseña esos resultados para webs de salud y de administraciones.
+  - El `<style>` mínimo evita un fogonazo blanco antes de que cargue `index.css`, ahora que hay texto visible en el HTML.
+  - No hay lógica, `localStorage` ni `backup.js` tocados.
+- Concepto nuevo:
+  - Renderizado en cliente (CSR) contra HTML con contenido: en una SPA todo lo que ves lo pinta JavaScript; un buscador ve primero el HTML crudo. Lo que se pone dentro de `#root` en `index.html` se ve antes de que cargue el JS, y React lo reemplaza al arrancar.
+  - JSON-LD: JSON dentro de `<script type="application/ld+json">` que los buscadores leen como datos, sin que se vea en la página.
+- Cómo probarlo:
+  1. `npm run build` y `npm run preview`; abre `/robots.txt` y `/sitemap.xml`: se ven los textos.
+  2. En las herramientas de desarrollador, desactiva JavaScript y recarga: sale el título y el párrafo. Actívalo: sale la calculadora.
+  3. Pega la dirección en la prueba de resultados enriquecidos de Google (search.google.com/test/rich-results) tras desplegar: debe detectar un `WebApplication`.
+  4. Search Console: añade la propiedad de dominio, envía `https://layercents.com/sitemap.xml` y en "Inspección de URLs" pide indexar la portada.
+
 ### 2026-10-22, Casillas de números sin flechitas pegadas al valor
 - Archivo y sitio: src/index.css, en la sección "Formulario" (después de `.field input`, justo antes de `.field input:hover`): reglas para ocultar los botones de subir y bajar, y el relleno horizontal de 9 a 11 px.
 - Qué cambió: las casillas numéricas de la calculadora ya no enseñan las flechitas de subir y bajar, y el número queda con más aire a la derecha.

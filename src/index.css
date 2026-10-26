@@ -340,6 +340,18 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .history-table .strong{font-weight:600}
 .history-table .accent{color:var(--oro-vivo)}
 .history-table .actions{text-align:right;width:1%}
+/* Linea de cliente y fecha bajo el nombre: solo existe en el movil */
+.history-table .row-sub{display:none}
+/* En el movil la tabla no cabe entera y la barra horizontal no se ve:
+   se esconden fecha, cliente, cantidad, coste y precio por pieza, y queda
+   lo que importa (pieza, importe del pedido y botones). Cliente y fecha
+   pasan debajo del nombre. */
+@media(max-width:600px){
+  .history-table .wide{display:none}
+  .history-table th,.history-table td{padding:8px 6px}
+  .history-table td.part{white-space:normal;overflow-wrap:anywhere}
+  .history-table .row-sub{display:block;margin-top:2px;font-size:.76rem;font-weight:400;color:var(--tenue)}
+}
 
 .row-btn{
   font-family:inherit;font-size:.78rem;
@@ -403,12 +415,18 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 
 /* Grafica de columnas por mes */
 .columns-chart{display:flex;align-items:flex-end;gap:8px;height:190px;border-bottom:1px solid var(--tinta-suave)}
-.col{flex:1;max-width:72px;height:100%;display:flex;flex-direction:column;align-items:center;min-width:0}
+.col{position:relative;flex:1;max-width:72px;height:100%;display:flex;flex-direction:column;align-items:center;min-width:0}
 .col-value{font-size:.7rem;color:var(--tinta);font-variant-numeric:tabular-nums;margin-bottom:4px;white-space:nowrap}
 .col-bar-area{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center}
 .col-bar{width:70%;min-height:2px;background:var(--oro-papel);border-radius:4px 4px 0 0}
-.col-label{font-size:.7rem;color:var(--tinta-suave);margin:6px 0 -22px;white-space:nowrap}
-.columns-chart{margin-bottom:26px}
+/* La etiqueta cuelga por debajo del eje con position:absolute: asi no
+   ocupa sitio dentro de la columna, y una etiqueta de dos lineas (mes y
+   ano) no empuja su barra hacia arriba respecto a las de una linea. */
+.col-label{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:6px;font-size:.7rem;line-height:1.25;color:var(--tinta-suave);white-space:nowrap;text-align:center}
+/* El ano va debajo del mes, solo en la primera barra y en cada enero */
+.col-year{display:block}
+/* Hueco bajo la grafica para las dos lineas de la etiqueta (mes y ano) */
+.columns-chart{margin-bottom:40px}
 
 /* Barras horizontales (desglose y clientes) */
 .bar-list{display:flex;flex-direction:column;gap:7px}
@@ -537,6 +555,11 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 .quote-notes{margin-top:26px;break-inside:avoid}
 .quote-notes p{white-space:pre-line;font-size:.82rem;line-height:1.5}
 @media(max-width:700px){
+  /* Tabla de piezas en el movil: las cuatro columnas tienen que caber sin
+     barra horizontal, o el cliente ve "Tota" y "7.94 EUF" cortados. El
+     nombre de la pieza puede partirse en dos lineas; los importes no. */
+  .quote-lines .report-table th,.quote-lines .report-table td{padding:6px 4px}
+  .quote-lines .report-table td:first-child{white-space:normal;overflow-wrap:anywhere}
   .quote-from{max-width:100%}
   .quote-title{text-align:left}
   .quote-title dl{justify-content:start}
@@ -596,7 +619,7 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 }
 
 /* ------------------------- Impresoras (beta) -------------------------
-   Pestana Printers: por ahora solo el estado del agente local. */
+   Pestana Printers: el estado del agente local y sus impresoras en vivo. */
 .printers h1{display:flex;align-items:center;gap:10px}
 /* Etiqueta "Beta" al lado del titulo: avisa de que es una funcion a medias */
 .beta{
@@ -617,3 +640,24 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
   font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.84em;
   padding:1px 6px;border-radius:4px;background:var(--panel-alto);border:1px solid var(--borde);
 }
+
+/* Lista de impresoras en vivo (datos del agente, cada 3 s) */
+.printers-body{display:flex;flex-direction:column;gap:12px;padding:13px 15px 15px;font-size:.88rem}
+.printer-card{display:flex;flex-direction:column;gap:7px;padding:12px 14px;border:1px solid var(--borde);border-radius:var(--radio);background:var(--fondo)}
+.printer-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.printer-head h3{font-size:.98rem;font-weight:600}
+/* Insignia del estado: siempre con texto, el color solo acompana */
+.printer-badge{font-size:.74rem;font-weight:600;padding:2px 9px;border-radius:9px;white-space:nowrap}
+.printer-badge.busy{background:rgba(242,179,61,.15);color:var(--oro-vivo)}
+.printer-badge.ok{background:var(--panel-alto);color:var(--texto)}
+.printer-badge.bad{background:rgba(229,72,77,.14);color:var(--rojo)}
+.printer-badge.muted{background:var(--panel-alto);color:var(--tenue)}
+.printer-job{font-weight:500;overflow-wrap:anywhere}
+/* Barra de progreso: pista oscura y relleno de oro, con el % y el tiempo al lado */
+.printer-progress{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.printer-bar{flex:1 1 160px;height:8px;border-radius:4px;background:var(--panel-alto);overflow:hidden}
+.printer-bar span{display:block;height:100%;background:var(--oro);border-radius:4px;transition:width .4s ease}
+@media (prefers-reduced-motion:reduce){.printer-bar span{transition:none}}
+.printer-pct{font-weight:600;min-width:3ch;text-align:right}
+.printer-details{font-size:.8rem}
+.printer-error{font-size:.82rem;color:var(--tenue);border-left:2px solid var(--borde);padding-left:9px;max-width:46em}

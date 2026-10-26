@@ -12,7 +12,8 @@ export const AGENT_URL = 'http://127.0.0.1:31415'
 // The agent API version this web app speaks (PROTOCOL in agent/handler.js).
 // The web updates on every deploy but each person's agent doesn't, so an
 // old agent is detected here instead of failing later in odd ways.
-export const AGENT_PROTOCOL = 1
+// 2: the agent has GET /printers (live printer status).
+export const AGENT_PROTOCOL = 2
 
 // A local server answers in milliseconds and a closed port is refused at
 // once, but some firewalls silently drop the packet, and then the browser
@@ -46,6 +47,23 @@ export async function checkAgent({ url = AGENT_URL } = {}) {
   if (!res.ok || info?.app !== 'layercents-agent') return { status: 'wrong', httpStatus: res.status }
   if (info.protocol !== AGENT_PROTOCOL) return { status: 'outdated', info }
   return { status: 'connected', info }
+}
+
+/* Asks the agent for the live status of every printer. Never throws:
+   { ok: true, printers }  the list (maybe empty), in the agent's common
+                           shape (printerStatus in agent/drivers/bambu.js)
+   { ok: false }           the agent didn't answer properly; the caller
+                           checks the agent again to say why */
+export async function fetchPrinters({ url = AGENT_URL } = {}) {
+  try {
+    const res = await fetch(`${url}/printers`, { cache: 'no-store', signal: AbortSignal.timeout(TIMEOUT_MS) })
+    if (!res.ok) return { ok: false }
+    const data = await res.json()
+    // Only an array is trusted to be the list; anything else is treated as "no answer".
+    return Array.isArray(data?.printers) ? { ok: true, printers: data.printers } : { ok: false }
+  } catch {
+    return { ok: false }
+  }
 }
 
 /* ------------------------------------------------------------------

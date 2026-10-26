@@ -141,7 +141,7 @@ export default function BackupPanel({ quotes, lastBackupAt, onBackup, onRestore 
         <p>
           {isEmpty
             ? 'Coming from another computer or browser? Restore your layercents backup file here.'
-            : 'Your quotes and business details are stored only in this browser. Download a backup now and then and keep it somewhere safe: you can restore it here or on any other computer.'}
+            : 'Your quotes, business details and setup are stored only in this browser. Download a backup from time to time and keep it somewhere safe: you can restore it here or on any other computer.'}
         </p>
 
         {/* "Last backup" line: hidden on an empty, never-backed-up browser,
@@ -154,8 +154,11 @@ export default function BackupPanel({ quotes, lastBackupAt, onBackup, onRestore 
         )}
 
         <div className="backup-actions">
+          {/* Gold only when the reminder above isn't showing: when a backup is
+              due, the reminder already has the gold "Download backup", and two
+              identical gold buttons on one screen look like two different things. */}
           {canDownload && (
-            <button type="button" className="controls primary" onClick={onBackup}>Download backup</button>
+            <button type="button" className={`controls ${status.due ? '' : 'primary'}`} onClick={onBackup}>Download backup</button>
           )}
           {/* A real <input type="file"> inside a styled label: the browser's own
               picker, keyboard included, without its unstyleable default button. */}

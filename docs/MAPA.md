@@ -19,7 +19,7 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 
 | Archivo | Qué hace |
 |---|---|
-| `index.html` | El shell: metadatos para buscadores y para compartir (Open Graph), fuentes de Google, Cloudflare Web Analytics y el `<div id="root">` donde React pinta todo. |
+| `index.html` | El shell: metadatos para buscadores y para compartir (título, descripción, `canonical`, Open Graph, datos estructurados JSON-LD), fuentes de Google, Cloudflare Web Analytics y el `<div id="root">` donde React pinta todo. Dentro de `#root` hay un `<h1>` y un párrafo de respaldo para quien lea el HTML sin ejecutar JavaScript; React lo reemplaza al arrancar. |
 | `src/main.jsx` | Punto de entrada. Importa `index.css`, lee y quita el `?agent` de la dirección (una vez por carga) y monta `<App>` dentro de `<StrictMode>`. En desarrollo, StrictMode ejecuta dos veces renders y efectos para destapar efectos secundarios mal hechos; en producción no hace nada. |
 | `src/App.jsx` | Estado global, cálculo y navegación. Cuatro secciones: 1) campos (`SECTIONS`, `INITIAL`) y colores del gráfico (`LAYERS`, en el orden en que se imprime: de abajo arriba); 2) `calculate(d)`; 3) componentes pequeños (`Field`, `SiteFooter`); 4) `App`. |
 | `src/History.jsx` | Lista de presupuestos: tarjetas resumen, buscador, tabla agrupada por mes, marcar piezas para el presupuesto de cliente, Load y borrar. No es dueño de ningún dato. |
@@ -30,9 +30,10 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/exportExcel.js` | Export `.xlsx` con formato y fórmulas `SUM`. Se carga solo al pulsar el botón. |
 | `src/backup.js` | Copia de seguridad: funciones puras (construir, validar, fusionar, planificar, recordatorio) y capa de almacenamiento (`writeAtomically`, `applyRestore`, `downloadBackup`). |
 | `src/BackupPanel.jsx` | Panel "Backup" al final de History y aviso `BackupReminder` encima. |
-| `src/agent.js` | Cliente del agente local: `checkAgent()` (¿está corriendo y habla nuestro protocolo?) y la activación por enlace (`?agent`). Sin React. |
+| `src/agent.js` | Cliente del agente local: `checkAgent()` (¿está corriendo y habla nuestro protocolo?), `fetchPrinters()` (estado de las impresoras) y la activación por enlace (`?agent`). Sin React. |
 | `src/agent.test.js` | Tests de contrato entre la web y el agente: `checkAgent` contra el código real de `agent/handler.js`. |
-| `src/Printers.jsx` | Pestaña Printers (beta): estado del agente. Solo existe si la persona la activó. |
+| `src/Printers.jsx` | Pestaña Printers (beta): estado del agente y, si está conectado, cada impresora en vivo (pide `/printers` cada 3 s solo mientras la pestaña está abierta y visible). Solo existe si la persona la activó. |
+| `src/printerView.js` | Funciones puras para poner en palabras el estado de una impresora: etiquetas, "1 h 15 min", porcentaje, color de la insignia y la línea de capa y temperaturas. Tests en `printerView.test.js`. |
 | `src/backup.test.js` | Tests de la parte "Your setup" de `backup.js`: ida y vuelta, copias antiguas sin `setup`, Merge/Replace, almacenamiento bloqueado. |
 | `src/Logo.jsx` | El logo en SVG; los colores salen del CSS. |
 | `src/logoGeometry.js` | Las coordenadas de las capas del logo, como datos. Las leen el logo y la gráfica de costes, para que no se descuadren. |
@@ -40,12 +41,19 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/symbolChart.test.js` | Tests de `symbolChart.js`: proporciones, orden, huecos entre colores, entradas raras (NaN, negativos, todo a 0). |
 | `src/CostSymbol.jsx` | La gráfica "Breakdown": dibuja el símbolo con un `clipPath` por capa y un rectángulo por coste. Solo pinta; las cuentas están en `symbolChart.js`. |
 | `src/index.css` | Todos los estilos. Arriba los tokens (`--fondo`, `--oro`…) en `:root`; luego una sección por pantalla, con comentarios en español. `@media print` decide qué sale en los PDF. |
-| `public/` | Se copia tal cual a la web: `CNAME` (el dominio para GitHub Pages: no se borra), iconos e imagen para compartir. |
+| `public/` | Se copia tal cual a la web: `CNAME` (el dominio para GitHub Pages: no se borra), iconos e imagen para compartir, y para los buscadores `robots.txt` y `sitemap.xml` (cada página nueva añade su `<url>`). |
 | `screenshots/` | Capturas del README. |
-| `agent/server.js` | Arranque del agente local (`npm run agent`): abre el puerto 31415 solo en `127.0.0.1` y pasa cada petición a `handler.js`. |
-| `agent/handler.js` | Qué responde el agente a cada petición: seguridad (Host, Origin, CORS, preflight) y rutas. Hoy solo `/health`. |
-| `agent/handler.test.js` | Tests del agente con `node:test` (`npm test`), sin dependencias. |
+| `agent/server.js` | Arranque del agente local. `npm run agent`: lee las impresoras, se conecta a ellas y abre el puerto 31415 solo en `127.0.0.1`. `npm run agent -- add / list / remove`: pasa a `setup.js`. |
+| `agent/setup.js` | Comandos de terminal para añadir, listar y quitar impresoras. `add` pide IP, número de serie y código de acceso, los prueba (`probeBambu`) y los guarda. |
+| `agent/config.js` | Lee y guarda la lista de impresoras en `~/.layercents/printers.json` (fuera del proyecto, permisos 600) y valida cada campo al cargarla. |
+| `agent/printers.js` | Un driver por impresora según su marca; `list()` devuelve el estado común de todas. |
+| `agent/drivers/bambu.js` | Driver de Bambu Lab: TLS con la huella del certificado fijada, MQTT, `pushall`, fusión de las actualizaciones parciales, reconexión con esperas crecientes, y `printerStatus` (de mensaje de Bambu a estado común). |
+| `agent/mqtt.js` | Cliente MQTT 3.1.1 mínimo y sin dependencias: codificar y leer paquetes (`PacketReader`) y una sesión (`MqttSession`) con login, suscripción, publicación y keepalive. |
+| `agent/fakeBroker.js` | Una impresora de mentira para los tests: habla MQTT, graba lo que le mandan y contesta como una Bambu. |
+| `agent/handler.js` | Qué responde el agente a cada petición: seguridad (Host, Origin, CORS, preflight) y rutas: `/health` y `/printers` (solo lectura). `PROTOCOL` es la versión del contrato con la web. |
+| `agent/*.test.js` | Tests del agente con `node:test` (`npm test`), sin dependencias: HTTP (`handler`), MQTT byte a byte (`mqtt`), driver de Bambu con TLS de verdad (`bambu`; se saltan sin openssl) y configuración (`config`). |
 | `docs/MAPA.md` | Este archivo. |
+| `docs/IMPRESORAS.md` | Investigación por marca (Bambu, Klipper/Moonraker, Prusa, Creality, Elegoo, Anycubic, Flashforge, OctoPrint): protocolo, puerto, credenciales, qué se puede leer, y el orden del plan. |
 | `CLAUDE.md`, `DEV_LOG.md` | Instrucciones del proyecto y registro de cada cambio con su porqué. |
 
 Restos de la plantilla de Vite que nada usa y se pueden borrar: `src/assets/` (hero.png, react.svg, vite.svg) y `public/icons.svg`.
@@ -69,7 +77,7 @@ Restos de la plantilla de Vite que nada usa y se pueden borrar: `src/assets/` (h
              onCustomerQuote)
              BackupPanel / BackupReminder ──► backup.js ◄──► localStorage
   App.set (campos de "Your setup") ──► saveSetupField ──► localStorage `setup`
-             Printers ──► agent.js ──fetch──► agente en 127.0.0.1:31415
+             Printers ──► agent.js ──fetch /health y /printers──► agente en 127.0.0.1:31415
 ```
 
 - `r` es estado derivado: no se guarda en `useState`, se recalcula con `calculate(d)` en cada render. Calcular es barato, y así nunca puede quedar desincronizado de `d`.
@@ -83,8 +91,23 @@ La web no puede hablar con una impresora: el navegador solo habla MQTT por WebSo
 
 ```
   navegador (layercents.com)  ──HTTP──►  agente (127.0.0.1:31415)  ──MQTT/FTPS──►  impresora
-         la web, sin backend               agent/, Node, sin nube            (PRs siguientes)
+         la web, sin backend               agent/, Node, sin nube         MQTT sobre TLS (Bambu)
 ```
+
+Dentro del agente:
+
+```
+  server.js ──► handler.js  ── GET /printers ──►  printers.js ──► drivers/bambu.js ──► mqtt.js ──TLS 8883──► impresora
+                                                        ▲
+                                    config.js (~/.layercents/printers.json, permisos 600)
+                                                        ▲
+                                      setup.js (npm run agent -- add: prueba y guarda)
+```
+
+- Cada impresora tiene su driver, que mantiene la conexión abierta y va guardando el último estado. `/printers` solo lee ese estado de memoria: preguntar no molesta a la impresora.
+- El estado que sale del agente es el mismo para todas las marcas (`printerStatus`) y nunca lleva la IP, el número de serie ni el código de acceso.
+- Las impresoras se añaden desde la terminal (`npm run agent -- add`), no desde la web: así el código de acceso no pasa por el navegador, y el agente no necesita ninguna ruta que cambie cosas.
+- Detalles por marca y fuentes: `docs/IMPRESORAS.md`.
 
 - Es otro proceso, no forma parte de la web: Vite no lo empaqueta porque nada de `src/` lo importa. Usa los mismos `node_modules` del proyecto.
 - Solo escucha en `127.0.0.1`: nadie de la red puede llamarlo, solo este ordenador.
@@ -181,6 +204,7 @@ Simplificación a tener en cuenta: con una tasa de fallos `p`, el coste esperado
 - `npm run dev`: servidor de desarrollo con recarga en caliente (HMR) en `localhost:5173`.
 - `npm run build`: compila a `dist/` (JS minificado y separado en trozos).
 - `npm run lint`: oxlint, con las reglas de hooks de React.
-- `npm run agent`: arranca el agente local. Para comprobarlo, abre `http://127.0.0.1:31415/health` en el navegador. Se para con Ctrl+C.
-- `npm test`: `node --test` busca y ejecuta todos los `*.test.js` del proyecto, con el test runner que ya trae Node.
+- `npm run agent`: arranca el agente local y se conecta a las impresoras guardadas. Para comprobarlo, abre `http://127.0.0.1:31415/health` o `/printers` en el navegador. Se para con Ctrl+C.
+- `npm run agent -- add` (y `list`, `remove <id>`): gestiona las impresoras del agente.
+- `npm test`: `node --test` busca y ejecuta todos los `*.test.js` del proyecto, con el test runner que ya trae Node. `--test-timeout=20000`: un test que se quede colgado falla a los 20 s en vez de bloquear la terminal.
 - `npm run deploy`: `gh-pages` publica `dist/` en la rama `gh-pages`. GitHub Pages sirve esa rama y `public/CNAME` le dice el dominio; Cloudflare va delante y pone el HTTPS.

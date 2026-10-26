@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "agent": "node agent/server.js",
-    "test": "node --test",
+    "test": "node --test --test-timeout=20000",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {

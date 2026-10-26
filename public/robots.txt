@@ -1,0 +1,6 @@
+# Everything is public: let every search engine in.
+User-agent: *
+Allow: /
+
+# Where the list of pages is (see public/sitemap.xml).
+Sitemap: https://layercents.com/sitemap.xml
