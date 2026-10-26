@@ -2,6 +2,21 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-26, El PDF ya no sale con un bloque negro debajo de la hoja
+- Archivo y sitio: src/index.css, sección "Informe (PDF)", dentro de `@media print`, en la regla del fondo (antes solo `body`, ahora `html,body`).
+- Qué cambió: al imprimir, el fondo blanco se pone también en `html`. Desde el PR del SEO (#16), el informe y el presupuesto para el cliente salían con un bloque negro desde la última línea hasta el final de la hoja. No llegó a la web publicada: layercents.com se desplegó el 22 y el SEO entró después.
+- Por qué:
+  - El SEO (commit 5b6b732) puso en index.html un `<style>` que pinta `html` y `body` de oscuro antes de que cargue index.css, para que no haya un destello blanco al abrir la web. Al imprimir, index.css volvía a poner `body` en blanco, pero nadie tocaba `html`.
+  - El fondo de `html` no es solo el de su caja: es el de todo el lienzo, la hoja entera. Y `*{print-color-adjust:exact}`, que hace falta para que salgan las barras de oro, obliga a imprimir los fondos aunque el diálogo de impresión tenga desactivados los gráficos de fondo. Así que el oscuro de `html` llegaba al papel por debajo del `body` blanco.
+  - Descartado quitar `html` del `<style>` de index.html: también lo arreglaría (sin fondo propio, `html` toma el de `body`), pero dejaría el arreglo lejos de las reglas de impresión, y se rompería otra vez el día que alguien le diera fondo a `html`. Mejor decirlo donde se decide cómo se imprime.
+  - Descartado quitar `print-color-adjust:exact`: arregla el fondo, pero se pierden las barras de oro de las gráficas del informe.
+- Concepto nuevo: el fondo del lienzo. El navegador pinta toda la ventana (o toda la hoja, al imprimir) con el fondo de `html`; si `html` no tiene, usa el de `body`. Por eso el fondo de `body` llena la pantalla aunque el `body` mida menos. Ejemplo: con `html{background:red}` y `body{background:white;height:100px}`, la página es roja con una franja blanca arriba, que es justo lo que pasaba en el papel con el oscuro.
+- De la carrera: Introducción a la Ingeniería del Software, las pruebas de regresión. Esto es una regresión, un cambio (el SEO) que rompe algo que ya funcionaba (imprimir) en una parte que el cambio ni tocaba. Ningún test imprime, así que nadie lo vio; el "Cómo probarlo" de abajo hace de prueba de regresión a mano.
+- Cómo probarlo:
+  1. `npm run dev` y guarda dos presupuestos con cliente.
+  2. History, marca los dos y pulsa "Customer quote"; luego "Save as PDF". En la vista previa de impresión, debajo de "Quote made with layercents" la hoja sigue blanca hasta abajo. Antes, ahí empezaba el bloque negro.
+  3. Lo mismo con "PDF report": blanco hasta el final y las barras de oro siguen saliendo.
+
 ### 2026-10-25, CLAUDE.md: cada cambio dice de qué asignatura de la carrera viene
 - Archivo y sitio: CLAUDE.md, sección "Regla principal: registro de cambios", en el formato de las entradas.
 - Qué cambió: las entradas de este registro tienen una línea nueva, "De la carrera", que dice qué asignatura explica lo que usa el cambio y dónde se ve en el código. Si no hay ninguna, no se pone.
