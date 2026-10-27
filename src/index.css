@@ -451,7 +451,11 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 @page{size:A4;margin:14mm}
 @media print{
   .no-print{display:none !important}
-  body{background:var(--papel)}
+  /* html tambien, no solo body: index.html pinta los dos de oscuro antes
+     de que cargue este archivo, y el fondo de html es el de toda la hoja.
+     Con print-color-adjust:exact (abajo) ese oscuro salia en el papel como
+     un bloque negro debajo del informe y del presupuesto. */
+  html,body{background:var(--papel)}
   .report-screen{padding:0;max-width:none}
   .report{padding:0;border-radius:0;font-size:9.5pt}
   .report-kpis{grid-template-columns:repeat(5,1fr)}
