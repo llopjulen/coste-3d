@@ -14,7 +14,8 @@ export const AGENT_URL = 'http://127.0.0.1:31415'
 // old agent is detected here instead of failing later in odd ways.
 // 2: the agent has GET /printers (live printer status).
 // 3: the agent has GET /jobs (the job log).
-export const AGENT_PROTOCOL = 3
+// 4: Klipper printers; the state "cancelled" exists.
+export const AGENT_PROTOCOL = 4
 
 // A local server answers in milliseconds and a closed port is refused at
 // once, but some firewalls silently drop the packet, and then the browser

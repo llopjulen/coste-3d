@@ -5,21 +5,22 @@
      npm run agent -- list      shows the saved printers
      npm run agent -- remove <id>
 
-   Why the terminal and not the web page: adding a printer means typing
+   Why the terminal and not the web page: adding a printer can mean typing
    its access code. Here it goes straight from the keyboard to a file on
    this computer. Through the web page it would pass through a browser
    tab where other code runs, and the agent would need an endpoint that
    CHANGES things, which is a much bigger door to keep shut than one
    that only reads. A screen for this can come later, with that work done.
 
-   The code is asked for in an interactive prompt and not as an argument
-   (npm run agent -- add --code 12345678) because arguments are saved in
-   the shell's history file.
+   The code (or the API key of a Klipper printer) is asked for in an
+   interactive prompt and not as an argument (npm run agent -- add
+   --code 12345678) because arguments are saved in the shell's history file.
 ================================================================== */
 import { createInterface } from 'node:readline'
 import { stdin, stdout } from 'node:process'
 import { configPath, isValidHost, readConfig, writeConfig, checkPrinter } from './config.js'
 import { probeBambu } from './drivers/bambu.js'
+import { MOONRAKER_PORT, probeMoonraker } from './drivers/moonraker.js'
 
 /* "P1S del taller" -> "p1s-del-taller": the id used in the config and in the web app. */
 export function slugify(name) {
@@ -62,41 +63,36 @@ async function ask(read, question, check, fix = v => v.trim()) {
   }
 }
 
+/* Adds a printer: asks the brand, then only what that brand needs. */
 async function add() {
   const rl = createInterface({ input: stdin, output: stdout })
   const read = lineReader(rl)
   try {
-    console.log('Adding a Bambu Lab printer. Have its screen at hand.\n')
-    const name = await ask(read, 'Name for this printer (e.g. P1S workshop): ', v => (v && v.length <= 60 ? null : 'Between 1 and 60 characters.'))
-    const model = await ask(read, 'Model, optional (e.g. P1S): ', v => (v.length <= 30 ? null : 'Up to 30 characters.'))
+    const brand = await ask(read, 'What kind of printer?\n  1) Bambu Lab (A1, P1S, X1C, H2D…)\n  2) Klipper with Moonraker (Creality K1/K2, Elegoo Neptune 4, Qidi, Sovol, Voron…)\n> ', v => (v === '1' || v === '2' ? null : 'Type 1 or 2.'))
+    console.log('')
+    const name = await ask(read, 'Name for this printer (e.g. Workshop 1): ', v => (v && v.length <= 60 ? null : 'Between 1 and 60 characters.'))
+    const model = await ask(read, 'Model, optional (e.g. K2 Plus): ', v => (v.length <= 30 ? null : 'Up to 30 characters.'))
     const host = await ask(read, 'IP address (printer screen, network settings): ', v => (isValidHost(v) ? null : 'That doesn’t look like an IP address, e.g. 192.168.1.50'))
-    const serial = await ask(read, 'Serial number (Settings > Device): ', v => (/^[A-Z0-9]{8,32}$/.test(v) ? null : 'Letters and digits only, as shown on the printer.'), v => v.trim().toUpperCase().replace(/\s+/g, ''))
-    const accessCode = await ask(read, 'Access code (8 characters; it stays on this computer): ', v => (/^[A-Za-z0-9]{8}$/.test(v) ? null : 'The access code has 8 letters or digits.'))
-
-    console.log('\nTesting the connection…')
-    let probe
-    try {
-      probe = await probeBambu({ host, serial, accessCode })
-    } catch (err) {
-      console.log(`\n✗ ${probeErrorText(err, { host, serial })}\nNothing was saved. Run "npm run agent -- add" again when it's fixed.`)
+    const found = brand === '1' ? await addBambu(read, { name, model, host }) : await addMoonraker(read, { name, model, host })
+    if (!found) {
       process.exitCode = 1
       return
     }
 
     const { printers } = await readConfig()
-    // The same printer added twice (same serial) replaces the old entry;
-    // a new printer whose name gives an id already in use gets a number.
-    const others = printers.filter(p => p.serial !== serial)
+    // The same printer added twice replaces the old entry (same serial for
+    // Bambu; same address and port for Klipper); a new printer whose name
+    // gives an id already in use gets a number.
+    const others = printers.filter(p => !found.isSame(p))
     let id = slugify(name)
     for (let n = 2; others.some(p => p.id === id); n++) id = `${slugify(name).slice(0, 36)}-${n}`
-    const { printer, reason } = checkPrinter({ id, name, brand: 'bambu', model: model || null, host, serial, accessCode, fingerprint: probe.fingerprint })
+    const { printer, reason } = checkPrinter({ id, name, model: model || null, host, ...found.fields })
     // Every field was already checked while typing; this is the same check
     // config.js runs on load, so nothing gets saved that the agent would skip.
     if (!printer) throw new Error(`internal: ${reason}`)
     await writeConfig([...others, printer])
 
-    console.log(`\n✓ Connected. The printer says: ${probe.state}.`)
-    console.log(`  Certificate fingerprint saved: ${probe.fingerprint.slice(0, 23)}…`)
+    console.log(`\n✓ ${found.message}`)
     console.log(`  Saved as "${id}" in ${configPath()}`)
     console.log('\nNow start the agent with "npm run agent" and open the Printers tab on layercents.com.')
   } catch (err) {
@@ -109,11 +105,63 @@ async function add() {
   }
 }
 
+/* The Bambu part of "add". Returns what to save, or null after saying what failed. */
+async function addBambu(read, { host }) {
+  const serial = await ask(read, 'Serial number (Settings > Device): ', v => (/^[A-Z0-9]{8,32}$/.test(v) ? null : 'Letters and digits only, as shown on the printer.'), v => v.trim().toUpperCase().replace(/\s+/g, ''))
+  const accessCode = await ask(read, 'Access code (8 characters; it stays on this computer): ', v => (/^[A-Za-z0-9]{8}$/.test(v) ? null : 'The access code has 8 letters or digits.'))
+  console.log('\nTesting the connection…')
+  let probe
+  try {
+    probe = await probeBambu({ host, serial, accessCode })
+  } catch (err) {
+    console.log(`\n✗ ${probeErrorText(err, { host, serial })}\nNothing was saved. Run "npm run agent -- add" again when it's fixed.`)
+    return null
+  }
+  return {
+    fields: { brand: 'bambu', serial, accessCode, fingerprint: probe.fingerprint },
+    isSame: p => p.serial === serial,
+    message: `Connected. The printer says: ${probe.state}.\n  Certificate fingerprint saved: ${probe.fingerprint.slice(0, 23)}…`,
+  }
+}
+
+/* The Klipper part of "add". */
+async function addMoonraker(read, { host }) {
+  const portText = await ask(read, 'Moonraker port [7125]: ', v => (v === '' || (/^\d{1,5}$/.test(v) && Number(v) >= 1 && Number(v) <= 65535) ? null : 'A port number, usually 7125.'))
+  const port = portText === '' ? MOONRAKER_PORT : Number(portText)
+  const key = await ask(read, 'API key, only if Moonraker asks for one (Enter to skip): ', v => (v === '' || /^[A-Za-z0-9_.~-]{8,128}$/.test(v) ? null : 'That key has characters that can’t be used.'))
+  const apiKey = key || null
+  console.log('\nTesting the connection…')
+  let probe
+  try {
+    probe = await probeMoonraker({ host, port, apiKey })
+  } catch (err) {
+    console.log(`\n✗ ${moonrakerProbeText(err, { port })}\nNothing was saved. Run "npm run agent -- add" again when it's fixed.`)
+    return null
+  }
+  const klipper = probe.klippyState === 'ready' ? 'Klipper is ready.' : `Klipper says “${probe.klippyState}”: restart the firmware from Mainsail or Fluidd.`
+  return {
+    fields: { brand: 'moonraker', port, apiKey },
+    isSame: p => p.host === host && (p.port ?? MOONRAKER_PORT) === port,
+    message: `Connected. Moonraker ${probe.version}. ${klipper}`,
+  }
+}
+
+/* What went wrong while testing a Klipper printer, in words the person can act on. */
+export function moonrakerProbeText(err, { port }) {
+  if (err.code === 'UNAUTHORIZED') return 'Moonraker asked for an API key and refused the one given. Look for it in the printer’s moonraker.conf (or in Mainsail/Fluidd settings).'
+  if (err.code === 'KLIPPER_DOWN') return 'Moonraker answered, but Klipper is not running. Restart the firmware from Mainsail or Fluidd and try again.'
+  if (err.code === 'BAD_JSON' || err.code === 'HTTP' || err.code === 'REDIRECT' || err.code === 'TOO_BIG') return `Something answers on port ${port}, but it isn’t Moonraker. Check the port (usually 7125).`
+  return `Can’t reach the printer on port ${port} (${err.code ?? 'connection failed'}). Is it on, on the same network as this computer, and is the IP right?`
+}
+
 async function list() {
   const { printers, skipped } = await readConfig()
   if (printers.length === 0) console.log('No printers yet. Add one with "npm run agent -- add".')
   // Never the access code: this output ends up in screenshots and support messages.
-  for (const p of printers) console.log(`${p.id}  ·  ${p.name}${p.model ? ` (${p.model})` : ''}  ·  ${p.host}  ·  serial ${p.serial}`)
+  for (const p of printers) {
+    const detail = p.brand === 'bambu' ? `serial ${p.serial}` : `Klipper, port ${p.port}`
+    console.log(`${p.id}  ·  ${p.name}${p.model ? ` (${p.model})` : ''}  ·  ${p.host}  ·  ${detail}`)
+  }
   for (const s of skipped) console.log(`(skipped "${s.id}": ${s.reason})`)
   console.log(`\nFile: ${configPath()}`)
 }

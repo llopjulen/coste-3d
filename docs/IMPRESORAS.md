@@ -25,7 +25,7 @@ Conclusión para el orden: **Bambu primero** (la más vendida, y la que tiene Ju
 | Marca y modelos | Cómo se habla | Puerto | Credencial | ¿Leer estado en modo normal? | ¿Guarda historial? | Gramos reales | Driver |
 |---|---|---|---|---|---|---|---|
 | **Bambu Lab**: A1, A1 mini, P1P, P1S, P2S, X1C, X1E, H2D, H2S, H2C, X2D, A2L | MQTT 3.1.1 sobre TLS | 8883 | usuario `bblp`, contraseña = código de acceso LAN, y el número de serie | **Sí** (lectura permitida) | No, en local | Del 3MF por FTPS (puerto 990); puede necesitar Developer Mode | `bambu` (PR de hoy) |
-| **Klipper + Moonraker**: Creality K2 / K2 Plus / K2 Pro, K1 con Moonraker, Elegoo Neptune 4, Qidi, Sovol, Voron, Anycubic con Rinkhals | HTTP + JSON (también WebSocket) | 7125 | ninguna en red de confianza, o `X-Api-Key` | Sí | **Sí**: `/server/history/list` | Longitud en mm (pasar a gramos) | `moonraker` (siguiente) |
+| **Klipper + Moonraker**: Creality K2 / K2 Plus / K2 Pro, K1 con Moonraker, Elegoo Neptune 4, Qidi, Sovol, Voron, Anycubic con Rinkhals | HTTP + JSON (también WebSocket) | 7125 | ninguna en red de confianza, o `X-Api-Key` | Sí | **Sí**: `/server/history/list` | Longitud en mm (pasar a gramos) | `moonraker` (hecho, falta probarlo en una impresora real) |
 | **Prusa**: MK4/MK4S, MK3.9, MK3.5, Core One, XL, MINI+; MK3S con PrusaLink en una Raspberry Pi | HTTP REST (PrusaLink) | 80 | usuario `maker` + contraseña de la pantalla | Sí | No, en local | De los metadatos del G-code | `prusalink` |
 | **Creality sin root**: K1, K1C, K1 Max, Ender-3 V3, Hi | WebSocket con JSON | 9999 | ninguna | Sí | No | Longitud usada | `creality-ws` (si alguien lo pide) |
 | **Elegoo Centauri Carbon** y resina (Saturn, Mars) | SDCP 3.0 sobre WebSocket | 3030 | ninguna | Sí | No | Solo total | `sdcp` (si alguien lo pide) |
@@ -107,7 +107,7 @@ Klipper es un firmware libre que usan muchas impresoras rápidas, y Moonraker es
 - **Historial de trabajos incluido**: `GET /server/history/list` devuelve cada trabajo con `status` (`completed`, `cancelled`, `error`, `klippy_shutdown`…), `start_time`, `end_time`, `print_duration` y `total_duration` en segundos, y `filament_used` **en milímetros** `[17]`. `GET /server/history/totals` da totales.
 - **Autenticación**: normalmente ninguna dentro de la red local (`trusted_clients` en `moonraker.conf`); si está activada, una cabecera `X-Api-Key`.
 
-Esto es mucho mejor que Bambu: los pasos 4 y 5 del plan (registro de trabajos y material real) vienen hechos. Solo hay que convertir mm a gramos: `gramos = mm × π × (diámetro/2)² × densidad / 1000` (con 1,75 mm de PLA a 1,24 g/cm³, un metro son unos 2,98 g).
+Esto es mucho mejor que Bambu: los pasos 4 y 5 del plan (registro de trabajos y material real) vienen hechos. El driver (`agent/drivers/moonraker.js`) copia ese historial al registro de trabajos cuando empieza o acaba una impresión, así que los tiempos son medidos aunque el agente estuviera apagado. Falta pasar `filament_used` a gramos, que va con el paso 5: `gramos = mm × π × (diámetro/2)² × densidad / 1000` (con 1,75 mm de PLA a 1,24 g/cm³, un metro son unos 2,98 g).
 
 Qué impresoras traen Moonraker:
 
@@ -115,6 +115,17 @@ Qué impresoras traen Moonraker:
 - **Creality K1, K1C, K1 Max**: depende de la unidad. Unas K1C de 2025 tienen la API de Moonraker en el 7125 aunque no traen interfaz web `[19]`; las K1 más antiguas necesitan root y el "Helper Script" para instalarlo `[20]`. Sin root, todas tienen el WebSocket del 9999 (abajo).
 - **Elegoo Neptune 4, Qidi (X-Plus 3, Q1 Pro, Plus4), Sovol (SV07, SV08), Voron**: Klipper con Moonraker de fábrica.
 - **Anycubic Kobra 3 / S1 con el firmware modificado Rinkhals** y **Flashforge AD5M con Klipper Mod** `[21]`: Moonraker añadido por la comunidad.
+
+### Qué probar con una impresora Klipper (hace falta alguien que la tenga)
+
+Lo que se ha probado hasta ahora es contra una impresora de mentira que habla como dice la documentación de Moonraker. No demuestra que una K2 o una Neptune 4 real conteste igual. Con una impresora de verdad:
+
+1. `npm run agent -- add`, elige **2**, IP, puerto (7125) y, solo si Moonraker lo pide, la API key. Debe decir «Connected. Moonraker vX. Klipper is ready.»
+2. `npm run agent` y la pestaña Printers: estado, temperaturas y, imprimiendo, progreso y tiempo restante. El tiempo restante es una estimación por el ritmo; compáralo con el del laminador.
+3. Mira `http://127.0.0.1:31415/jobs` tras una impresión corta: debe aparecer con `startedApprox: false`, `outcome: "finished"` y `estimatedMinutes` parecido al del laminador.
+4. Cancela una impresión: debe salir `outcome: "cancelled"`, no `failed`.
+5. Apunta si `layer` y `totalLayers` salen (solo si el laminador manda `SET_PRINT_STATS_INFO`) y qué firmware y modelo es.
+6. Si pide API key o va por HTTPS/otro puerto, apúntalo: el driver solo habla HTTP.
 
 ## Prusa (PrusaLink)
 
@@ -201,7 +212,7 @@ Lo que cuesta dinero: en macOS, un programa sin **firmar y notarizar** con una c
 3. **Bambu: estado en vivo por MQTT** (agente) y **pestaña Printers con el estado** (web). Los PRs de hoy.
 4. Registro de trabajos de Bambu (inicio, fin, fallo) en un JSON en disco.
 5. Gramos reales de Bambu: el 3MF por FTPS, si la prueba en la P1S dice que se puede sin Developer Mode; si no, el plan B de arrastrar el 3MF.
-6. Driver Moonraker: estado y el historial que ya trae (cubre Creality K2/K1 con Moonraker, Elegoo Neptune 4, Qidi, Sovol, Voron).
+6. Driver Moonraker: estado y el historial que ya trae (cubre Creality K2/K1 con Moonraker, Elegoo Neptune 4, Qidi, Sovol, Voron). Hecho; falta probarlo en una impresora real.
 7. Driver PrusaLink.
 8. Pestaña Printers con historial, tasa de fallos y tiempo medio.
 9. "Use real data" en la calculadora.

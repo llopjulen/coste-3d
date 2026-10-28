@@ -2,6 +2,33 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-28, Agente paso 6: impresoras Klipper (Moonraker)
+- Archivo y sitio:
+  - agent/drivers/moonraker.js (nuevo): `createMoonrakerDriver`, `getJson`, `printerStatus`, `historyToJobs`, `probeMoonraker`, `explain`. agent/fakeMoonraker.js (nuevo): impresora de mentira. agent/moonraker.test.js y agent/setup.test.js (nuevos).
+  - agent/config.js: `checkPrinter` valida por marca (`BRAND_CHECKS`): `bambu` como antes y `moonraker` con `port` y `apiKey` opcionales.
+  - agent/printers.js: `moonraker` entra en `DRIVERS`; cada driver recibe `onStatus` y `onHistory`.
+  - agent/jobs.js: `importHistory()` y el resultado `cancelled`. agent/setup.js: `npm run agent -- add` pregunta la marca. agent/handler.js: `PROTOCOL` 4, `VERSION` 0.4.0. agent/drivers/bambu.js: `printMessage` en el estado y `Object.hasOwn`.
+  - src/agent.js (`AGENT_PROTOCOL` 4), src/printerView.js (etiqueta «Cancelled») y src/Printers.jsx (una línea con el mensaje de Klipper cuando falla). supabase/migrations: `cancelled` entre los resultados válidos.
+- Qué cambió: el agente entiende impresoras Klipper con Moonraker (Creality K1/K2, Elegoo Neptune 4, Qidi, Sovol, Voron…): estado en vivo y su historial de trabajos. Se añaden con `npm run agent -- add`, eligiendo la opción 2.
+- Por qué:
+  - Una sola API cubre muchas marcas. Y Moonraker guarda su propio historial con el inicio y el final reales, aunque el agente estuviera apagado. Por eso el registro no se adivina mirando cambios de estado, como en Bambu: el historial se copia (`importHistory`). Los tiempos de estas impresoras son medidos siempre (`startedApprox: false`).
+  - Se pregunta cada 2 s (polling) y no por WebSocket: no hay conexión que mantener ni que reconectar, un fallo es solo una pregunta fallida, y no hace falta ninguna dependencia (`fetch` ya viene en Node). El coste es una petición pequeña cada 2 s a una máquina de la red local. Descartado el WebSocket por más código para el mismo resultado visible.
+  - El historial se vuelve a leer solo cuando una impresión empieza o acaba, no en cada pregunta. Si Moonraker aún no ha cerrado el registro justo al acabar, se mira otra vez en la siguiente vuelta; si no, el trabajo se quedaría abierto para siempre.
+  - Solo GET, sin seguir redirecciones (`redirect: 'manual'`) y con tope de 2 MB por respuesta. La API key se manda en `X-Api-Key`: si la impresora redirigiera a otra dirección, un cliente que sigue redirecciones se la entregaría. Y un aparato equivocado en ese puerto no puede hacer que el agente lea gigas en memoria.
+  - Solo HTTP, porque así viene Moonraker en la red local. Si una persona lo tiene detrás de HTTPS, el driver dice que esa dirección no responde como Moonraker en vez de fallar callado.
+  - `cancelled` es un resultado propio. Klipper dice sin ambigüedad cuándo una impresión se canceló, y cancelar es una decisión de la persona, no un fallo de la impresora: si contara como fallo, la tasa de fallos (que es lo que se quiere enseñar) saldría inflada. `interrupted` y `server_exit` (se paró Moonraker, no la impresión) quedan como `unknown`.
+  - El tiempo restante de Klipper es una estimación por el ritmo (`print_duration × (1−p) / p`), porque Moonraker no da ninguno. Se avisa en la checklist para que se compare con el del laminador.
+  - La API key se guarda en `printers.json` (permisos 600, fuera del proyecto) igual que el código de las Bambu, nunca sale en el estado ni en `list`, y el comando no la repite en pantalla.
+  - `Object.hasOwn(TABLA, valor)` en vez de `TABLA[valor]`: con `TABLA['constructor']` JavaScript devolvería el método de `Object` y se tomaría por un estado válido. Los datos vienen de un aparato de la red, no de una fuente de confianza.
+  - Los tests sacaron un fallo real: `importHistory` se rompía con una entrada nula. Ahora cualquier entrada mala se salta.
+  - Límite honesto: lo probado es contra una impresora de mentira que habla como dice la documentación de Moonraker. No sé cómo se comporta una K2 o una Neptune 4 reales (firmware, puertos, si exigen clave). Hace falta una persona con una: checklist en docs/IMPRESORAS.md.
+- Concepto nuevo: polling con retroceso exponencial. En vez de preguntar cada 2 s siempre, tras cada fallo se espera el doble (2, 4, 8… hasta 60 s) y al primer éxito se vuelve a 2 s. Ejemplo: `espera = backoffMs[Math.min(intento - 1, backoffMs.length - 1)]`.
+- De la carrera: Redes: HTTP, códigos de estado (401, 503, 3xx) y el porqué de no seguir redirecciones al enviar credenciales. Sistemas Operativos / Programación concurrente: un bucle asíncrono con temporizador que se cancela con `stop()` sin esperar. Ingeniería del Software: el patrón «una interfaz, un driver por marca» (`printerStatus` común) y probar contra un doble de prueba (`fakeMoonraker.js`). Estadística: separar `cancelled` de `failed` es decidir qué cuenta como éxito en una tasa.
+- Cómo probarlo:
+  1. `npm test` (133 pasan, 16 se saltan sin Postgres) y `npm run build`.
+  2. Sin impresora: no se puede ver más allá de los tests. Con una Klipper, la checklist de docs/IMPRESORAS.md («Qué probar con una impresora Klipper»).
+  3. Para ver el asistente sin impresora: `npm run agent -- add` y elige 2 con una IP que no responda: debe decirte qué falló y no guardar nada.
+
 ### 2026-10-28, Esquema de Supabase con seguridad por filas y sus tests
 - Archivo y sitio:
   - supabase/migrations/20261028000000_init.sql (nuevo): 8 tablas, 3 triggers, permisos y políticas.

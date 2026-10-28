@@ -13,6 +13,7 @@ export const STATE_LABELS = {
   printing: 'Printing',
   paused: 'Paused',
   finished: 'Finished',
+  cancelled: 'Cancelled',
   failed: 'Failed',
   unknown: '—',
 }

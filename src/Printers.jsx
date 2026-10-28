@@ -53,6 +53,8 @@ function PrinterCard({ printer }) {
       {details && <p className="printer-details muted">{details}</p>}
       {/* The agent's own explanation when something's wrong (wrong code, unreachable…). */}
       {printer.error && <p className="printer-error">{printer.error}</p>}
+      {/* Why a Klipper print failed, in Klipper's own words. */}
+      {online && printer.printMessage && <p className="printer-error">{printer.printMessage}</p>}
     </article>
   )
 }

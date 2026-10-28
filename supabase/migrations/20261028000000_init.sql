@@ -109,7 +109,7 @@ create table public.jobs (
   started_at        timestamptz not null,
   started_approx    boolean     not null default false,
   ended_at          timestamptz,
-  outcome           text        check (outcome in ('finished', 'failed', 'unknown')),
+  outcome           text        check (outcome in ('finished', 'failed', 'cancelled', 'unknown')),
   estimated_minutes numeric     check (estimated_minutes >= 0),
   -- Null when the start was estimated: a guess is never stored as a measurement.
   real_minutes      numeric     check (real_minutes >= 0),

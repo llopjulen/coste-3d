@@ -21,10 +21,12 @@ import { NO_JOBS } from './jobs.js'
 // "update your agent" instead of failing in strange ways.
 // 2: GET /printers added (live printer status); /health no longer lists printers.
 // 3: GET /jobs added (the job log); a printer's job now carries `id`.
-export const PROTOCOL = 3
+// 4: brand "moonraker"; printer state "cancelled"; jobs may end "cancelled";
+//    the status has `printMessage`.
+export const PROTOCOL = 4
 
 // The build of the agent, shown in /health and on the web app's screen.
-export const VERSION = '0.3.0'
+export const VERSION = '0.4.0'
 
 // The only web pages allowed to use the agent: the live site and the
 // local dev servers (npm run dev uses 5173, npm run preview uses 4173).
