@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-28T17:40:18+00:00",
+  "generatedAt": "2026-10-28T17:44:24+00:00",
   "title": "Design System: layercents",
   "extensions": {
     "colorMeta": {
@@ -97,13 +97,13 @@
       "fog": {
         "role": "neutral",
         "displayName": "Fog",
-        "canonical": "#8E8E98",
+        "canonical": "#9A9AA4",
         "tonalRamp": [
           "oklch(15% 0.005 286)",
           "oklch(26% 0.008 286)",
           "oklch(38% 0.010 286)",
-          "oklch(49% 0.013 286)",
-          "oklch(61% 0.015 286)",
+          "oklch(49% 0.012 286)",
+          "oklch(61% 0.014 286)",
           "oklch(72% 0.012 286)",
           "oklch(84% 0.010 286)",
           "oklch(95% 0.007 286)"
@@ -157,16 +157,16 @@
       "loss-red": {
         "role": "semantic",
         "displayName": "Loss Red",
-        "canonical": "#E5484D",
+        "canonical": "#FF6369",
         "tonalRamp": [
-          "oklch(15% 0.064 23)",
-          "oklch(26% 0.100 23)",
-          "oklch(38% 0.134 23)",
-          "oklch(49% 0.165 23)",
-          "oklch(61% 0.191 23)",
-          "oklch(72% 0.161 23)",
-          "oklch(84% 0.130 23)",
-          "oklch(95% 0.096 23)"
+          "oklch(15% 0.063 21)",
+          "oklch(26% 0.099 21)",
+          "oklch(38% 0.132 21)",
+          "oklch(49% 0.162 21)",
+          "oklch(61% 0.188 21)",
+          "oklch(72% 0.159 21)",
+          "oklch(84% 0.128 21)",
+          "oklch(95% 0.094 21)"
         ]
       },
       "quote-paper": {
@@ -359,6 +359,10 @@
       "label-caps": {
         "displayName": "Label Caps",
         "purpose": "Table column headers only."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Terminal commands in the Printers tab."
       }
     },
     "shadows": [
@@ -440,7 +444,7 @@
       "refersTo": "input-number",
       "description": "Calculator field: label with help button, recessed right-aligned number, unit.",
       "html": "<div class=\"ds-field\"><label for=\"ds-g\">Filament used</label><input id=\"ds-g\" class=\"ds-num\" type=\"number\" value=\"42.5\"><span class=\"ds-unit\">g</span></div>",
-      "css": ".ds-field{font-family:'Inter',system-ui,sans-serif;display:flex;align-items:center;gap:10px;padding:7px 15px;background:var(--panel, #212125);color:var(--texto, #E9E9EC);font-size:.89rem} .ds-field label{flex:1} .ds-num{width:92px;font:inherit;font-variant-numeric:tabular-nums;text-align:right;padding:6px 11px;border:1px solid var(--borde, #36363D);border-radius:5px;background:var(--fondo, #161619);color:var(--texto, #E9E9EC);appearance:textfield} .ds-num::-webkit-inner-spin-button{-webkit-appearance:none} .ds-num:hover{border-color:#4A4A53} .ds-num:focus-visible{outline:none;border-color:var(--oro, #F2B33D);box-shadow:0 0 0 2px rgba(242,179,61,.22)} .ds-unit{width:28px;font-size:.78rem;color:var(--tenue, #8E8E98)}"
+      "css": ".ds-field{font-family:'Inter',system-ui,sans-serif;display:flex;align-items:center;gap:10px;padding:7px 15px;background:var(--panel, #212125);color:var(--texto, #E9E9EC);font-size:.89rem} .ds-field label{flex:1} .ds-num{width:92px;font:inherit;font-variant-numeric:tabular-nums;text-align:right;padding:6px 11px;border:1px solid var(--borde, #36363D);border-radius:5px;background:var(--fondo, #161619);color:var(--texto, #E9E9EC);appearance:textfield} .ds-num::-webkit-inner-spin-button{-webkit-appearance:none} .ds-num:hover{border-color:#4A4A53} .ds-num:focus-visible{outline:none;border-color:var(--oro, #F2B33D);box-shadow:0 0 0 2px rgba(242,179,61,.22)} .ds-unit{width:28px;font-size:.78rem;color:var(--tenue, #9A9AA4)}"
     },
     {
       "name": "Top Bar Tabs",
@@ -448,7 +452,7 @@
       "refersTo": "tab",
       "description": "Text tabs on the graphite top bar; active tab is one step lighter.",
       "html": "<nav class=\"ds-nav\"><button class=\"ds-tab ds-active\">Calculator</button><button class=\"ds-tab\">History <span class=\"ds-count\">12</span></button><button class=\"ds-tab\">Printers<span class=\"ds-dot\"></span></button></nav>",
-      "css": ".ds-nav{font-family:'Inter',system-ui,sans-serif;display:flex;gap:2px;padding:11px 18px;background:var(--panel, #212125);border-bottom:1px solid var(--borde, #36363D)} .ds-tab{font:inherit;font-size:.84rem;padding:5px 11px;border:0;border-radius:5px;background:none;color:var(--tenue, #8E8E98);cursor:pointer} .ds-tab:hover{color:var(--texto, #E9E9EC)} .ds-tab.ds-active{background:var(--panel-alto, #2A2A30);color:var(--texto, #E9E9EC)} .ds-tab:focus-visible{outline:2px solid var(--oro, #F2B33D);outline-offset:1px} .ds-count{display:inline-block;min-width:18px;margin-left:4px;padding:0 5px;border-radius:9px;background:var(--borde, #36363D);font-size:.7rem;color:var(--texto, #E9E9EC)} .ds-dot{display:inline-block;width:7px;height:7px;margin-left:5px;border-radius:50%;background:var(--oro, #F2B33D);vertical-align:middle}"
+      "css": ".ds-nav{font-family:'Inter',system-ui,sans-serif;display:flex;gap:2px;padding:11px 18px;background:var(--panel, #212125);border-bottom:1px solid var(--borde, #36363D)} .ds-tab{font:inherit;font-size:.84rem;padding:5px 11px;border:0;border-radius:5px;background:none;color:var(--tenue, #9A9AA4);cursor:pointer} .ds-tab:hover{color:var(--texto, #E9E9EC)} .ds-tab.ds-active{background:var(--panel-alto, #2A2A30);color:var(--texto, #E9E9EC)} .ds-tab:focus-visible{outline:2px solid var(--oro, #F2B33D);outline-offset:1px} .ds-count{display:inline-block;min-width:18px;margin-left:4px;padding:0 5px;border-radius:9px;background:var(--borde, #36363D);font-size:.7rem;color:var(--texto, #E9E9EC)} .ds-dot{display:inline-block;width:7px;height:7px;margin-left:5px;border-radius:50%;background:var(--oro, #F2B33D);vertical-align:middle}"
     },
     {
       "name": "Panel",
@@ -456,7 +460,7 @@
       "refersTo": "panel",
       "description": "Graphite surface with a raised heading band and figures separated by seams.",
       "html": "<section class=\"ds-panel\"><h2>Cost to make it <strong>4.12 EUR</strong></h2><div class=\"ds-fig\"><span>Material</span><b>1.06 EUR</b></div><div class=\"ds-fig\"><span>Power</span><b>0.31 EUR</b></div></section>",
-      "css": ".ds-panel{font-family:'Inter',system-ui,sans-serif;background:var(--panel, #212125);border:1px solid var(--borde, #36363D);border-radius:8px;overflow:hidden;color:var(--texto, #E9E9EC)} .ds-panel h2{display:flex;justify-content:space-between;margin:0;padding:10px 15px;font-size:.76rem;font-weight:600;color:var(--tenue, #8E8E98);background:var(--panel-alto, #2A2A30);border-bottom:1px solid var(--borde, #36363D)} .ds-panel h2 strong{font-size:.95rem;color:var(--texto, #E9E9EC);font-variant-numeric:tabular-nums} .ds-fig{display:flex;justify-content:space-between;padding:9px 15px;font-size:.86rem} .ds-fig + .ds-fig{border-top:1px solid var(--borde, #36363D)} .ds-fig span{color:var(--tenue, #8E8E98)} .ds-fig b{font-weight:600;font-variant-numeric:tabular-nums}"
+      "css": ".ds-panel{font-family:'Inter',system-ui,sans-serif;background:var(--panel, #212125);border:1px solid var(--borde, #36363D);border-radius:8px;overflow:hidden;color:var(--texto, #E9E9EC)} .ds-panel h2{display:flex;justify-content:space-between;margin:0;padding:10px 15px;font-size:.76rem;font-weight:600;color:var(--tenue, #9A9AA4);background:var(--panel-alto, #2A2A30);border-bottom:1px solid var(--borde, #36363D)} .ds-panel h2 strong{font-size:.95rem;color:var(--texto, #E9E9EC);font-variant-numeric:tabular-nums} .ds-fig{display:flex;justify-content:space-between;padding:9px 15px;font-size:.86rem} .ds-fig + .ds-fig{border-top:1px solid var(--borde, #36363D)} .ds-fig span{color:var(--tenue, #9A9AA4)} .ds-fig b{font-weight:600;font-variant-numeric:tabular-nums}"
     },
     {
       "name": "Status Badges",
@@ -464,7 +468,7 @@
       "refersTo": "chip-badge",
       "description": "Pill badges with text; color only supports the label.",
       "html": "<div class=\"ds-badges\"><span class=\"ds-badge ds-busy\">Printing</span><span class=\"ds-badge\">Idle</span><span class=\"ds-badge ds-bad\">Failed</span><span class=\"ds-chip\">PLA · 38 g</span></div>",
-      "css": ".ds-badges{font-family:'Inter',system-ui,sans-serif;display:flex;gap:8px;flex-wrap:wrap} .ds-badge{font-size:.74rem;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--panel-alto, #2A2A30);color:var(--texto, #E9E9EC)} .ds-busy{background:rgba(242,179,61,.15);color:var(--oro-vivo, #F7C96A)} .ds-bad{background:rgba(229,72,77,.14);color:var(--rojo, #E5484D)} .ds-chip{font-size:.78rem;padding:3px 9px;border:1px solid var(--borde, #36363D);border-radius:999px;color:var(--texto, #E9E9EC);font-variant-numeric:tabular-nums}"
+      "css": ".ds-badges{font-family:'Inter',system-ui,sans-serif;display:flex;gap:8px;flex-wrap:wrap} .ds-badge{font-size:.74rem;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--panel-alto, #2A2A30);color:var(--texto, #E9E9EC)} .ds-busy{background:rgba(242,179,61,.15);color:var(--oro-vivo, #F7C96A)} .ds-bad{background:rgba(255,99,105,.14);color:var(--rojo, #FF6369)} .ds-chip{font-size:.78rem;padding:3px 9px;border:1px solid var(--borde, #36363D);border-radius:999px;color:var(--texto, #E9E9EC);font-variant-numeric:tabular-nums}"
     },
     {
       "name": "Hero Price",
@@ -472,7 +476,7 @@
       "refersTo": "hero-price",
       "description": "The answer: recommended price in Lit Gold Bricolage, cents and currency smaller.",
       "html": "<section class=\"ds-hero\"><span class=\"ds-hero-label\">Recommended price</span><div class=\"ds-hero-price\"><span class=\"ds-w\">12</span><span class=\"ds-c\">.40</span><span class=\"ds-cur\">EUR</span></div><p class=\"ds-hero-sub\">You keep <strong>4.96 EUR</strong> per part</p></section>",
-      "css": ".ds-hero{font-family:'Inter',system-ui,sans-serif;padding:20px 20px 18px;background:var(--panel, #212125);border:1px solid rgba(242,179,61,.35);border-radius:8px;color:var(--texto, #E9E9EC)} .ds-hero-label{font-size:.78rem;font-weight:600;color:var(--tenue, #8E8E98)} .ds-hero-price{display:flex;align-items:baseline;gap:3px;margin-top:2px;font-family:'Bricolage Grotesque','Inter',sans-serif;font-weight:700;letter-spacing:-.04em;color:var(--oro-vivo, #F7C96A);font-variant-numeric:tabular-nums} .ds-w{font-size:4.6rem;line-height:1} .ds-c{font-size:2rem} .ds-cur{margin-left:6px;font-size:1rem;letter-spacing:0;color:var(--tenue, #8E8E98)} .ds-hero-sub{margin:8px 0 0;font-size:.88rem;color:var(--tenue, #8E8E98)} .ds-hero-sub strong{color:var(--texto, #E9E9EC);font-weight:600}"
+      "css": ".ds-hero{font-family:'Inter',system-ui,sans-serif;padding:20px 20px 18px;background:var(--panel, #212125);border:1px solid rgba(242,179,61,.35);border-radius:8px;color:var(--texto, #E9E9EC)} .ds-hero-label{font-size:.78rem;font-weight:600;color:var(--tenue, #9A9AA4)} .ds-hero-price{display:flex;align-items:baseline;gap:3px;margin-top:2px;font-family:'Bricolage Grotesque','Inter',sans-serif;font-weight:700;letter-spacing:-.04em;color:var(--oro-vivo, #F7C96A);font-variant-numeric:tabular-nums} .ds-w{font-size:4.6rem;line-height:1} .ds-c{font-size:2rem} .ds-cur{margin-left:6px;font-size:1rem;letter-spacing:0;color:var(--tenue, #9A9AA4)} .ds-hero-sub{margin:8px 0 0;font-size:.88rem;color:var(--tenue, #9A9AA4)} .ds-hero-sub strong{color:var(--texto, #E9E9EC);font-weight:600}"
     },
     {
       "name": "Help Callout",
@@ -480,7 +484,7 @@
       "refersTo": "panel",
       "description": "Explanation opened from the (i) button: raised fill, gold left edge.",
       "html": "<div class=\"ds-help\">Failed prints spread the cost of the ones that didn't make it across the ones that did.</div>",
-      "css": ".ds-help{font-family:'Inter',system-ui,sans-serif;max-width:34em;padding:9px 11px;background:var(--panel-alto, #2A2A30);border-left:2px solid var(--oro, #F2B33D);border-radius:0 5px 5px 0;font-size:.82rem;line-height:1.45;color:var(--tenue, #8E8E98)}"
+      "css": ".ds-help{font-family:'Inter',system-ui,sans-serif;max-width:34em;padding:9px 11px;background:var(--panel-alto, #2A2A30);border-left:2px solid var(--oro, #F2B33D);border-radius:0 5px 5px 0;font-size:.82rem;line-height:1.45;color:var(--tenue, #9A9AA4)}"
     }
   ],
   "narrative": {
