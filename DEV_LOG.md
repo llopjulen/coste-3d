@@ -2,6 +2,20 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-28, Diseño de cuentas, nube y cobro (solo documentación)
+- Archivo y sitio: docs/NUBE.md (nuevo) y CLAUDE.md, regla «No metas backend…», «Pendiente» punto 5 e «Ideas futuras».
+- Qué cambió: no hay código. Queda escrito el diseño de las cuentas con Supabase, la subida de estado y trabajos de las impresoras a la cuenta, el cobro con Lemon Squeezy, el modelo de seguridad y el orden de PRs. CLAUDE.md pasa a permitir esa excepción, con condiciones.
+- Por qué:
+  - Julen decidió ir a un producto de pago con cuentas, y eso rompe una regla que estaba para evitar justamente esto. Mejor cambiarla por escrito, con sus límites, que que cada sesión la interprete a su manera.
+  - Supabase en vez de un servidor propio: Postgres, login y funciones sin un servidor que parchear, copiar y reiniciar, para alguien que trabaja a jornada completa. Descartado el backend propio por ese mantenimiento.
+  - El agente sube estado y trabajos, pero nunca el código de acceso, la serie, la IP ni la huella. Un token robado solo debe poder escribir datos de impresoras de esa cuenta, no leer presupuestos: por eso el agente usa su propio token y no la sesión de la persona.
+  - El token del agente se guarda hasheado (SHA-256) en la base de datos: un volcado no permite suplantar agentes. Es el mismo motivo por el que no se guardan contraseñas en claro.
+  - Lo de pago se comprueba en el servidor. El código es público, así que ocultar un botón en el cliente no protege nada. Por eso Excel y PDF no sirven como función de pago.
+  - Qué es de pago y el precio quedan fuera del repositorio (es público) y van en el documento privado.
+  - Descartado: dejar los datos de impresoras solo locales. Es más privado, pero «ver todo desde cualquier sitio» es lo que se puede cobrar.
+- Concepto nuevo: Row Level Security (RLS). Es una regla dentro de la base de datos que filtra las filas según quién pregunta, así que aunque la web tuviera un fallo, un usuario no puede leer filas de otro. Ejemplo: `create policy "own rows" on quotes using (user_id = auth.uid());`.
+- De la carrera: Seguridad informática / Redes: el emparejamiento del agente es el «device flow» de OAuth, y guardar solo el hash del token es el mismo principio que el almacenamiento de contraseñas. Bases de datos: control de acceso por filas (RLS) y `on delete cascade` para el borrado de cuenta. Ingeniería del Software: decisiones de arquitectura escritas con sus alternativas descartadas.
+- Cómo probarlo: no cambia la app. Léelo y dime qué no te cuadra antes del siguiente PR, que son las tablas y las políticas RLS.
 ### 2026-10-28, Agente paso 4: registro de trabajos de Bambu
 - Archivo y sitio:
   - agent/jobs.js (nuevo): `openJobLog()` con `observe(status)`, `list()` y `flush()`; `checkJob()` valida cada entrada del archivo. agent/jobs.test.js (nuevo): 15 tests con reloj falso.

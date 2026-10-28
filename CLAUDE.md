@@ -24,7 +24,9 @@ No hagas ningún cambio sin dejar su entrada.
 - Cada tarea llega como pull request: rama `feature/...` contra `main`, con el código comentado explicando el porqué. Julen lo revisa, lo cambia o lo acepta.
 - Nunca hagas push a `main` ni `npm run deploy`: eso lo hace Julen después del merge. Al abrir el PR, dile qué probar.
 - No añadas dependencias nuevas sin explicar por qué hacen falta.
-- No metas backend, cuentas de usuario ni bases de datos. La app guarda datos en localStorage y así se queda por ahora. Única excepción, acordada el 2026-10-22: el agente local de agent/ (Node, escucha solo en 127.0.0.1, sin nube) para conectar impresoras. Mantén su seguridad: Host local, lista de Origin permitidos, CORS y `PROTOCOL` subido si cambia su API.
+- No metas backend, cuentas de usuario ni bases de datos fuera de lo acordado. La app guarda datos en localStorage. Dos excepciones:
+  - Acordada el 2026-10-22: el agente local de agent/ (Node, escucha solo en 127.0.0.1) para conectar impresoras. Mantén su seguridad: Host local, lista de Origin permitidos, CORS y `PROTOCOL` subido si cambia su API.
+  - Acordada el 2026-10-28, diseño en docs/NUBE.md: cuentas, sincronización y flota de impresoras en la nube con Supabase, y cobro con Lemon Squeezy, en PRs por pasos. La calculadora tiene que seguir funcionando sin cuenta. El agente solo abre conexiones salientes a la nube si la persona vincula su cuenta, y nunca sube el código de acceso, el número de serie, la IP ni la huella del certificado de una impresora. Las claves secretas (`service_role` de Supabase, claves y secretos de Lemon Squeezy) no van nunca en el repositorio ni en el chat; la `anon key` y la URL, en `.env.local`.
 - Nunca escribas claves, tokens ni emails personales en el código.
 - Git usa el email noreply de GitHub; no lo cambies.
 - Mantén el estilo actual: oscuro con el oro de la marca (`--oro`), colores definidos como variables en index.css. El logo está en src/Logo.jsx; no uses el verde de Bambu Lab.
@@ -82,8 +84,8 @@ Plan acordado tras analizar la competencia (MakerQuote, 3DPCC, CraftersQuote): u
 2. Varios filamentos por pieza, cada uno con su precio, y perfiles de impresoras y materiales predefinidos.
 3. Mostrar cuántas piezas por semana saca la impresora según el tiempo de impresión (idea de un usuario de Reddit).
 4. Revisar en un móvil de verdad la pantalla del presupuesto (en Chromium a 360 y 390 px ya cabe entera desde #17).
-5. Pensar cómo monetizar (por ejemplo, Excel y PDF como "Pro"). Solo hablarlo; no tocar código de pagos sin pedirlo.
+5. Monetizar: el diseño técnico (Lemon Squeezy, webhook con firma, plan comprobado en el servidor) está en docs/NUBE.md, y el código de pago se escribe en su paso (el 7). Qué es de pago y a qué precio va en el documento privado, no en el repositorio. Excel y PDF como "Pro" no se protegen: el código es público y se saltaría en el cliente.
 
 ## Ideas futuras, no tocar sin pedirlo
-Gráficas, comparativas mes a mes, cuentas de usuario, versión de pago. Sincronizar presupuestos entre móvil y PC e inventario de filamento (serían "Pro" y necesitan backend: pedirlo antes). Quitar "Quote made with layercents" del presupuesto como función de pago.
+Gráficas, comparativas mes a mes. Inventario de filamento (necesitaría la nube de docs/NUBE.md). Quitar "Quote made with layercents" del presupuesto como función de pago. Cuentas, sincronización de presupuestos y versión de pago ya no son ideas: están en docs/NUBE.md, en orden de PRs.
 Recordar también los datos por pieza entre visitas (ahora solo se recuerda "Your setup"; el resto vuelve a los valores por defecto al recargar). Más impresoras en el agente (Klipper/Moonraker, OctoPrint, PrusaLink) cuando Bambu funcione.
