@@ -3,7 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="The real cost of a 3D printed part and a customer quote in seconds: material, power, printer depreciation, failed prints and your time. Free, no account." />
+    <meta name="description" content="Free 3D print cost calculator: material, power, printer wear, failed prints and your time. Get the real cost, a price and a customer quote. No account." />
+    <!-- The one official address of the page. layercents.com, www.layercents.com and
+         any ?query version all show the same page: this tells Google which one to
+         keep, so they don't compete with each other. -->
+    <link rel="canonical" href="https://layercents.com/" />
     <meta name="theme-color" content="#161619" />
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -11,21 +15,52 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <meta property="og:site_name" content="layercents" />
-    <meta property="og:title" content="layercents · 3D print cost &amp; quotes" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="3D Print Cost Calculator &amp; Quote Maker · layercents" />
     <meta property="og:description" content="Drop your sliced file, get the real cost and a customer quote in seconds. Free, no account." />
     <meta property="og:url" content="https://layercents.com/" />
     <meta property="og:image" content="https://layercents.com/social-preview.png" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="3D Print Cost Calculator &amp; Quote Maker · layercents" />
+    <meta name="twitter:description" content="Drop your sliced file, get the real cost and a customer quote in seconds. Free, no account." />
+    <meta name="twitter:image" content="https://layercents.com/social-preview.png" />
+
+    <!-- Structured data (schema.org): tells search engines this is a free web tool.
+         Only facts that are true today: no ratings or reviews are invented. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "layercents",
+      "url": "https://layercents.com/",
+      "description": "Free 3D print cost calculator. Works out the real cost of a printed part (material, power, printer wear, failed prints, labor and packaging), a recommended price and a customer quote.",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires JavaScript",
+      "inLanguage": "en",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+    }
+    </script>
+
+    <!-- Just enough CSS to paint the dark background before index.css loads,
+         so the text below doesn't flash on white. -->
+    <style>html,body{color:#e9e9ec;background:#161619;margin:0;font-family:system-ui,sans-serif}</style>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet" />
-    <title>layercents · 3D print cost &amp; quotes</title>
-    <script type="module" crossorigin src="/assets/index-B2r_NSfj.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DqmEr2PT.css">
+    <title>3D Print Cost Calculator &amp; Quote Maker · layercents</title>
+    <script type="module" crossorigin src="/assets/index-Cly1UZ_M.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BerfdLBr.css">
   </head>
   <body>
-        <div id="root"></div>
+        <div id="root">
+      <main style="max-width:44rem;margin:0 auto;padding:2rem 1.25rem">
+        <h1>What a printed part actually costs you</h1>
+        <p>layercents is a free 3D print cost calculator. Drop your sliced file (.gcode, .bgcode or .gcode.3mf) and get the real cost of a part: material, power, printer depreciation, failed prints, your time and packaging. It then suggests a price and builds a customer quote. No account, and nothing you type leaves your browser.</p>
+        <noscript><p>This tool needs JavaScript to run. Please enable it in your browser.</p></noscript>
+      </main>
+    </div>
     <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "cb72017d95f74d0eac0692088522eb88"}'></script><!-- End Cloudflare Web Analytics -->
   </body>
 </html>
