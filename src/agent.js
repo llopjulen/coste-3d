@@ -68,6 +68,19 @@ export async function fetchPrinters({ url = AGENT_URL } = {}) {
   }
 }
 
+/* Reads the job log (newest first) with the same contract as fetchPrinters:
+   { ok: true, jobs } or { ok: false }. Never throws. */
+export async function fetchJobs({ url = AGENT_URL } = {}) {
+  try {
+    const res = await fetch(`${url}/jobs`, { cache: 'no-store', signal: AbortSignal.timeout(TIMEOUT_MS) })
+    if (!res.ok) return { ok: false }
+    const data = await res.json()
+    return Array.isArray(data?.jobs) ? { ok: true, jobs: data.jobs } : { ok: false }
+  } catch {
+    return { ok: false }
+  }
+}
+
 /* ------------------------------------------------------------------
    Opt-in. The Printers tab, and with it every call to 127.0.0.1, only
    exists in browsers where the person turned it on. Calling a local

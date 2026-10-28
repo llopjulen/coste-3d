@@ -214,7 +214,7 @@ Lo que cuesta dinero: en macOS, un programa sin **firmar y notarizar** con una c
 5. Gramos reales de Bambu: el 3MF por FTPS, si la prueba en la P1S dice que se puede sin Developer Mode; si no, el plan B de arrastrar el 3MF.
 6. Driver Moonraker: estado y el historial que ya trae (cubre Creality K2/K1 con Moonraker, Elegoo Neptune 4, Qidi, Sovol, Voron). Hecho; falta probarlo en una impresora real.
 7. Driver PrusaLink.
-8. Pestaña Printers con historial, tasa de fallos y tiempo medio.
+8. Pestaña Printers con historial, tasa de fallos y tiempo medio. Hecho (`src/jobStats.js` y el panel «Print history»).
 9. "Use real data" en la calculadora.
 
 Creality por el 9999, Elegoo, Anycubic, Flashforge y OctoPrint: cuando alguien que los tenga lo pida, y con esa persona probándolo.
