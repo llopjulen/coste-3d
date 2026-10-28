@@ -2,6 +2,32 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-28, Esquema de Supabase con seguridad por filas y sus tests
+- Archivo y sitio:
+  - supabase/migrations/20261028000000_init.sql (nuevo): 8 tablas, 3 triggers, permisos y políticas.
+  - supabase/tests/prelude.sql (nuevo) y supabase/rls.test.js (nuevo): 16 tests contra un Postgres de verdad.
+  - docs/MAPA.md al día. La web y el agente no cambian todavía: nada usa estas tablas.
+- Qué cambió: queda definido dónde vivirá todo lo de la nube (presupuestos, negocio, agentes, impresoras, estado, trabajos, suscripciones y códigos de emparejamiento) y quién puede leer o escribir cada cosa.
+- Por qué:
+  - La `anon key` de Supabase va en el JavaScript de la web y es pública. Lo único que separa los datos de un usuario de los de otro es RLS. Por eso es lo primero que se escribe y se prueba, antes de que haya una sola línea de interfaz.
+  - Dos cerrojos, no uno. Supabase da por defecto todos los permisos de tabla a `anon` y `authenticated`; el archivo empieza quitándolos todos y devuelve solo lo necesario. Aunque se olvide una política, la tabla no queda abierta. Y un test comprueba que todas las tablas tienen RLS.
+  - Las tablas que un usuario no debe poder falsear (estado, trabajos, impresoras, suscripciones) no tienen permiso de escritura para la web: las escriben Edge Functions con la clave de servicio. Si no, cualquiera podría ponerse un historial de 0 % de fallos.
+  - `token_hash` no se puede leer desde la web (permisos por columna) y se guarda como SHA-256: ni un volcado de la base de datos ni una cuenta robada permiten suplantar al agente. Un agente revocado no se puede reactivar (trigger); se vincula uno nuevo.
+  - Borrado con marca (`deleted_at`) en los presupuestos: con dos dispositivos, una fila que desaparece parece «este dispositivo nunca la tuvo» y reaparece en la siguiente sincronización.
+  - Los trabajos llevan `jobs_real_needs_measured_start`: un inicio estimado no puede tener tiempo «real». La regla de `agent/jobs.js` queda también garantizada en la base de datos.
+  - `local_id` de las impresoras solo admite el formato de identificador del agente (`p1s-taller`), así que ni una IP ni un número de serie caben ahí por error.
+  - Un tope de 20 impresoras por cuenta en un trigger, además del de la función de subida: un fallo allí no debe poder llenar la tabla.
+  - `(select auth.uid())` en vez de `auth.uid()` en las políticas: Postgres lo calcula una vez por consulta y no una vez por fila.
+  - Descartado: guardar los presupuestos en columnas. Cambian de forma con la app; `payload jsonb` con `schema_version` evita una migración por cada campo nuevo, igual que `BACKUP_SCHEMA_VERSION` en backup.js.
+  - Los tests no tocan Supabase: usan un Postgres local con un `prelude.sql` que imita lo que Supabase ya trae. Para comprobar que los tests sirven, se rompió la seguridad a propósito (RLS apagado, permisos sin quitar, `token_hash` legible, escritura abierta en `jobs`) y cada ruptura hizo fallar tests. Una cosa no se detecta, y es correcta: quitar `with check` de una política `for all` no cambia nada, porque Postgres reutiliza `using`.
+  - Límite honesto: esto demuestra que las políticas hacen lo que digo en un Postgres 16 normal, no que el panel de Supabase no tenga una configuración que las anule. Eso se comprueba una vez con el proyecto real.
+- Concepto nuevo: permisos por columna. `grant select (id, name) on agents to authenticated` deja leer solo esas columnas; `select *` falla con «permission denied» porque incluye una que no se concedió. Es lo que esconde `token_hash`.
+- De la carrera: Bases de datos: restricciones `check`, claves primarias compuestas, `on delete cascade`, triggers y transacciones. Seguridad informática: mínimo privilegio (todo cerrado, se abre lo necesario), separación de privilegios (la web lee, la función escribe) y no guardar secretos en claro (solo el hash del token).
+- Cómo probarlo:
+  1. `npm test`: 103 pasan y 16 se saltan (los de la base de datos).
+  2. Con un Postgres a mano: `LAYERCENTS_TEST_PG=postgres://usuario:clave@localhost:5432/postgres npm test`. Deben pasar los 16. Crea y borra una base de datos temporal. Necesita `psql` instalado.
+  3. Rompe algo a propósito en el .sql (por ejemplo, borra una línea `enable row level security`) y mira cómo fallan los tests.
+
 ### 2026-10-28, Diseño de cuentas, nube y cobro (solo documentación)
 - Archivo y sitio: docs/NUBE.md (nuevo) y CLAUDE.md, regla «No metas backend…», «Pendiente» punto 5 e «Ideas futuras».
 - Qué cambió: no hay código. Queda escrito el diseño de las cuentas con Supabase, la subida de estado y trabajos de las impresoras a la cuenta, el cobro con Lemon Squeezy, el modelo de seguridad y el orden de PRs. CLAUDE.md pasa a permitir esa excepción, con condiciones.
