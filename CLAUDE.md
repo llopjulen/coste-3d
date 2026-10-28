@@ -74,7 +74,7 @@ Investigación por marca, protocolos, puertos y orden en docs/IMPRESORAS.md: lé
 5. Gramos reales de Bambu: el 3MF por FTPS, leído con `parseSliceInfo` de src/slicerFile.js. Antes, probar en la P1S si FTPS funciona sin Developer Mode; si no, plan B: arrastrar el 3MF.
 6. Driver Moonraker (Klipper): estado e historial, que ya trae (Creality K2/K1 con Moonraker, Elegoo Neptune 4, Qidi, Sovol, Voron). Hecho en el PR `feature/agent-moonraker` (`PROTOCOL` 4); falta probarlo en una impresora real: alguien con una Klipper, checklist en docs/IMPRESORAS.md.
 7. Driver PrusaLink.
-8. Pestaña Printers: historial, tasa de fallos y tiempo medio.
+8. Pestaña Printers: historial, tasa de fallos y tiempo medio. (Hecho en el PR `feature/printers-history`: src/jobStats.js y el panel «Print history». Con datos de la Bambu y de Klipper cuando se prueben.)
 9. "Use real data" en la calculadora.
 Creality por WebSocket 9999, Elegoo SDCP, Anycubic, Flashforge y OctoPrint: solo cuando lo pida alguien que pueda probarlo.
 

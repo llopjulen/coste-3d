@@ -33,6 +33,7 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/agent.js` | Cliente del agente local: `checkAgent()` (¿está corriendo y habla nuestro protocolo?), `fetchPrinters()` (estado de las impresoras) y la activación por enlace (`?agent`). Sin React. |
 | `src/agent.test.js` | Tests de contrato entre la web y el agente: `checkAgent` contra el código real de `agent/handler.js`. |
 | `src/Printers.jsx` | Pestaña Printers (beta): estado del agente y, si está conectado, cada impresora en vivo (pide `/printers` cada 3 s solo mientras la pestaña está abierta y visible). Solo existe si la persona la activó. |
+| `src/jobStats.js` | Funciones puras que resumen el registro de trabajos: tasa de fallos, tiempo medio, horas, piezas por semana y cuánto se desvía el tiempo real del que dijo el laminador (mediana, para que un trabajo atascado no mande). Tres reglas: los cancelados y desconocidos no cuentan como fallo ni como éxito, solo cuentan tiempos medidos, y con menos de 5 impresiones no se enseñan porcentajes. Tests en `jobStats.test.js`. |
 | `src/printerView.js` | Funciones puras para poner en palabras el estado de una impresora: etiquetas, "1 h 15 min", porcentaje, color de la insignia y la línea de capa y temperaturas. Tests en `printerView.test.js`. |
 | `src/backup.test.js` | Tests de la parte "Your setup" de `backup.js`: ida y vuelta, copias antiguas sin `setup`, Merge/Replace, almacenamiento bloqueado. |
 | `src/Logo.jsx` | El logo en SVG; los colores salen del CSS. |
@@ -83,7 +84,7 @@ Restos de la plantilla de Vite que nada usa y se pueden borrar: `src/assets/` (h
              onCustomerQuote)
              BackupPanel / BackupReminder ──► backup.js ◄──► localStorage
   App.set (campos de "Your setup") ──► saveSetupField ──► localStorage `setup`
-             Printers ──► agent.js ──fetch /health y /printers──► agente en 127.0.0.1:31415
+             Printers ──► agent.js ──fetch /health, /printers y /jobs──► agente en 127.0.0.1:31415
 ```
 
 - `r` es estado derivado: no se guarda en `useState`, se recalcula con `calculate(d)` en cada render. Calcular es barato, y así nunca puede quedar desincronizado de `d`.

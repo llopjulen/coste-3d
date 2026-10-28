@@ -6,7 +6,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { createHandler, PROTOCOL, VERSION } from '../agent/handler.js'
-import { AGENT_PROTOCOL, checkAgent, consumeAgentOptIn, fetchPrinters, isAgentEnabled, setAgentEnabled } from './agent.js'
+import { AGENT_PROTOCOL, checkAgent, consumeAgentOptIn, fetchJobs, fetchPrinters, isAgentEnabled, setAgentEnabled } from './agent.js'
 
 /* Starts a server with the given handler on a free port; returns its URL and a stop function. */
 async function serve(handler) {
@@ -126,5 +126,27 @@ test('fetchPrinters: a stopped agent or a strange answer is { ok: false }, never
   } finally {
     await odd.stop()
     await broken.stop()
+  }
+})
+
+test('fetchJobs: reads the job log from the REAL agent handler, as the agent sends it', async () => {
+  const jobs = [{ id: 'p1s-1', printerId: 'p1s', name: 'Stand', outcome: 'finished', realMinutes: 95 }]
+  const { url, stop } = await serve(createHandler({ jobs: { list: () => jobs } }))
+  try {
+    assert.deepEqual(await fetchJobs({ url }), { ok: true, jobs })
+  } finally {
+    await stop()
+  }
+})
+
+test('fetchJobs: a stopped agent or a strange answer is { ok: false }, never an exception', async () => {
+  const { url, stop } = await serve(answering(200, {}))
+  await stop()
+  assert.deepEqual(await fetchJobs({ url }), { ok: false })
+  const odd = await serve(answering(200, { jobs: 'nope' }))
+  try {
+    assert.deepEqual(await fetchJobs({ url: odd.url }), { ok: false })
+  } finally {
+    await odd.stop()
   }
 })

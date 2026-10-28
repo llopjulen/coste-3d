@@ -2,6 +2,30 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-28, Pestaña Printers: historial, tasa de fallos y tiempo real frente al estimado
+- Archivo y sitio:
+  - src/jobStats.js (nuevo): `summarize`, `summarizeByPrinter`, `median`, `describeEstimateError`. src/jobStats.test.js (nuevo): 11 tests.
+  - src/agent.js: `fetchJobs()`, junto a `fetchPrinters`. src/agent.test.js: 2 tests contra el handler real del agente.
+  - src/Printers.jsx: componente `PrintHistory` y un efecto que pide `/jobs` cada 20 s; el texto de «sin impresoras» ya no dice que solo hay Bambu.
+  - src/index.css: tres reglas pequeñas (`.printers-stats`, `.printers-subtitle`, `.printers .stat .muted`). docs/MAPA.md, docs/IMPRESORAS.md y CLAUDE.md al día.
+- Qué cambió: debajo de las impresoras sale «Print history»: impresiones de los últimos 30 días, tasa de fallos, tiempo medio y cuánto se desvía el tiempo real del que dijo el laminador; una tabla por impresora si hay más de una y las 10 últimas impresiones.
+- Por qué:
+  - Es lo que una calculadora normal no puede enseñar: los números salen de impresiones reales, no de estimaciones.
+  - La tasa de fallos es `fallidas / (terminadas + fallidas)`. Las canceladas son decisión de la persona y las «desconocidas» (no se vio cómo acabaron) y la que está en marcha no son ni éxito ni fallo: contarlas inflaría o desinflaría la tasa con cosas que no lo son.
+  - Con menos de 5 impresiones no se enseña ningún porcentaje, sino «Needs 5 finished prints». Un fallo en dos impresiones saldría como «50 %» y no significa nada. Los contadores sí se enseñan siempre.
+  - Para «real frente a lo que dijo el laminador» se usa la mediana del cociente real/estimado, no la media: una impresión que se atascó un día entero arrastraría la media y no dice nada de la impresión típica.
+  - Solo cuentan tiempos medidos. Una impresión cuyo inicio se estimó (`startedApprox`) no tiene `realMinutes` y se marca con «~» en la tabla: un tiempo calculado no se promedia como si fuera medido.
+  - Cada impresora tiene su propia tasa: una vieja que falla más no puede esconderse detrás de una nueva que no falla nunca.
+  - El registro se pide cada 20 s y no cada 3 s como el estado: solo cambia al empezar o acabar una impresión y puede tener cientos de entradas. Y solo con la pestaña visible, igual que el estado.
+  - En el móvil la tabla pierde fecha, impresora y «Slicer said» (la fecha y la impresora pasan debajo del nombre) y reutiliza las clases `.wide` y `.row-sub` de History, para no inventar otro sistema.
+  - Es solo la pantalla de los datos. El diseño bonito de esta pestaña lo haces tú con Codex, como dijiste: la lógica está separada en `jobStats.js`, que no sabe nada de cómo se pinta.
+- Concepto nuevo: la mediana frente a la media. `median([100, 101, 99, 5000])` da 100,5, mientras que la media da 1325. Con datos que pueden tener un valor extremo, la mediana describe al caso típico. Se calcula ordenando una copia (`[...values].sort((a, b) => a - b)`) y cogiendo el valor del medio.
+- De la carrera: Estadística: mediana frente a media, tamaño de muestra mínimo antes de dar una proporción, y qué entra en el denominador de una tasa. Interfaces de usuario / Ingeniería del Software: separar el cálculo (`jobStats.js`, puro y con tests) de la presentación (`PrintHistory`).
+- Cómo probarlo:
+  1. `npm test` (146 pasan) y `npm run build`.
+  2. Con el agente corriendo y la pestaña Printers abierta (`layercents.com/?agent`, o `npm run dev` con `?agent`): tras unas impresiones sale el panel. Con menos de 5, los porcentajes salen como «—» con la nota.
+  3. Para verlo lleno sin impresoras: el agente lee `~/.layercents/jobs.json`; copia ahí unas 10 entradas de ejemplo (el formato está en `agent/jobs.js`) y reinicia el agente.
+
 ### 2026-10-28, Agente paso 6: impresoras Klipper (Moonraker)
 - Archivo y sitio:
   - agent/drivers/moonraker.js (nuevo): `createMoonrakerDriver`, `getJson`, `printerStatus`, `historyToJobs`, `probeMoonraker`, `explain`. agent/fakeMoonraker.js (nuevo): impresora de mentira. agent/moonraker.test.js y agent/setup.test.js (nuevos).
