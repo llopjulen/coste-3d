@@ -2,6 +2,19 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-28, DESIGN.md: el sistema visual por escrito
+- Archivo y sitio: DESIGN.md (nuevo, en la raíz) y .impeccable/design.json (nuevo). docs/MAPA.md, en la tabla de documentación, debajo de `PRODUCT.md`.
+- Qué cambió: DESIGN.md recoge el sistema visual que ya existe en src/index.css: los 22 colores con nombre y para qué sirve cada uno, la tipografía (Bricolage Grotesque para la marca y el precio, Inter para todo lo demás), radios, espaciado, capas de profundidad, componentes y una lista de lo que se hace y lo que no. design.json es su complemento para la skill `impeccable`: escalas de tono de cada color, movimiento, breakpoints y fragmentos HTML/CSS de 8 componentes.
+- Por qué:
+  - Cualquier pantalla nueva (la pestaña Printers, las cuentas de docs/NUBE.md) tiene que parecer de la misma app; con las reglas escritas no hace falta deducirlas del CSS cada vez.
+  - Documenta lo que hay, no lo que me gustaría: cada valor sale de index.css, App.jsx (colores de la gráfica) o exportExcel.js. No he cambiado ningún estilo.
+  - Tu respuesta («elegante, que transmita paz, bonito y cómodo»; componentes «cálidos y táctiles») se recoge como la metáfora «The Quiet Workshop» y como dirección futura: hoy los componentes son sobrios (bordes finos, 5 px de radio). Lo dejo escrito como hacia dónde ir al retocar, sin rehacer pantallas que nadie ha pedido tocar.
+  - La cabecera YAML sigue el formato estándar de DESIGN.md (colores, tipografía, radios, espaciado, componentes), que pueden leer otras herramientas. Lo que no cabe ahí (sombras, movimiento, breakpoints) va en el JSON, para no inventar claves que el formato no acepta.
+  - Los nombres de los colores (Layer Gold, Night Workshop…) son descriptivos y en inglés, como el resto del código; las variables CSS siguen siendo las de siempre (`--oro`, `--fondo`), y el documento dice cuál es cuál.
+- Concepto nuevo: OKLCH, el espacio de color de las escalas de design.json. `oklch(72% 0.12 79)` es luminosidad, croma (saturación) y tono en grados. A diferencia del hex o del HSL, subir la luminosidad en OKLCH se percibe igual en todos los tonos, por eso sirve para generar escalas de un color: misma `H`, distinta `L`.
+- De la carrera: Ingeniería del Software: es la documentación de diseño del sistema (la vista de interfaz), separada de los requisitos que van en PRODUCT.md. Informática Gráfica: espacios de color (sRGB a OKLab y OKLCH) en las escalas de tono.
+- Cómo probarlo: abre DESIGN.md y compara dos o tres valores con src/index.css (por ejemplo `layer-gold` con `--oro`). Corrige nombres o reglas que no te convenzan. `npm run build` sigue pasando (no toca código).
+
 ### 2026-10-28, PRODUCT.md: contexto de producto para el diseño
 - Archivo y sitio: PRODUCT.md (nuevo, en la raíz). docs/MAPA.md, en la tabla de documentación, junto a `CLAUDE.md, DEV_LOG.md`.
 - Qué cambió: un documento con la verdad de producto (usuarios, propósito, posicionamiento, contexto de uso, restricciones, compromisos de marca, evidencia y principios), escrito con `/impeccable init` a partir del repositorio y de tus tres respuestas: vendedor pequeño ahora y granja después, los cuatro diferenciadores, y uso en escritorio junto al laminador.
