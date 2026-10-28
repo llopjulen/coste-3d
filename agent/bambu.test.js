@@ -47,7 +47,7 @@ test('printerStatus: a running Bambu job becomes the common status', () => {
   const status = printerStatus(PRINTER, { raw: FULL.print, connection: 'online', updatedAt: new Date('2026-10-25T12:00:00Z') })
   assert.deepEqual(status, {
     id: 'p1s', name: 'P1S', brand: 'bambu', model: 'P1S', connection: 'online', state: 'printing',
-    job: { name: 'Phone stand', progress: 0.42, remainingMinutes: 75, layer: 120, totalLayers: 300 },
+    job: { id: null, name: 'Phone stand', progress: 0.42, remainingMinutes: 75, layer: 120, totalLayers: 300 },
     temps: { nozzle: 220.1, bed: 59.8 }, printError: null, updatedAt: '2026-10-25T12:00:00.000Z', error: null,
   })
 })
@@ -73,6 +73,39 @@ test('printerStatus: states, finished jobs, and stale data while offline', () =>
   // Garbage from the printer becomes null, not NaN on the screen.
   assert.equal(s({ gcode_state: 'RUNNING', mc_percent: 'x', nozzle_temper: null }).job.progress, null)
   assert.equal(s({ gcode_state: 'RUNNING', mc_percent: 140 }).job.progress, 1)
+})
+
+test('printerStatus: the job id is Bambu\'s own, and "0" (started at the printer) means none', () => {
+  const id = raw => printerStatus(PRINTER, { raw: { gcode_state: 'RUNNING', ...raw }, connection: 'online' }).job.id
+  assert.equal(id({ subtask_id: '812345', task_id: '700' }), '812345')
+  assert.equal(id({ task_id: '700' }), '700')
+  assert.equal(id({ subtask_id: '0', task_id: '0' }), null)
+  assert.equal(id({}), null)
+  assert.equal(id({ subtask_id: 55 }), '55') // a number from the firmware is read as text
+})
+
+test('the driver reports every status change to the listener, and survives a listener that throws', async () => {
+  const broker = await startFakeBroker({ onPublish: ({ reply }) => reply(`device/${SERIAL}/report`, FULL) })
+  const seen = []
+  const logs = []
+  let calls = 0
+  const driver = createBambuDriver(PRINTER, {
+    openSocket: plainTo(broker.port),
+    log: m => logs.push(m),
+    onStatus: status => { seen.push(status); if (++calls === 1) throw new Error('boom') },
+  })
+  try {
+    driver.start()
+    await until(() => seen.length > 0)
+    assert.equal(seen[0].state, 'printing')
+    assert.equal(seen[0].job.name, 'Phone stand')
+    assert.match(logs.join('\n'), /status listener failed: boom/)
+    // The throwing listener didn't stop the driver from keeping its status.
+    assert.equal(driver.status().state, 'printing')
+  } finally {
+    driver.stop()
+    await broker.close()
+  }
 })
 
 test('explain: each failure gets a message a person can act on, and only a changed certificate stops retries', () => {

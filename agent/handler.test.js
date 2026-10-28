@@ -10,13 +10,15 @@ const STARTED = new Date('2026-10-22T08:00:00Z')
 // What /printers should hand over: whatever the printer list says, as is.
 const FAKE_STATUS = [{ id: 'p1s', name: 'P1S', brand: 'bambu', connection: 'online', state: 'idle' }]
 const FAKE_PRINTERS = { start() {}, stop() {}, list: () => FAKE_STATUS }
+const FAKE_JOBS_LIST = [{ id: 'p1s-1', printerId: 'p1s', name: 'Phone stand', outcome: 'finished' }]
+const FAKE_JOBS = { observe() {}, flush: () => Promise.resolve(), list: () => FAKE_JOBS_LIST }
 let server
 let port
 
 // Port 0 asks the operating system for any free port, so the tests never
 // clash with a real agent running on 31415.
 before(async () => {
-  server = createServer(createHandler({ startedAt: STARTED, printers: FAKE_PRINTERS }))
+  server = createServer(createHandler({ startedAt: STARTED, printers: FAKE_PRINTERS, jobs: FAKE_JOBS }))
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
   port = server.address().port
 })
@@ -121,5 +123,22 @@ test('/printers is read-only and protected like /health', async () => {
   const evil = await call({ path: '/printers', headers: { origin: 'https://evil.example' } })
   assert.equal(evil.status, 403)
   const rebinding = await call({ path: '/printers', headers: { host: `evil.example:${port}` } })
+  assert.equal(rebinding.status, 403)
+})
+
+test('/jobs returns the job log, readable by the live site', async () => {
+  const res = await call({ path: '/jobs', headers: { origin: 'https://layercents.com' } })
+  assert.equal(res.status, 200)
+  assert.equal(res.headers['access-control-allow-origin'], 'https://layercents.com')
+  assert.equal(res.headers['cache-control'], 'no-store')
+  assert.deepEqual(res.json, { jobs: FAKE_JOBS_LIST })
+})
+
+test('/jobs is read-only and protected like /printers', async () => {
+  const post = await call({ method: 'POST', path: '/jobs', headers: { origin: 'https://layercents.com' } })
+  assert.equal(post.status, 405)
+  const evil = await call({ path: '/jobs', headers: { origin: 'https://evil.example' } })
+  assert.equal(evil.status, 403)
+  const rebinding = await call({ path: '/jobs', headers: { host: `evil.example:${port}` } })
   assert.equal(rebinding.status, 403)
 })

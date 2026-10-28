@@ -46,12 +46,13 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `agent/server.js` | Arranque del agente local. `npm run agent`: lee las impresoras, se conecta a ellas y abre el puerto 31415 solo en `127.0.0.1`. `npm run agent -- add / list / remove`: pasa a `setup.js`. |
 | `agent/setup.js` | Comandos de terminal para añadir, listar y quitar impresoras. `add` pide IP, número de serie y código de acceso, los prueba (`probeBambu`) y los guarda. |
 | `agent/config.js` | Lee y guarda la lista de impresoras en `~/.layercents/printers.json` (fuera del proyecto, permisos 600) y valida cada campo al cargarla. |
-| `agent/printers.js` | Un driver por impresora según su marca; `list()` devuelve el estado común de todas. |
+| `agent/printers.js` | Un driver por impresora según su marca; `list()` devuelve el estado común de todas y cada cambio de estado se pasa al registro de trabajos. |
+| `agent/jobs.js` | Registro de trabajos: una máquina de estados por impresora (empieza al imprimir, acaba en `finished`, `failed` o `unknown`) que se guarda en `~/.layercents/jobs.json`. Un tiempo calculado nunca se presenta como medido (`startedApprox`). |
 | `agent/drivers/bambu.js` | Driver de Bambu Lab: TLS con la huella del certificado fijada, MQTT, `pushall`, fusión de las actualizaciones parciales, reconexión con esperas crecientes, y `printerStatus` (de mensaje de Bambu a estado común). |
 | `agent/mqtt.js` | Cliente MQTT 3.1.1 mínimo y sin dependencias: codificar y leer paquetes (`PacketReader`) y una sesión (`MqttSession`) con login, suscripción, publicación y keepalive. |
 | `agent/fakeBroker.js` | Una impresora de mentira para los tests: habla MQTT, graba lo que le mandan y contesta como una Bambu. |
 | `agent/handler.js` | Qué responde el agente a cada petición: seguridad (Host, Origin, CORS, preflight) y rutas: `/health` y `/printers` (solo lectura). `PROTOCOL` es la versión del contrato con la web. |
-| `agent/*.test.js` | Tests del agente con `node:test` (`npm test`), sin dependencias: HTTP (`handler`), MQTT byte a byte (`mqtt`), driver de Bambu con TLS de verdad (`bambu`; se saltan sin openssl) y configuración (`config`). |
+| `agent/*.test.js` | Tests del agente con `node:test` (`npm test`), sin dependencias: HTTP (`handler`), MQTT byte a byte (`mqtt`), driver de Bambu con TLS de verdad (`bambu`; se saltan sin openssl), configuración (`config`) y registro de trabajos (`jobs`, con reloj falso). |
 | `docs/MAPA.md` | Este archivo. |
 | `docs/IMPRESORAS.md` | Investigación por marca (Bambu, Klipper/Moonraker, Prusa, Creality, Elegoo, Anycubic, Flashforge, OctoPrint): protocolo, puerto, credenciales, qué se puede leer, y el orden del plan. |
 | `CLAUDE.md`, `DEV_LOG.md` | Instrucciones del proyecto y registro de cada cambio con su porqué. |
@@ -98,14 +99,17 @@ Dentro del agente:
 
 ```
   server.js ──► handler.js  ── GET /printers ──►  printers.js ──► drivers/bambu.js ──► mqtt.js ──TLS 8883──► impresora
-                                                        ▲
-                                    config.js (~/.layercents/printers.json, permisos 600)
+                  │                                     ▲                  │ onStatus (cada cambio)
+                  └───────── GET /jobs ──► jobs.js ◄────┼──────────────────┘
+                                             │          │
+                       ~/.layercents/jobs.json   config.js (~/.layercents/printers.json, permisos 600)
                                                         ▲
                                       setup.js (npm run agent -- add: prueba y guarda)
 ```
 
 - Cada impresora tiene su driver, que mantiene la conexión abierta y va guardando el último estado. `/printers` solo lee ese estado de memoria: preguntar no molesta a la impresora.
 - El estado que sale del agente es el mismo para todas las marcas (`printerStatus`) y nunca lleva la IP, el número de serie ni el código de acceso.
+- La Bambu no guarda historial, así que el agente lo apunta él: `jobs.js` recibe cada estado que produce el driver y solo toca el disco cuando un trabajo empieza o acaba, no en cada actualización de progreso. Si el agente estaba apagado cuando un trabajo acabó, ese trabajo queda como `unknown`, nunca como éxito ni como fallo. `/jobs` devuelve los últimos 500, el más nuevo primero.
 - Las impresoras se añaden desde la terminal (`npm run agent -- add`), no desde la web: así el código de acceso no pasa por el navegador, y el agente no necesita ninguna ruta que cambie cosas.
 - Detalles por marca y fuentes: `docs/IMPRESORAS.md`.
 

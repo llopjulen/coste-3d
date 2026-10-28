@@ -219,6 +219,16 @@ Todo con la impresora en **modo normal** (nube), sin LAN only ni Developer Mode:
 5. Abre Bambu Handy en el móvil mientras tanto: debe seguir funcionando (si deja de funcionar, apúntalo).
 6. Si algo falla, copia lo que imprime la consola del agente (sin el código de acceso).
 
+### Y con el registro de trabajos (paso 4)
+
+El agente apunta cada trabajo en `~/.layercents/jobs.json` y lo enseña en `http://127.0.0.1:31415/jobs`. Con el agente corriendo:
+
+7. Lanza una impresión corta y mira `/jobs` en el navegador mientras imprime: debe haber un trabajo con `endedAt: null` y `startedApprox: false`.
+8. Al terminar debe pasar a `outcome: "finished"`, con `realMinutes` parecido a lo que has tardado y `estimatedMinutes` parecido a lo que dijo el laminador.
+9. **Cancela una impresión a mitad** y apunta qué sale. No sabemos si Bambu lo manda como `FAILED` (saldría `failed`) o como `IDLE` (saldría `unknown`). Con tu respuesta decidimos si hace falta un resultado `cancelled` propio. Si sale `failed`, apunta también el `printError`.
+10. Para el agente (Ctrl+C) a mitad de una impresión y arráncalo otra vez: el trabajo debe seguir abierto (no duplicarse) y cerrarse bien al terminar. Si lo arrancas con la impresión ya empezada, sale con `startedApprox: true` y sin `realMinutes`: es lo esperado.
+11. Mira si `subtask_id` / `task_id` cambian entre trabajos lanzados desde Bambu Studio y desde la pantalla de la impresora. Si desde la pantalla siempre valen `"0"`, el agente distingue los trabajos por el nombre del archivo, y dos impresiones seguidas de la misma pieza sin ver el `FINISH` entre medias contarían como una.
+
 La prueba de FTPS para los gramos (paso 5) llegará con su propio PR.
 
 ## Fuentes

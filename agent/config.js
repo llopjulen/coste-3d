@@ -87,17 +87,23 @@ export async function readConfig(env = process.env) {
   return { printers, skipped }
 }
 
-/* Saves the whole list. Written to a temporary file and then renamed:
-   rename is atomic, so a crash halfway never leaves a half-written file
-   (and with it, every printer lost). */
-export async function writeConfig(printers, env = process.env) {
-  const dir = configDir(env)
-  await mkdir(dir, { recursive: true, mode: 0o700 })
-  const target = configPath(env)
+/* Writes any JSON file of the agent's folder so that a crash can never leave
+   it half-written, and so that only the owner can read it.
+   Written to a temporary file and then renamed: rename is atomic, so the
+   file is always either the old version or the new one, never a mix (the
+   same idea as a database transaction that commits or rolls back whole).
+   Shared by the printer list and the job log. */
+export async function writePrivateJson(target, data, env = process.env) {
+  await mkdir(configDir(env), { recursive: true, mode: 0o700 })
   const temp = `${target}.tmp`
-  await writeFile(temp, `${JSON.stringify({ version: CONFIG_VERSION, printers }, null, 2)}\n`, { mode: 0o600 })
+  await writeFile(temp, `${JSON.stringify(data, null, 2)}\n`, { mode: 0o600 })
   await rename(temp, target)
   // mode on writeFile only applies when the file is created; this also
   // fixes a file that already existed with looser permissions.
   await chmod(target, 0o600)
+}
+
+/* Saves the whole list of printers. */
+export function writeConfig(printers, env = process.env) {
+  return writePrivateJson(configPath(env), { version: CONFIG_VERSION, printers }, env)
 }

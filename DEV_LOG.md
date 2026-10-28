@@ -2,6 +2,34 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-28, Agente paso 4: registro de trabajos de Bambu
+- Archivo y sitio:
+  - agent/jobs.js (nuevo): `openJobLog()` con `observe(status)`, `list()` y `flush()`; `checkJob()` valida cada entrada del archivo. agent/jobs.test.js (nuevo): 15 tests con reloj falso.
+  - agent/drivers/bambu.js: opción `onStatus` de `createBambuDriver`, llamada dentro de `onReport`; `jobId()` y el campo `job.id` en `printerStatus`.
+  - agent/printers.js: `createPrinters` recibe `jobLog` y se lo pasa a cada driver como `onStatus`.
+  - agent/handler.js: ruta `GET /jobs`; `PROTOCOL` pasa a 3 y `VERSION` a 0.3.0. agent/server.js: abre el registro, se lo da al handler y espera a `flush()` en Ctrl+C. src/agent.js: `AGENT_PROTOCOL` = 3.
+  - agent/config.js: `writePrivateJson()` sacada de `writeConfig` para que la usen las impresoras y los trabajos.
+  - docs/IMPRESORAS.md (checklist 7-11), docs/MAPA.md y CLAUDE.md al día.
+- Qué cambió: el agente apunta en `~/.layercents/jobs.json` cada trabajo que ve en una Bambu (impresora, nombre, inicio, fin, resultado, minutos estimados y reales, código de error) y lo sirve en `GET /jobs`, el más nuevo primero.
+- Por qué:
+  - La Bambu no guarda historial: cuando un trabajo acaba, lo olvida. Sin este registro no se puede comparar lo presupuestado con lo que pasó de verdad, que es lo que ninguna calculadora de la competencia hace.
+  - El driver avisa con un callback (`onStatus`) en cuanto llega un mensaje, en vez de que el registro pregunte cada X segundos: no se pierde ningún cambio ni se hace trabajo en vacío. Se llama dentro de un `try/catch`, porque un fallo del registro no debe dejar sin estado en vivo a la web.
+  - Solo se escribe en disco cuando un trabajo empieza o acaba, no con cada porcentaje: la P1S manda varios mensajes por segundo.
+  - Resultado `unknown` cuando no se vio cómo acabó (el agente estaba apagado, la impresora pasó a reposo, otro trabajo ocupó su sitio). Descartado asumir `finished`: un éxito inventado falsea la tasa de fallos.
+  - Si el agente arranca con una impresión a medias, el inicio se estima con el progreso y el tiempo restante que da la propia impresora, se marca `startedApprox` y no se calcula `realMinutes`. Un tiempo calculado nunca se presenta como medido, o "presupuestado frente a real" sería un círculo.
+  - El reloj empieza en `PREPARE` si se vio, porque la estimación de la Bambu incluye el calentamiento y la calibración.
+  - La clave del trabajo (id de Bambu o nombre del archivo) se guarda en el archivo. Si solo estuviera en memoria, tras reiniciar el agente un trabajo nuevo se confundiría con el que quedó abierto.
+  - Un archivo roto se aparta como `jobs.json.broken-<hora>` en vez de sobrescribirse, y las entradas dañadas se saltan y se avisan. Un fallo al guardar se registra pero no se lanza: una promesa rechazada sin atender detiene un programa de Node.
+  - Las escrituras se encadenan (`saving = saving.then(...)`) para que dos no se pisen en el mismo archivo temporal.
+  - `PROTOCOL` sube a 3 porque la API cambia (ruta nueva y `job.id`), como pide CLAUDE.md. Con la comparación estricta de la web, un agente viejo saldrá como "outdated" hasta que lo actualices.
+  - Descartado: guardar los trabajos en el navegador (el agente puede llevar días sin web abierta) y SQLite (una dependencia más para un archivo que crece unas decenas de filas a la semana).
+- Concepto nuevo: encadenar promesas para serializar escrituras. `let cola = Promise.resolve(); cola = cola.then(() => escribir())` hace que cada escritura espere a que acabe la anterior, aunque se pidan a la vez. Y `.catch` al final de la cadena evita que un error rompa las siguientes.
+- De la carrera: Autómatas / Teoría de la computación: `observe()` es un autómata finito por impresora (estados: sin trabajo y abierto; las transiciones están en el dibujo de la cabecera de jobs.js). Bases de datos: `writePrivateJson` escribe en un temporal y hace `rename`, que es atómico; el archivo es el anterior o el nuevo entero, igual que un commit o un rollback. Sistemas Operativos: los permisos 600 del archivo y esperar a `flush()` antes de salir en la señal SIGINT.
+- Cómo probarlo:
+  1. `npm test` (103 tests) y `npm run build`.
+  2. Con la P1S: sigue la checklist de docs/IMPRESORAS.md (puntos 7 a 11). Lo más importante: lanza una impresión corta y mira `http://127.0.0.1:31415/jobs`, y **cancela otra a mitad** para ver cómo la cuenta Bambu.
+  3. Sin impresora: `npm run agent` y abre `/jobs`; debe salir `{"jobs":[]}`.
+
 ### 2026-10-26, El PDF ya no sale con un bloque negro debajo de la hoja
 - Archivo y sitio: src/index.css, sección "Informe (PDF)", dentro de `@media print`, en la regla del fondo (antes solo `body`, ahora `html,body`).
 - Qué cambió: al imprimir, el fondo blanco se pone también en `html`. Desde el PR del SEO (#16), el informe y el presupuesto para el cliente salían con un bloque negro desde la última línea hasta el final de la hoja. No llegó a la web publicada: layercents.com se desplegó el 22 y el SEO entró después.
