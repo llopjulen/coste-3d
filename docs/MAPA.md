@@ -4,7 +4,7 @@ Para orientarse antes de leer un archivo: qué hace cada pieza, cómo viajan los
 
 ## La arquitectura en un párrafo
 
-Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backend: todo se ejecuta en el navegador y los datos persisten en `localStorage`. Un único componente raíz, `App`, tiene el estado y decide qué pantalla se ve. El resto de componentes son casi todos presentacionales: reciben datos por props y avisan hacia arriba con callbacks (`onLoad`, `onDelete`…). Es flujo de datos unidireccional: los datos bajan, los eventos suben. La única excepción son los datos del negocio y el contador de presupuestos, que `CustomerQuote` lee y escribe directamente en `localStorage`.
+Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backend (cuentas y nube están en camino, ver `docs/NUBE.md`; `supabase/` ya tiene el esquema pero la web aún no lo usa): todo se ejecuta en el navegador y los datos persisten en `localStorage`. Un único componente raíz, `App`, tiene el estado y decide qué pantalla se ve. El resto de componentes son casi todos presentacionales: reciben datos por props y avisan hacia arriba con callbacks (`onLoad`, `onDelete`…). Es flujo de datos unidireccional: los datos bajan, los eventos suben. La única excepción son los datos del negocio y el contador de presupuestos, que `CustomerQuote` lee y escribe directamente en `localStorage`.
 
 ## Orden recomendado de lectura
 
@@ -52,6 +52,9 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `agent/mqtt.js` | Cliente MQTT 3.1.1 mínimo y sin dependencias: codificar y leer paquetes (`PacketReader`) y una sesión (`MqttSession`) con login, suscripción, publicación y keepalive. |
 | `agent/fakeBroker.js` | Una impresora de mentira para los tests: habla MQTT, graba lo que le mandan y contesta como una Bambu. |
 | `agent/handler.js` | Qué responde el agente a cada petición: seguridad (Host, Origin, CORS, preflight) y rutas: `/health` y `/printers` (solo lectura). `PROTOCOL` es la versión del contrato con la web. |
+| `supabase/migrations/20261028000000_init.sql` | Esquema de la base de datos en la nube (todavía sin conectar a la web): `quotes`, `business`, `agents`, `printers`, `printer_status`, `jobs`, `subscriptions`, `pairings`. Cada tabla con RLS y con los permisos de `anon` y `authenticated` quitados y devueltos uno a uno. Diseño en `docs/NUBE.md`. |
+| `supabase/tests/prelude.sql` | Solo para los tests: crea en un Postgres normal lo que Supabase ya trae (roles `anon`, `authenticated`, `service_role`, `auth.users`, `auth.uid()`). |
+| `supabase/rls.test.js` | Tests de las políticas contra un Postgres de verdad con `psql`. Se saltan si no existe `LAYERCENTS_TEST_PG`. |
 | `agent/*.test.js` | Tests del agente con `node:test` (`npm test`), sin dependencias: HTTP (`handler`), MQTT byte a byte (`mqtt`), driver de Bambu con TLS de verdad (`bambu`; se saltan sin openssl), configuración (`config`) y registro de trabajos (`jobs`, con reloj falso). |
 | `docs/MAPA.md` | Este archivo. |
 | `docs/IMPRESORAS.md` | Investigación por marca (Bambu, Klipper/Moonraker, Prusa, Creality, Elegoo, Anycubic, Flashforge, OctoPrint): protocolo, puerto, credenciales, qué se puede leer, y el orden del plan. |
