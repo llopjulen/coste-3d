@@ -83,7 +83,7 @@ export function openPinnedTls({ host, port = BAMBU_PORT, expectedFingerprint, ti
 /* printer: one entry of the agent's config (config.js): id, name, model,
    host, serial, accessCode, fingerprint.
    `openSocket` is a parameter so tests can use a fake printer. */
-export function createBambuDriver(printer, { openSocket = openPinnedTls, now = () => new Date(), log = () => {} } = {}) {
+export function createBambuDriver(printer, { openSocket = openPinnedTls, now = () => new Date(), log = () => {}, onStatus = () => {} } = {}) {
   const reportTopic = `device/${printer.serial}/report`
   const requestTopic = `device/${printer.serial}/request`
 
@@ -109,6 +109,14 @@ export function createBambuDriver(printer, { openSocket = openPinnedTls, now = (
     if (message?.print && typeof message.print === 'object') {
       raw = { ...raw, ...message.print }
       updatedAt = now()
+      // Tell whoever is listening (the job log) the moment something changes,
+      // instead of making it poll. A bug in the listener must not stop the
+      // status from updating, so it's caught here.
+      try {
+        onStatus(printerStatus(printer, { raw, updatedAt, connection, error }))
+      } catch (err) {
+        log(`${printer.name}: status listener failed: ${err.message}`)
+      }
     }
   }
 
@@ -273,6 +281,13 @@ const STATES = {
 // A number from the printer, or null if it isn't one (missing, text, NaN).
 const num = v => (typeof v === 'number' && Number.isFinite(v) ? v : null)
 
+// Bambu's own id for a job. Prints started from the printer's screen or an
+// SD card report "0" or nothing, which is the same as having no id.
+const jobId = raw => {
+  const id = String(raw.subtask_id ?? raw.task_id ?? '')
+  return id && id !== '0' ? id : null
+}
+
 /* Pure: the merged raw "print" object -> the common status. */
 export function printerStatus(printer, { raw = {}, updatedAt = null, connection = 'connecting', error = null } = {}) {
   const state = STATES[raw.gcode_state] ?? 'unknown'
@@ -289,6 +304,7 @@ export function printerStatus(printer, { raw = {}, updatedAt = null, connection 
     state: connection === 'online' ? state : 'unknown',
     job: hasJob
       ? {
+          id: jobId(raw),
           name: raw.subtask_name || raw.gcode_file || null,
           progress: percent === null ? null : Math.min(Math.max(percent, 0), 100) / 100,
           remainingMinutes: num(raw.mc_remaining_time),

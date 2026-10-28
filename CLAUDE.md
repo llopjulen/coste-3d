@@ -68,7 +68,7 @@ Investigación por marca, protocolos, puertos y orden en docs/IMPRESORAS.md: lé
 1. Servidor del agente (hecho, ver arriba).
 2. La web detecta el agente, solo cuando la persona lo activa: un sondeo automático a 127.0.0.1 le saltaría un aviso de permisos de Chrome a todo el mundo (hecho, ver arriba).
 3. Bambu: estado en vivo por MQTT en el agente y en la pestaña Printers (hecho en #19 y #20, falta que Julen lo pruebe con su P1S con la checklist de docs/IMPRESORAS.md). Solo lectura, que el firmware permite en modo normal (sin LAN only ni Developer Mode).
-4. Registro de trabajos de Bambu (inicio, fin, fallo) en un JSON en disco: la impresora no guarda historial.
+4. Registro de trabajos de Bambu (inicio, fin, fallo) en un JSON en disco: la impresora no guarda historial. (Hecho en el PR `feature/agent-job-log`: agent/jobs.js, `GET /jobs`, `PROTOCOL` 3. Falta probarlo con la P1S: checklist en docs/IMPRESORAS.md.)
 5. Gramos reales de Bambu: el 3MF por FTPS, leído con `parseSliceInfo` de src/slicerFile.js. Antes, probar en la P1S si FTPS funciona sin Developer Mode; si no, plan B: arrastrar el 3MF.
 6. Driver Moonraker (Klipper): estado e historial, que ya trae (Creality K2/K1 con Moonraker, Elegoo Neptune 4, Qidi, Sovol, Voron).
 7. Driver PrusaLink.

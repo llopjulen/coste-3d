@@ -6,15 +6,17 @@
    Adding a brand means adding a driver file and one line in DRIVERS.
 ================================================================== */
 import { createBambuDriver } from './drivers/bambu.js'
+import { NO_JOBS } from './jobs.js'
 
 const DRIVERS = {
   bambu: createBambuDriver,
 }
 
 /* configured: the printers from config.js.
-   `drivers` is a parameter so tests can plug in fakes. */
-export function createPrinters(configured, { drivers = DRIVERS, log = () => {} } = {}) {
-  const running = configured.map(printer => drivers[printer.brand](printer, { log }))
+   `drivers` is a parameter so tests can plug in fakes.
+   `jobLog` hears every status change (see jobs.js). */
+export function createPrinters(configured, { drivers = DRIVERS, log = () => {}, jobLog = NO_JOBS } = {}) {
+  const running = configured.map(printer => drivers[printer.brand](printer, { log, onStatus: status => jobLog.observe(status) }))
   return {
     start() {
       for (const driver of running) driver.start()

@@ -11,6 +11,7 @@ import { createServer } from 'node:http'
 import { createHandler, VERSION } from './handler.js'
 import { configPath, readConfig } from './config.js'
 import { createPrinters } from './printers.js'
+import { openJobLog } from './jobs.js'
 
 // 127.0.0.1 and never 0.0.0.0: the agent only answers this same
 // computer. On every network interface, anyone on the same Wi-Fi could
@@ -40,8 +41,9 @@ async function startAgent() {
   // Each line is prefixed with the time: when something fails at 3 a.m.,
   // the console says when.
   const log = message => console.log(`${new Date().toLocaleTimeString()}  ${message}`)
-  const printers = createPrinters(configured, { log })
-  const server = createServer(createHandler({ printers }))
+  const jobs = await openJobLog({ log })
+  const printers = createPrinters(configured, { log, jobLog: jobs })
+  const server = createServer(createHandler({ printers, jobs }))
 
   // The usual way to fail: a second copy of the agent is already running.
   // A clear message beats Node's stack trace.
@@ -67,6 +69,7 @@ async function startAgent() {
   process.on('SIGINT', () => {
     console.log('\nStopping the layercents agent…')
     printers.stop()
-    server.close(() => process.exit(0))
+    // The job log writes in the background: wait until the last write is on disk.
+    jobs.flush().finally(() => server.close(() => process.exit(0)))
   })
 }
