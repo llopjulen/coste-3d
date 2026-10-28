@@ -44,21 +44,40 @@ const HOSTNAME_RE = /^[A-Za-z0-9.-]{1,253}$/
 
 export const isValidHost = host => typeof host === 'string' && (net.isIP(host) !== 0 || HOSTNAME_RE.test(host))
 
-/* One printer entry -> a clean copy, or null with the reason. Only Bambu exists for now. */
+// A Moonraker API key goes into an HTTP header, so only characters that are
+// safe there; real ones are 32 hex characters.
+const API_KEY_RE = /^[A-Za-z0-9_.~-]{8,128}$/
+
+// The brands the agent has a driver for. Each one checks only its own fields;
+// the checks every printer shares (id, name, host) run first.
+const BRAND_CHECKS = {
+  bambu(p, model) {
+    if (typeof p.serial !== 'string' || !SERIAL_RE.test(p.serial)) return { reason: 'serial must be 8 to 32 capital letters and digits' }
+    if (typeof p.accessCode !== 'string' || !ACCESS_CODE_RE.test(p.accessCode)) return { reason: 'access code must be 8 letters or digits' }
+    if (typeof p.fingerprint !== 'string' || !FINGERPRINT_RE.test(p.fingerprint)) return { reason: 'certificate fingerprint missing or malformed' }
+    return { fields: { model, serial: p.serial, accessCode: p.accessCode, fingerprint: p.fingerprint } }
+  },
+  moonraker(p, model) {
+    // Missing = the usual port; present = a real port number.
+    const port = p.port ?? 7125
+    if (!Number.isInteger(port) || port < 1 || port > 65535) return { reason: 'port must be a number between 1 and 65535' }
+    if (p.apiKey != null && (typeof p.apiKey !== 'string' || !API_KEY_RE.test(p.apiKey))) return { reason: 'API key has characters that are not allowed' }
+    return { fields: { model, port, apiKey: p.apiKey ?? null } }
+  },
+}
+
+/* One printer entry -> a clean copy, or null with the reason. */
 export function checkPrinter(p) {
   if (!p || typeof p !== 'object') return { printer: null, reason: 'not an object' }
-  if (p.brand !== 'bambu') return { printer: null, reason: `brand "${p.brand}" is not supported yet` }
+  if (!Object.hasOwn(BRAND_CHECKS, p.brand)) return { printer: null, reason: `brand "${p.brand}" is not supported yet` }
   if (typeof p.id !== 'string' || !ID_RE.test(p.id)) return { printer: null, reason: 'id must be lowercase letters, digits and dashes' }
   if (typeof p.name !== 'string' || !p.name.trim() || p.name.length > 60) return { printer: null, reason: 'name must be 1 to 60 characters' }
   if (!isValidHost(p.host)) return { printer: null, reason: 'host must be an IP address or a host name' }
-  if (typeof p.serial !== 'string' || !SERIAL_RE.test(p.serial)) return { printer: null, reason: 'serial must be 8 to 32 capital letters and digits' }
-  if (typeof p.accessCode !== 'string' || !ACCESS_CODE_RE.test(p.accessCode)) return { printer: null, reason: 'access code must be 8 letters or digits' }
-  if (typeof p.fingerprint !== 'string' || !FINGERPRINT_RE.test(p.fingerprint)) return { printer: null, reason: 'certificate fingerprint missing or malformed' }
   const model = typeof p.model === 'string' && p.model.length <= 30 ? p.model : null
-  return {
-    printer: { id: p.id, name: p.name.trim(), brand: 'bambu', model, host: p.host, serial: p.serial, accessCode: p.accessCode, fingerprint: p.fingerprint },
-    reason: null,
-  }
+  const { fields, reason } = BRAND_CHECKS[p.brand](p, model)
+  if (!fields) return { printer: null, reason }
+  // Only known fields are copied, so anything extra in a hand-edited file is dropped.
+  return { printer: { id: p.id, name: p.name.trim(), brand: p.brand, host: p.host, ...fields }, reason: null }
 }
 
 /* Reads the config. A missing file is a normal first run: no printers.

@@ -240,3 +240,88 @@ test('list returns newest first and respects the limit', async () => {
     assert.deepEqual(log.list({ limit: 2 }).map(j => j.name), ['job 2', 'job 1'])
   } finally { t.cleanup() }
 })
+
+/* An entry as historyToJobs (drivers/moonraker.js) produces it. */
+const entry = (id, fields = {}) => ({
+  id, name: 'Stand', startedAt: '2026-10-28T10:00:00.000Z', startedApprox: false, endedAt: '2026-10-28T11:35:00.000Z',
+  outcome: 'finished', estimatedMinutes: 90, realMinutes: 95, totalLayers: 300, printError: null, ...fields,
+})
+const K2 = { id: 'k2', name: 'K2 Plus' }
+
+test('importHistory: the printer\'s own records enter the log with its id and name', async () => {
+  const t = setup()
+  try {
+    const log = await t.open()
+    log.importHistory(K2, [entry('moonraker-A1'), entry('moonraker-A2', { startedAt: '2026-10-28T08:00:00.000Z', endedAt: '2026-10-28T09:00:00.000Z', outcome: 'cancelled', realMinutes: 60 })])
+    const jobs = log.list()
+    assert.deepEqual(jobs.map(j => [j.id, j.printerId, j.printerName, j.outcome]), [
+      ['moonraker-A1', 'k2', 'K2 Plus', 'finished'],
+      ['moonraker-A2', 'k2', 'K2 Plus', 'cancelled'],
+    ])
+    assert.equal(jobs[0].startedApprox, false)
+    assert.equal('key' in jobs[0], false)
+  } finally { t.cleanup() }
+})
+
+test('importHistory: a job open in the history is updated when it closes, never duplicated', async () => {
+  const t = setup()
+  try {
+    const log = await t.open()
+    log.importHistory(K2, [entry('moonraker-A1', { endedAt: null, outcome: null, realMinutes: null })])
+    assert.equal(log.list()[0].endedAt, null)
+    log.importHistory(K2, [entry('moonraker-A1')])
+    assert.equal(log.list().length, 1)
+    assert.equal(log.list()[0].outcome, 'finished')
+    assert.equal(log.list()[0].realMinutes, 95)
+  } finally { t.cleanup() }
+})
+
+test('importHistory: the same history again changes nothing and does not touch the disk', async () => {
+  const t = setup()
+  try {
+    const log = await t.open()
+    log.importHistory(K2, [entry('moonraker-A1')])
+    await log.flush()
+    const first = statSync(jobsPath(t.env)).mtimeMs
+    await new Promise(resolve => setTimeout(resolve, 30))
+    log.importHistory(K2, [entry('moonraker-A1')])
+    await log.flush()
+    assert.equal(statSync(jobsPath(t.env)).mtimeMs, first)
+  } finally { t.cleanup() }
+})
+
+test('importHistory: survives a restart, and damaged entries are ignored', async () => {
+  const t = setup()
+  try {
+    const first = await t.open()
+    first.importHistory(K2, [entry('moonraker-A1'), { id: 'bad' }, null, entry('moonraker-A3', { outcome: 'victory' })])
+    await first.flush()
+    const second = await t.open()
+    assert.deepEqual(second.list().map(j => j.id), ['moonraker-A1'])
+  } finally { t.cleanup() }
+})
+
+test('importHistory: keeps the log ordered by start, whatever order the printer sends', async () => {
+  const t = setup()
+  try {
+    const log = await t.open()
+    log.importHistory(K2, [
+      entry('moonraker-N', { startedAt: '2026-10-28T12:00:00.000Z', endedAt: '2026-10-28T13:00:00.000Z' }),
+      entry('moonraker-O', { startedAt: '2026-10-27T12:00:00.000Z', endedAt: '2026-10-27T13:00:00.000Z' }),
+    ])
+    assert.deepEqual(log.list().map(j => j.id), ['moonraker-N', 'moonraker-O']) // newest first
+  } finally { t.cleanup() }
+})
+
+test('a cancelled print is its own outcome, kept apart from failures', async () => {
+  const t = setup()
+  try {
+    const log = await t.open()
+    t.at(0); log.observe(status('printing'))
+    t.at(20); log.observe(status('cancelled'))
+    const [job] = log.list()
+    assert.equal(job.outcome, 'cancelled')
+    assert.equal(job.realMinutes, 20)
+    assert.equal(job.printError, null)
+  } finally { t.cleanup() }
+})

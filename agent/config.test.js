@@ -78,6 +78,7 @@ test('checkPrinter: every field is checked, so a hand-edited file cannot inject 
   assert.equal(bad({ fingerprint: undefined }), null)
   assert.equal(bad({ id: 'Has Spaces' }), null)
   assert.equal(bad({ brand: 'prusa' }), null) // not supported yet
+  assert.equal(bad({ brand: 'constructor' }), null) // not Object's own method
   // Unknown extra fields are dropped, not carried along.
   assert.equal('extra' in checkPrinter({ ...GOOD, extra: 1 }).printer, false)
 })
@@ -107,4 +108,42 @@ test('createPrinters: one driver per printer, started and stopped together', () 
   assert.deepEqual(printers.list(), [{ id: 'p1s-taller' }, { id: 'x1c' }])
   printers.stop()
   assert.deepEqual(calls, ['start p1s-taller', 'start x1c', 'stop p1s-taller', 'stop x1c'])
+})
+
+const KLIPPER = { id: 'k2', name: 'K2 Plus', brand: 'moonraker', model: 'K2 Plus', host: '192.168.1.60', port: 7125, apiKey: null }
+
+test('checkPrinter (Klipper): the port defaults to 7125, the key is optional, and bad values are refused', () => {
+  assert.deepEqual(checkPrinter(KLIPPER).printer, KLIPPER)
+  const { port: _port, apiKey: _key, ...bare } = KLIPPER
+  assert.deepEqual(checkPrinter(bare).printer, KLIPPER) // defaults filled in
+  assert.equal(checkPrinter({ ...KLIPPER, apiKey: 'abcdef1234567890' }).printer.apiKey, 'abcdef1234567890')
+  for (const port of [0, 70000, 7125.5, '7125']) assert.match(checkPrinter({ ...KLIPPER, port }).reason, /port/, String(port))
+  for (const apiKey of ['short', 'has space in it', 'new\nline1234', 'x'.repeat(200), 12345678]) assert.match(checkPrinter({ ...KLIPPER, apiKey }).reason, /API key/, String(apiKey))
+  assert.equal(checkPrinter({ ...KLIPPER, host: 'http://x' }).printer, null)
+  // A Bambu field on a Klipper printer is dropped, not carried along.
+  assert.equal('serial' in checkPrinter({ ...KLIPPER, serial: '01P00A123456789' }).printer, false)
+})
+
+test('both brands live in the same file and each keeps only its own fields', async () => {
+  const { env, cleanup } = tempHome()
+  try {
+    await writeConfig([GOOD, KLIPPER], env)
+    const { printers, skipped } = await readConfig(env)
+    assert.deepEqual(printers, [GOOD, KLIPPER])
+    assert.deepEqual(skipped, [])
+  } finally {
+    cleanup()
+  }
+})
+
+test('createPrinters: each driver gets both ways of feeding the job log, and they reach the right method', () => {
+  const seen = []
+  const jobLog = { observe: s => seen.push(['observe', s.id]), importHistory: (p, e) => seen.push(['import', p.id, p.name, e.length]), list: () => [], flush: async () => {} }
+  const driver = (printer, { onStatus, onHistory }) => {
+    onStatus({ id: printer.id })
+    onHistory([{}, {}])
+    return { start() {}, stop() {}, status: () => ({}) }
+  }
+  createPrinters([KLIPPER], { drivers: { moonraker: driver }, jobLog })
+  assert.deepEqual(seen, [['observe', 'k2'], ['import', 'k2', 'K2 Plus', 2]])
 })

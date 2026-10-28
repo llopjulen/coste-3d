@@ -48,7 +48,10 @@ export function jobsPath(env = process.env) {
   return join(configDir(env), 'jobs.json')
 }
 
-const OUTCOMES = new Set(['finished', 'failed', 'unknown'])
+// "cancelled" is the person's choice, not a failure: it is kept apart so it
+// doesn't count in the failure rate. Klipper says it outright; Bambu doesn't
+// (see docs/IMPRESORAS.md, checklist 9).
+const OUTCOMES = new Set(['finished', 'failed', 'cancelled', 'unknown'])
 
 /* One entry of the file -> a clean copy, or null if it isn't a job.
    The file can be edited by hand, so every field is checked on load. */
@@ -190,7 +193,7 @@ export async function openJobLog({ env = process.env, now = () => new Date(), lo
           open.key ??= jobKey(status.job)
           open.totalLayers = status.job?.totalLayers ?? open.totalLayers
         }
-      } else if (open && (status.state === 'finished' || status.state === 'failed')) {
+      } else if (open && (status.state === 'finished' || status.state === 'failed' || status.state === 'cancelled')) {
         close(open, status.state, at, status)
         dirty = true
       } else if (open && status.state === 'idle') {
@@ -200,6 +203,34 @@ export async function openJobLog({ env = process.env, now = () => new Date(), lo
       // Anything that isn't "preparing" cancels the preparing timer.
       if (status.state !== 'preparing') preparing.delete(status.id)
       if (dirty) save()
+    },
+
+    /* For printers that keep their own history (Moonraker): copies it into
+       the log. The printer's record is better than anything observed from
+       outside, so an entry with a known id replaces ours. Touches the disk
+       only if something actually changed, because this runs every time a
+       print starts or ends. */
+    importHistory(printer, entries) {
+      let dirty = false
+      for (const entry of entries) {
+        // Whatever calls this, a bad entry is skipped, not a crash.
+        if (!entry || typeof entry !== 'object') continue
+        const job = checkJob({ ...entry, printerId: printer.id, printerName: printer.name, key: entry.id })
+        if (!job) continue
+        const i = jobs.findIndex(j => j.id === job.id)
+        if (i === -1) {
+          jobs.push(job)
+          dirty = true
+        } else if (JSON.stringify(jobs[i]) !== JSON.stringify(job)) {
+          jobs[i] = job
+          dirty = true
+        }
+      }
+      if (dirty) {
+        // Oldest first, as list() expects.
+        jobs.sort((a, b) => Date.parse(a.startedAt) - Date.parse(b.startedAt))
+        save()
+      }
     },
 
     /* Newest first. A copy: the caller can't change the log by accident. */
@@ -246,4 +277,4 @@ async function load(file, log) {
 }
 
 /* An empty log, for when the agent runs without one (and for tests). */
-export const NO_JOBS = { observe() {}, list: () => [], flush: () => Promise.resolve() }
+export const NO_JOBS = { observe() {}, importHistory() {}, list: () => [], flush: () => Promise.resolve() }

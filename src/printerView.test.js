@@ -23,6 +23,7 @@ test('tone: gold while working, red on failure, grey when we cannot tell', () =>
   assert.equal(tone({ connection: 'online', state: 'printing' }), 'busy')
   assert.equal(tone({ connection: 'online', state: 'idle' }), 'ok')
   assert.equal(tone({ connection: 'online', state: 'failed' }), 'bad')
+  assert.equal(tone({ connection: 'online', state: 'cancelled' }), 'ok') // the person's choice, not an alarm
   assert.equal(tone({ connection: 'auth-error', state: 'unknown' }), 'bad')
   assert.equal(tone({ connection: 'offline', state: 'printing' }), 'muted')
 })

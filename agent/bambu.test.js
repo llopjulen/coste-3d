@@ -48,7 +48,7 @@ test('printerStatus: a running Bambu job becomes the common status', () => {
   assert.deepEqual(status, {
     id: 'p1s', name: 'P1S', brand: 'bambu', model: 'P1S', connection: 'online', state: 'printing',
     job: { id: null, name: 'Phone stand', progress: 0.42, remainingMinutes: 75, layer: 120, totalLayers: 300 },
-    temps: { nozzle: 220.1, bed: 59.8 }, printError: null, updatedAt: '2026-10-25T12:00:00.000Z', error: null,
+    temps: { nozzle: 220.1, bed: 59.8 }, printError: null, printMessage: null, updatedAt: '2026-10-25T12:00:00.000Z', error: null,
   })
 })
 

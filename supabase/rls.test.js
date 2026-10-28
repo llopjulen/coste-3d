@@ -173,6 +173,7 @@ test('a job is open or closed, never half-way, and an estimated start never has 
   fails(job('time', { ended_at: "'2026-10-28T09:00Z'", outcome: "'finished'" }), /jobs_end_after_start/, 'service_role')
   fails(job('guess', { ended_at: "'2026-10-28T11:00Z'", outcome: "'unknown'", started_approx: 'true', real_minutes: '60' }), /jobs_real_needs_measured_start/, 'service_role')
   fails(job('outcome', { ended_at: "'2026-10-28T11:00Z'", outcome: "'victory'" }), /check constraint/, 'service_role')
+  ok(job('stopped', { ended_at: "'2026-10-28T10:30Z'", outcome: "'cancelled'" }), 'service_role') // Klipper says so; it isn't a failure
   // Re-sending a job is an update, not a duplicate: the key is (printer, job).
   fails(job('open', { name: "'again'" }), /duplicate key/, 'service_role')
 })

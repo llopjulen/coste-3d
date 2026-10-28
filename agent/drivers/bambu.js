@@ -290,7 +290,7 @@ const jobId = raw => {
 
 /* Pure: the merged raw "print" object -> the common status. */
 export function printerStatus(printer, { raw = {}, updatedAt = null, connection = 'connecting', error = null } = {}) {
-  const state = STATES[raw.gcode_state] ?? 'unknown'
+  const state = Object.hasOwn(STATES, raw.gcode_state) ? STATES[raw.gcode_state] : 'unknown'
   // A job exists from the moment it's being prepared until the next one;
   // FINISH and FAILED keep it, so the last result stays visible while idle.
   const hasJob = ['preparing', 'printing', 'paused', 'finished', 'failed'].includes(state)
@@ -315,6 +315,7 @@ export function printerStatus(printer, { raw = {}, updatedAt = null, connection 
     temps: { nozzle: num(raw.nozzle_temper), bed: num(raw.bed_temper) },
     // Bambu's error code, if the printer reports one (0 means no error).
     printError: num(raw.print_error) || null,
+    printMessage: null, // Bambu reports a code only; Klipper brings words (see moonraker.js)
     updatedAt: updatedAt ? updatedAt.toISOString() : null,
     error,
   }
