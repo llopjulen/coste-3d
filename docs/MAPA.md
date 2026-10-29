@@ -37,6 +37,7 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/printerView.js` | Funciones puras para poner en palabras el estado de una impresora: etiquetas, "1 h 15 min", porcentaje, color de la insignia y la línea de capa y temperaturas. Tests en `printerView.test.js`. |
 | `src/backup.test.js` | Tests de la parte "Your setup" de `backup.js`: ida y vuelta, copias antiguas sin `setup`, Merge/Replace, almacenamiento bloqueado. |
 | `src/Logo.jsx` | El logo en SVG; los colores salen del CSS. |
+| `src/NavIcons.jsx` | Iconos de línea (calculadora, historial, impresora) de la navegación. SVG en línea con `currentColor`; sin librería de iconos. |
 | `src/logoGeometry.js` | Las coordenadas de las capas del logo, como datos. Las leen el logo y la gráfica de costes, para que no se descuadren. |
 | `src/symbolChart.js` | Función pura `symbolPieces`: reparte los costes sobre las 11 capas del símbolo (cada coste ocupa un trozo del largo total proporcional a su parte del coste). Sin React. |
 | `src/symbolChart.test.js` | Tests de `symbolChart.js`: proporciones, orden, huecos entre colores, entradas raras (NaN, negativos, todo a 0). |
