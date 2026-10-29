@@ -71,7 +71,7 @@
 html{-webkit-text-size-adjust:100%}
 
 body{
-  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-family:'Inter Variable','Inter',system-ui,-apple-system,sans-serif;
   background:var(--fondo);
   color:var(--texto);
   line-height:1.45;
@@ -93,7 +93,7 @@ body{
 /* Marca: el simbolo (src/Logo.jsx) y el nombre en su tipo de letra */
 .brand{
   display:inline-flex;align-items:center;gap:8px;
-  font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;
+  font-family:'Bricolage Grotesque Variable','Inter Variable','Inter',system-ui,sans-serif;
   font-size:1.05rem;font-weight:700;letter-spacing:-.03em;white-space:nowrap;
 }
 .logo{flex:none;display:block}
@@ -197,7 +197,7 @@ body{
 
 .wrap{max-width:1060px;margin:0 auto;padding:26px 18px 64px}
 
-h1{font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;font-size:clamp(1.55rem,4.4vw,2.2rem);font-weight:700;letter-spacing:-.03em;line-height:1.12}
+h1{font-family:'Bricolage Grotesque Variable','Inter Variable','Inter',system-ui,sans-serif;font-size:clamp(1.55rem,4.4vw,2.2rem);font-weight:700;letter-spacing:-.03em;line-height:1.12}
 .subtitle{margin-top:7px;color:var(--tenue);font-size:.94rem;max-width:40em}
 /* Los tres pasos debajo del titulo: lo que hace la app de un vistazo */
 .steps{list-style:none;display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:14px;font-size:.88rem}
@@ -316,7 +316,7 @@ h1{font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;font-size:clam
 .hero-label{display:block;font-size:.78rem;font-weight:600;color:var(--tenue)}
 .hero-price{
   display:flex;align-items:baseline;gap:3px;margin-top:2px;
-  font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;
+  font-family:'Bricolage Grotesque Variable','Inter Variable','Inter',system-ui,sans-serif;
   font-weight:700;letter-spacing:-.04em;color:var(--oro-texto);
   font-variant-numeric:tabular-nums;
 }
@@ -513,7 +513,7 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .report .muted{color:var(--tinta-suave)}
 
 .report-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;padding-bottom:18px;border-bottom:2px solid var(--tinta)}
-.report-brand{display:flex;align-items:center;gap:7px;font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;font-weight:700;font-size:.92rem;letter-spacing:-.02em}
+.report-brand{display:flex;align-items:center;gap:7px;font-family:'Bricolage Grotesque Variable','Inter Variable','Inter',system-ui,sans-serif;font-weight:700;font-size:.92rem;letter-spacing:-.02em}
 .report .logo-layers{fill:var(--oro-papel)}
 .report .logo-stroke{fill:var(--tinta)}
 .report-sub{margin-top:4px;color:var(--tinta-suave)}
@@ -746,7 +746,7 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 .printers h1{display:flex;align-items:center;gap:10px}
 /* Etiqueta "Beta" al lado del titulo: avisa de que es una funcion a medias */
 .beta{
-  font-family:'Inter',system-ui,sans-serif;font-size:.7rem;font-weight:600;letter-spacing:.02em;
+  font-family:'Inter Variable','Inter',system-ui,sans-serif;font-size:.7rem;font-weight:600;letter-spacing:.02em;
   padding:2px 8px;border-radius:9px;
   background:rgba(var(--oro-rgb),.15);color:var(--oro-texto);
 }

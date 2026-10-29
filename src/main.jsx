@@ -1,5 +1,11 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+// Fonts served from this site itself (see DEV_LOG 2026-10-29). Imported before
+// index.css so the @font-face rules exist when the stylesheet uses them.
+// Inter: one variable file for weights 400-600. Bricolage: variable with its
+// optical-size axis, which the old Google link also requested (opsz 12..96).
+import '@fontsource-variable/inter'
+import '@fontsource-variable/bricolage-grotesque/opsz.css'
 import './index.css'
 import App from './App.jsx'
 import { consumeAgentOptIn } from './agent.js'

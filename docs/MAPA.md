@@ -196,6 +196,7 @@ Simplificación a tener en cuenta: con una tasa de fallos `p`, el coste esperado
 - **Estado inicial perezoso.** `useState(() => leer())`: la función solo se ejecuta en el primer render. Se usa para leer `localStorage` una vez y no en cada render.
 - **Componentes controlados y no controlados.** Los inputs de `Field` son controlados (`value` + `onChange`). Los precios de `CustomerQuote` son no controlados (`defaultValue`) con una `key` que cambia con la moneda para rehacerlos; así el cursor no salta al escribir.
 - **Carga diferida.** `await import('./exportExcel.js')` y `await import('fflate')`: Vite los separa en otros archivos (code splitting) que solo se descargan cuando hacen falta, y la carga inicial es más ligera.
+- **Fuentes propias.** Inter y Bricolage Grotesque salen del propio sitio (paquetes `@fontsource-variable/*`, importados en `src/main.jsx`), no de Google. Vite copia los `.woff2` a `dist/assets/` y el navegador solo baja los del alfabeto que se usa (`unicode-range`). Antes cada visita le mandaba su IP a Google.
 - **PDF sin librería.** `window.print()` más `@media print` y la clase `.no-print`.
 - **`localStorage` siempre dentro de `try/catch`.** Lanza excepciones si está bloqueado (modo privado) o lleno (`QuotaExceededError`).
 - **`useRef` para listeners globales.** `ImportFile` registra `dragover` y `drop` en `window` una sola vez y llega a la `handleFile` más reciente a través de una ref, para que el listener no use una versión antigua de la función (stale closure).
