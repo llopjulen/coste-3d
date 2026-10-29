@@ -9,6 +9,7 @@ import BackupPanel, { BackupReminder } from './BackupPanel.jsx'
 import { applyRestore, backupStatus, clearSetup, downloadBackup, readLastBackup, readSetup, saveSetupField } from './backup.js'
 import Printers from './Printers.jsx'
 import NavIcon from './NavIcons.jsx'
+import SubNav from './SubNav.jsx'
 import { applyTheme, readTheme, saveTheme } from './theme.js'
 import { isAgentEnabled, setAgentEnabled } from './agent.js'
 
@@ -18,6 +19,19 @@ import { isAgentEnabled, setAgentEnabled } from './agent.js'
    adding a field means touching this list only: the form is drawn
    by looping over it.
 ================================================================== */
+// The blocks of the calculator's FORM column, in screen order, for the sidebar's
+// second level. The result column (price, costs, save) is left out on purpose: it
+// is sticky, and scrolling to a sticky element does nothing useful.
+// A module-level constant on purpose: SubNav re-creates its observer whenever
+// this array changes, and a new array on every render would do that every time.
+const CALC_NAV = [
+  { id: 'sec-import', label: 'Import file' },
+  { id: 'sec-material', label: 'Material' },
+  { id: 'sec-this-print', label: 'This print' },
+  { id: 'sec-this-sale', label: 'This sale' },
+  { id: 'sec-setup', label: 'Your setup' },
+]
+
 const SECTIONS = [
   {
     title: 'Material',
@@ -501,6 +515,8 @@ export default function App({ agentOptIn = false }) {
             <NavIcon name="calculator" />
             <span className="tab-label">Calculator</span>
           </button>
+          {/* Second level: only on the calculator, which is the long page. */}
+          {view === 'calculator' && <SubNav items={CALC_NAV} />}
           {/* History stays lit on its sub-screens (report, customer quote),
               which are reached from it; Printers is a tab of its own. */}
           <button
@@ -607,10 +623,10 @@ export default function App({ agentOptIn = false }) {
         <div className="columns">
           {/* --- Form: drawn by looping over SECTIONS --- */}
           <div>
-            <ImportFile onApply={applyImport} onUndo={undoImport} />
+            <div id="sec-import"><ImportFile onApply={applyImport} onUndo={undoImport} /></div>
             {/* The numbers that change with every part */}
             {SECTIONS.filter(section => !section.setup).map(section => (
-              <section className="panel" key={section.title}>
+              <section className="panel" key={section.title} id={`sec-${section.title.toLowerCase().replace(/\s+/g, '-')}`}>
                 <h2>{section.title}</h2>
                 <div className="body">{section.fields.map(renderField)}</div>
               </section>
@@ -618,7 +634,7 @@ export default function App({ agentOptIn = false }) {
 
             {/* The numbers that stay: saved on this device the moment they
                 change, so they are typed once. Folded once saved. */}
-            <section className="panel setup-panel">
+            <section className="panel setup-panel" id="sec-setup">
               <h2 className="with-value">
                 <span>Your setup</span>
                 <button type="button" className="link" aria-expanded={setupOpen} onClick={() => setSetupOpen(open => !open)}>

@@ -38,6 +38,7 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/backup.test.js` | Tests de la parte "Your setup" de `backup.js`: ida y vuelta, copias antiguas sin `setup`, Merge/Replace, almacenamiento bloqueado. |
 | `src/Logo.jsx` | El logo en SVG; los colores salen del CSS. |
 | `src/NavIcons.jsx` | Iconos de línea (calculadora, historial, impresora, sol y luna) de la navegación. SVG en línea con `currentColor`; sin librería de iconos. |
+| `src/SubNav.jsx` | El segundo nivel de la barra lateral: lista «On this page» bajo la pestaña Calculator, con salto a cada bloque del formulario y marca del bloque visible (scrollspy con `IntersectionObserver`). Solo en escritorio ancho. La lista `CALC_NAV` y los `id="sec-…"` están en `App.jsx`. |
 | `src/theme.js` | Tema claro u oscuro: lee la elección guardada o la del sistema, la pone en `<html data-theme>` y en el color de la barra del navegador. |
 | `src/logoGeometry.js` | Las coordenadas de las capas del logo, como datos. Las leen el logo y la gráfica de costes, para que no se descuadren. |
 | `src/symbolChart.js` | Función pura `symbolPieces`: reparte los costes sobre las 11 capas del símbolo (cada coste ocupa un trozo del largo total proporcional a su parte del coste). Sin React. |
