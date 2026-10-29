@@ -2,6 +2,18 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-28, PRODUCT.md: contexto de producto para el diseño
+- Archivo y sitio: PRODUCT.md (nuevo, en la raíz). docs/MAPA.md, en la tabla de documentación, junto a `CLAUDE.md, DEV_LOG.md`.
+- Qué cambió: un documento con la verdad de producto (usuarios, propósito, posicionamiento, contexto de uso, restricciones, compromisos de marca, evidencia y principios), escrito con `/impeccable init` a partir del repositorio y de tus tres respuestas: vendedor pequeño ahora y granja después, los cuatro diferenciadores, y uso en escritorio junto al laminador.
+- Por qué:
+  - La skill de diseño `impeccable` lo lee antes de cualquier trabajo de interfaz; sin él, cada sesión de diseño volvería a preguntar lo mismo o adivinaría el usuario.
+  - Solo hechos de producto, nada visual: paleta, tipografía y componentes van en DESIGN.md (`/impeccable document`), para que cambiar el aspecto no obligue a reescribir quién es el usuario.
+  - Precios y qué es de pago se quedan fuera a propósito: el repositorio es público y eso va en el documento privado.
+  - Deja escrito lo que no existe (testimonios, cifras de usuarios) para que ningún diseño futuro lo invente.
+  - En inglés, como la interfaz: el tono y los ejemplos de copy sirven tal cual para escribir textos de la web.
+- De la carrera: Ingeniería del Software: es una especificación de requisitos (actores, contexto de uso y restricciones) separada del diseño, como se separan requisitos y diseño en el ciclo de vida.
+- Cómo probarlo: lee PRODUCT.md y corrige lo que no encaje. `npm run build` sigue pasando (no toca código).
+
 ### 2026-10-28, Pestaña Printers: historial, tasa de fallos y tiempo real frente al estimado
 - Archivo y sitio:
   - src/jobStats.js (nuevo): `summarize`, `summarizeByPrinter`, `median`, `describeEstimateError`. src/jobStats.test.js (nuevo): 11 tests.
