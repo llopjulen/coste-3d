@@ -8,11 +8,17 @@
   --panel-alto:#2A2A30;
   --borde:#36363D;
   --texto:#E9E9EC;
-  --tenue:#8E8E98;
+  /* Gris del texto secundario. Era #8E8E98 y daba 4,4:1 sobre --panel-alto
+     (cabeceras de panel, ayudas): por debajo del 4,5:1 de WCAG AA. Con este
+     da 5,1:1 ahi y 4,8:1 en el peor fondo, el aviso de oro sobre --fondo. */
+  --tenue:#9A9AA4;
   --oro:#F2B33D;        /* color de la marca: botones, detalles, el logo */
   --oro-vivo:#F7C96A;   /* el oro al pasar el raton y en textos destacados */
   --sobre-oro:#161619;  /* texto encima de un boton de oro (oscuro: el blanco no se leeria) */
-  --rojo:#E5484D;
+  /* Perdidas y errores. Era #E5484D: 4,1:1 sobre --panel y 3,6:1 sobre
+     --panel-alto, justo en la frase de "pierdes dinero". Este, mas claro,
+     da 4,9:1 sobre --panel-alto y 4,5:1 en la insignia "Failed". */
+  --rojo:#FF6369;
   --radio:8px;
 }
 
@@ -657,7 +663,7 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 .printer-badge{font-size:.74rem;font-weight:600;padding:2px 9px;border-radius:9px;white-space:nowrap}
 .printer-badge.busy{background:rgba(242,179,61,.15);color:var(--oro-vivo)}
 .printer-badge.ok{background:var(--panel-alto);color:var(--texto)}
-.printer-badge.bad{background:rgba(229,72,77,.14);color:var(--rojo)}
+.printer-badge.bad{background:rgba(255,99,105,.14);color:var(--rojo)}
 .printer-badge.muted{background:var(--panel-alto);color:var(--tenue)}
 .printer-job{font-weight:500;overflow-wrap:anywhere}
 /* Barra de progreso: pista oscura y relleno de oro, con el % y el tiempo al lado */

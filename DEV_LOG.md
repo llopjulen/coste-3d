@@ -2,6 +2,23 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-28, Contraste: gris secundario y rojo que pasan WCAG AA
+- Archivo y sitio: src/index.css, en los tokens de `:root` (`--tenue` y `--rojo`) y en `.printer-badge.bad`. DESIGN.md y .impeccable/design.json, con los valores nuevos y la letra monoespaciada declarada.
+- Qué cambió: `--tenue` pasa de #8E8E98 a #9A9AA4 y `--rojo` de #E5484D a #FF6369. El tinte de fondo de la insignia «Failed» usa el rojo nuevo.
+- Por qué:
+  - La auditoría encontró dos fallos de WCAG 1.4.3 (contraste mínimo, 4,5:1 para texto normal). El gris daba 4,4:1 sobre `--panel-alto`, que es el fondo de la cabecera de cada panel y de las ayudas. El rojo daba 4,1:1 sobre `--panel` y 3,6:1 sobre `--panel-alto`, justo en la frase que te dice que pierdes dinero, que es lo último que alguien debería no poder leer.
+  - Ahora el gris da 5,1:1 sobre `--panel-alto` y 4,8:1 en el peor caso (el aviso de copia, oro sobre `--fondo`). El rojo da 4,9:1 sobre `--panel-alto` y 4,5:1 en la insignia «Failed». Probé cuatro grises y cinco rojos: elegí el más oscuro que pasa en todos los fondos donde se usa, para que el aspecto casi no cambie.
+  - Se cambia el valor de la variable, no se crea otra: hay un solo rojo y un solo gris secundario, y todo lo que los usa (unos 40 sitios) mejora a la vez. Un `--rojo-texto` aparte habría dejado dos rojos casi iguales que alguien acabaría mezclando.
+  - Descartado un rojo más rosado (#F2777A): pasaba con más margen, pero ya no se leía como «error».
+  - En DESIGN.md se añade la letra monoespaciada (`mono`), que ya se usaba para los comandos de la pestaña Printers pero no estaba declarada; el aviso del detector era por eso.
+- Concepto nuevo: el contraste de WCAG es `(L1 + 0,05) / (L2 + 0,05)`, donde L es la luminancia relativa de cada color (el sRGB pasado a lineal y ponderado 0,2126 R + 0,7152 G + 0,0722 B, porque el ojo es mucho más sensible al verde). Va de 1:1 (mismo color) a 21:1 (negro sobre blanco).
+- De la carrera: Interacción Persona-Ordenador: accesibilidad y la norma WCAG. Informática Gráfica: luminancia y corrección gamma de sRGB, que es el paso a lineal de la fórmula.
+- Cómo probarlo:
+  1. `npm run build` y `npm run dev`.
+  2. Mira la cabecera de cualquier panel y abre una ayuda (i): el gris se lee un poco mejor.
+  3. Para ver el rojo: pon un precio de venta por debajo del coste; la frase del veredicto sale en rojo y se lee sin esfuerzo.
+  4. `/impeccable audit` ya no da avisos de contraste en la calculadora.
+
 ### 2026-10-28, DESIGN.md: el sistema visual por escrito
 - Archivo y sitio: DESIGN.md (nuevo, en la raíz) y .impeccable/design.json (nuevo). docs/MAPA.md, en la tabla de documentación, debajo de `PRODUCT.md`.
 - Qué cambió: DESIGN.md recoge el sistema visual que ya existe en src/index.css: los 22 colores con nombre y para qué sirve cada uno, la tipografía (Bricolage Grotesque para la marca y el precio, Inter para todo lo demás), radios, espaciado, capas de profundidad, componentes y una lista de lo que se hace y lo que no. design.json es su complemento para la skill `impeccable`: escalas de tono de cada color, movimiento, breakpoints y fragmentos HTML/CSS de 8 componentes.

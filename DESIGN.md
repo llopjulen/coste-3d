@@ -8,11 +8,11 @@ colors:
   seam-grey: "#36363D"
   seam-grey-hover: "#4A4A53"
   soft-chalk: "#E9E9EC"
-  fog: "#8E8E98"
+  fog: "#9A9AA4"
   layer-gold: "#F2B33D"
   lit-gold: "#F7C96A"
   on-gold: "#161619"
-  loss-red: "#E5484D"
+  loss-red: "#FF6369"
   quote-paper: "#FFFFFF"
   ink: "#1B1B1F"
   soft-ink: "#5E5E68"
@@ -59,6 +59,9 @@ typography:
     fontSize: "0.72rem"
     fontWeight: 500
     letterSpacing: "0.04em"
+  mono:
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+    fontSize: "0.84em"
 rounded:
   hairline: "2px"
   sm: "4px"
@@ -170,10 +173,10 @@ A warm-dark graphite palette lit by a single brand gold, with a white paper set 
 - **Raised Graphite** (`raised-graphite`): panel headings, default button fill, active tab, help callouts, table row hover.
 - **Seam Grey** (`seam-grey`): every border and divider; **Seam Grey Hover** (`seam-grey-hover`) is the input border on hover.
 - **Soft Chalk** (`soft-chalk`): primary text, never pure white.
-- **Fog** (`fog`): secondary text, labels, units, hints, inactive tabs.
+- **Fog** (`fog`): secondary text, labels, units, hints, inactive tabs. Chosen to clear 4.5:1 on every surface it sits on, including Raised Graphite and the gold wash.
 
 ### Semantic
-- **Loss Red** (`loss-red`): real losses and real errors only (a negative margin, a failed import, a failed print, destructive hover on Delete).
+- **Loss Red** (`loss-red`): real losses and real errors only (a negative margin, a failed import, a failed print, destructive hover on Delete). Light enough to read as text on every graphite step (4.5:1 or more).
 
 ### Paper
 - **Quote Paper** (`quote-paper`), **Ink** (`ink`), **Soft Ink** (`soft-ink`), **Paper Rule** (`paper-rule`), **Paper Track** (`paper-track`): the customer quote and report sheets.
@@ -202,6 +205,7 @@ Each cost layer has its own hue, stacked bottom-up in the ¢ symbol like a print
 - **Body** (`body`): everything else, at 15px with 1.45 line height. Prose blocks cap at 40 to 46em.
 - **Label** (`label`): panel headings in Fog, sentence case. Field labels are body-size (0.89rem) in Soft Chalk.
 - **Label Caps** (`label-caps`): table column headers only, uppercase with 0.04em tracking.
+- **Mono** (`mono`): terminal commands in the Printers tab only, on a Raised Graphite chip.
 
 ### Named Rules
 **The Tabular Money Rule.** Every amount, weight, time and percentage uses `font-variant-numeric: tabular-nums`, right-aligned in tables and inputs.
