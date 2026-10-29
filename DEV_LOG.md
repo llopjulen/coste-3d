@@ -15,7 +15,7 @@ Registro de cambios del proyecto. La entrada más nueva va arriba.
   - Límite conocido: los colores de la gráfica por categorías son los mismos en los dos temas (el amarillo de «Material» sobre blanco tiene poco contraste como marca). Las etiquetas con texto sí lo cumplen. Se mira en un PR aparte si molesta.
   - El informe y el presupuesto ya eran de papel blanco con sus propias variables (`--papel`, `--tinta`): no cambian.
 - Concepto nuevo: variables CSS con ámbito. `:root{--x:1}` define un valor para toda la página y `:root[data-theme="light"]{--x:2}` lo sustituye cuando el atributo está presente, sin tocar las reglas que usan `var(--x)`. Y `rgba(var(--oro-rgb),.15)` funciona porque la variable guarda solo los tres números `242,179,61`.
-- De la carrera: Fundamentos de Computadores no; esto es más de Ingeniería del Software: separar el dato (el tema) de la presentación, y de Sistemas Operativos la idea de leer una preferencia del sistema (`prefers-color-scheme`) y dejar que la persona la sobrescriba. No hay nada más de la carrera en este cambio.
+- De la carrera: Ingeniería del Software, separar el dato (el tema) de la presentación para que ningún componente dependa de él. Y de Sistemas Operativos, la idea de leer una preferencia del sistema (`prefers-color-scheme`) y dejar que la persona la sobrescriba.
 - Cómo probarlo: `npm run dev`. En la barra, pulsa el icono de sol/luna: cambia de tema, y al recargar se mantiene. Borra `theme` en Application > Local Storage y recarga: manda el tema de tu sistema (cámbialo en los ajustes del sistema para verlo). Mira Calculator, History y Printers en claro; en History abre un informe y «Guardar como PDF»: sale igual que antes.
 
 ### 2026-10-29, Barra lateral y superficies con relieve
