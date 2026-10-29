@@ -177,6 +177,26 @@ body{
   .theme-btn{width:38px;height:36px;border-radius:10px;flex:none}
   .currency{flex:1;min-width:0;padding:8px 10px;border-radius:10px}
 }
+/* Segundo nivel: "En esta pagina", bajo la pestana activa. */
+.subnav{display:none}
+@media(min-width:1140px){
+  .subnav{
+    display:flex;flex-direction:column;gap:1px;list-style:none;
+    margin:2px 0 8px 22px;padding-left:12px;border-left:1px solid var(--borde);
+  }
+  .subnav-item{
+    width:100%;text-align:left;font-family:inherit;font-size:.82rem;
+    padding:5px 10px;border:0;border-radius:8px;background:none;
+    color:var(--tenue);cursor:pointer;
+  }
+  .subnav-item:hover{color:var(--texto);background:var(--velo)}
+  .subnav-item.active{color:var(--oro-texto);font-weight:600}
+  .subnav-item:focus-visible{outline:2px solid var(--oro);outline-offset:1px}
+  /* El salto no deja el bloque pegado al borde de la ventana */
+  [id^="sec-"]{scroll-margin-top:18px}
+}
+/* La barra lateral se desplaza si la ventana es baja */
+@media(min-width:861px){.topbar{overflow-y:auto}}
 /* Portatil estrecho: solo iconos. El nombre sigue ahi para lectores de pantalla. */
 @media(min-width:861px) and (max-width:1139px){
   :root{--rail-w:76px}

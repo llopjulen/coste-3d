@@ -2,6 +2,21 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-29, Barra lateral de dos niveles: «On this page»
+- Archivo y sitio: src/SubNav.jsx (nuevo). src/App.jsx, constante `CALC_NAV` encima de `SECTIONS`, los `id="sec-…"` de los bloques del formulario y la línea `{view === 'calculator' && <SubNav … />}` dentro de `<nav className="tabs">`. src/index.css, bloque `.subnav` antes de «Portatil estrecho: solo iconos».
+- Qué cambió: bajo la pestaña Calculator de la barra lateral aparece una lista con los bloques del formulario (Import file, Material, This print, This sale, Your setup). Pulsar uno salta a él y la lista marca en cuál estás mientras haces scroll. Solo en pantallas de 1140 px o más.
+- Por qué:
+  - La calculadora es larga y el formulario ocupa varias pantallas; el segundo nivel resuelve un problema real en vez de ser decoración. Es el patrón que se reutilizará en Printers cuando la flota venga de la nube (lista de impresoras con su estado).
+  - Scrollspy con `IntersectionObserver` y no con un listener de `scroll`: el navegador avisa solo cuando un bloque entra o sale de una franja de la ventana (del 10 % al 40 % de la altura), sin calcular posiciones en cada evento ni bloquear el hilo principal.
+  - `CALC_NAV` es una constante fuera del componente a propósito: `SubNav` recrea el observador cuando cambia el array de `items`, y un array nuevo en cada render lo haría en cada render.
+  - La columna del resultado (precio, costes, guardar) NO está en la lista: es `position:sticky`, y `scrollIntoView` sobre un elemento pegado no hace nada útil. En pantallas de menos de 1140 px o en móvil el segundo nivel no se muestra.
+  - `scrollIntoView` con `behavior:'auto'` si el sistema pide menos movimiento (`prefers-reduced-motion`), igual que el resto de la web.
+  - Los saltos usan botones y no enlaces `#ancla`: el hash cambiaría la URL y la pestaña no es una ruta.
+  - Descartado un panel lateral fijo con contenido propio (segundo nivel «de verdad»): hoy habría poco que poner en Printers e History, y quedaría vacío. Se hará con la flota.
+- Concepto nuevo: `IntersectionObserver`. Vigila elementos y llama a tu función cuando cambia cuánto se ven dentro de una región. Ejemplo mínimo: `new IntersectionObserver(es => console.log(es[0].isIntersecting)).observe(el)`. Y `rootMargin:'-10% 0px -60% 0px'` encoge la región de vigilancia por arriba y por abajo.
+- De la carrera: Estructuras de Datos: el `Set` de `SubNav` guarda qué bloques están dentro de la franja (inserción y borrado en O(1)) y se recorre `items` en orden para elegir el primero. Sistemas Operativos/Concurrencia: observar eventos con una callback en vez de hacer polling.
+- Cómo probarlo: `npm run dev` con la ventana a más de 1140 px. Bajo Calculator verás la lista; pulsa «This sale»: salta a ese bloque y se marca. Sube con la rueda: la marca vuelve a «Import file». Cambia a History: la lista desaparece. Reduce la ventana a menos de 1140 px: desaparece también.
+
 ### 2026-10-29, Fuentes alojadas en el propio sitio
 - Archivo y sitio: src/main.jsx (imports de fuentes, antes de `./index.css`). index.html, quitadas las tres líneas de fonts.googleapis.com / fonts.gstatic.com. src/index.css, las pilas `font-family`. package.json y package-lock.json.
 - Qué cambió: Inter y Bricolage Grotesque se sirven desde layercents.com y no desde Google. La web ya no hace ninguna petición a Google.
