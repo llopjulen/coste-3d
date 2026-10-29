@@ -26,6 +26,45 @@
   --filo:inset 0 1px 0 rgba(255,255,255,.05);
   /* Ancho de la barra lateral en escritorio (se estrecha a solo iconos). */
   --rail-w:216px;
+
+  /* Color de TEXTO dorado: el oro claro lee bien sobre oscuro; en el tema claro
+     pasa a un ocre oscuro (el #F7C96A sobre blanco daria 1,5:1). */
+  --oro-texto:#F7C96A;
+  --oro-rgb:242,179,61;   /* para los tintes: rgba(var(--oro-rgb),.15) */
+  --rojo-rgb:255,99,105;
+  --velo:rgba(255,255,255,.04);        /* capa suave al pasar el raton o en cabeceras */
+  --sombra:0 0 0 0 transparent;
+  --cabecera:rgba(255,255,255,.03);    /* fondo de la cabecera de cada panel */
+  --borde-fuerte:var(--borde-fuerte);              /* borde de un campo al pasar el raton */
+  color-scheme:dark;
+}
+
+/* ------------------------------------------------------------------
+   TEMA CLARO. Se activa con data-theme="light" en <html> (src/theme.js
+   lo pone antes de pintar, ver index.html). Solo cambia valores: ningun
+   componente sabe en que tema esta. Contrastes medidos (WCAG, minimo 4,5:1
+   para texto): --tenue 6,4 sobre --panel y 5,5 sobre --panel-alto;
+   --oro-texto 5,9 y 5,1; --rojo 5,7 y 4,9.
+------------------------------------------------------------------ */
+:root[data-theme="light"]{
+  --fondo:#F4F4F6;
+  --panel:#FFFFFF;
+  --panel-alto:#EDEDF2;
+  --borde:#D4D4DC;
+  --texto:#1B1B20;
+  --tenue:#5E5E68;
+  --oro:#F2B33D;          /* los botones siguen en oro con texto oscuro (9,7:1) */
+  --oro-vivo:#F7C96A;     /* fondo de los botones al pasar el raton */
+  --oro-texto:#8A5A00;
+  --rojo:#C4262E;
+  --rojo-rgb:196,38,46;
+  --brillo:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,0));
+  --filo:0 0 0 0 transparent;
+  --cabecera:rgba(27,27,32,.035);
+  --sombra:0 1px 2px rgba(27,27,32,.06),0 4px 14px rgba(27,27,32,.04);
+  --velo:rgba(27,27,32,.04);
+  --borde-fuerte:#A9A9B4;
+  color-scheme:light;
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
@@ -78,8 +117,15 @@ body{
   border-radius:9px;background:var(--borde);
   font-size:.7rem;text-align:center;color:var(--texto);
 }
+.topbar-end{display:flex;align-items:center;gap:8px;margin-left:auto}
+.theme-btn{
+  display:grid;place-items:center;width:32px;height:30px;
+  border:1px solid var(--borde);border-radius:5px;background:var(--fondo);
+  color:var(--tenue);cursor:pointer;
+}
+.theme-btn:hover{color:var(--texto);border-color:var(--borde-fuerte)}
+.theme-btn:focus-visible{outline:2px solid var(--oro);outline-offset:1px}
 .currency{
-  margin-left:auto;
   font-family:inherit;font-size:.8rem;
   padding:4px 6px;border:1px solid var(--borde);border-radius:5px;
   background:var(--fondo);color:var(--texto);
@@ -88,7 +134,7 @@ body{
    moneda, y debajo las pestanas. Sin esto la pagina se movia de lado. */
 @media(max-width:520px){
   .topbar{flex-wrap:wrap;row-gap:8px}
-  .currency{order:1}
+  .topbar-end{order:1}
   .tabs{order:2;flex-basis:100%;margin-left:0}
 }
 
@@ -116,18 +162,20 @@ body{
     border:1px solid transparent;border-radius:12px;
   }
   .tab .count{margin-left:auto}
-  .tab:hover{background:rgba(255,255,255,.04)}
+  .tab:hover{background:var(--velo)}
   /* El oro solo marca donde estas: borde, un velo y la marquita a la izquierda */
   .tab.active{
-    border-color:rgba(242,179,61,.4);
-    background:linear-gradient(90deg,rgba(242,179,61,.14),rgba(242,179,61,.03));
+    border-color:rgba(var(--oro-rgb),.4);
+    background:linear-gradient(90deg,rgba(var(--oro-rgb),.14),rgba(var(--oro-rgb),.03));
   }
-  .tab.active .nav-icon{color:var(--oro)}
+  .tab.active .nav-icon{color:var(--oro-texto)}
   .tab.active::before{
     content:'';position:absolute;left:-13px;top:10px;bottom:10px;width:3px;
     border-radius:0 3px 3px 0;background:var(--oro);
   }
-  .currency{margin:auto 0 0;padding:8px 10px;border-radius:10px}
+  .topbar-end{margin:auto 0 0}
+  .theme-btn{width:38px;height:36px;border-radius:10px;flex:none}
+  .currency{flex:1;min-width:0;padding:8px 10px;border-radius:10px}
 }
 /* Portatil estrecho: solo iconos. El nombre sigue ahi para lectores de pantalla. */
 @media(min-width:861px) and (max-width:1139px){
@@ -139,7 +187,9 @@ body{
   .tab{justify-content:center;padding:11px 0}
   .tab .count{position:absolute;top:1px;right:3px;min-width:16px;margin:0;padding:0 4px;font-size:.62rem}
   .tab-dot{position:absolute;top:7px;right:9px;margin:0}
-  .currency{padding:8px 2px;text-align:center}
+  .topbar-end{flex-direction:column}
+  .theme-btn{width:100%}
+  .currency{width:100%;flex:none;padding:8px 2px;text-align:center}
   .tab.active::before{left:-9px}
 }
 /* En el movil los iconos sobran: las tres pestanas ya apenas caben en 360 px */
@@ -154,8 +204,8 @@ h1{font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;font-size:clam
 .steps li{display:flex;align-items:center;gap:8px}
 .step-n{
   display:grid;place-items:center;width:22px;height:22px;flex:none;
-  border-radius:50%;background:rgba(242,179,61,.15);
-  color:var(--oro);font-size:.74rem;font-weight:700;
+  border-radius:50%;background:rgba(var(--oro-rgb),.15);
+  color:var(--oro-texto);font-size:.74rem;font-weight:700;
 }
 
 .columns{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;margin-top:24px}
@@ -164,7 +214,7 @@ h1{font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;font-size:clam
 /* ----------------------------- Paneles ---------------------------- */
 .panel{
   background:var(--brillo),var(--panel);
-  box-shadow:var(--filo);
+  box-shadow:var(--filo),var(--sombra);
   border:1px solid var(--borde);
   border-radius:var(--radio);
   margin-bottom:12px;
@@ -175,7 +225,7 @@ h1{font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;font-size:clam
   font-weight:600;
   color:var(--tenue);
   padding:10px 15px;
-  background:rgba(255,255,255,.03);
+  background:var(--cabecera);
   border-bottom:1px solid var(--borde);
 }
 .panel .body{padding:5px 15px 11px}
@@ -197,9 +247,9 @@ h1{font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;font-size:clam
   font-family:inherit;font-size:.66rem;font-weight:600;
   cursor:pointer;
 }
-.info:hover{border-color:var(--oro);color:var(--oro-vivo)}
+.info:hover{border-color:var(--oro);color:var(--oro-texto)}
 .info:focus-visible{outline:2px solid var(--oro);outline-offset:2px}
-.info[aria-expanded="true"]{border-color:var(--oro);color:var(--oro-vivo)}
+.info[aria-expanded="true"]{border-color:var(--oro);color:var(--oro-texto)}
 
 .help{
   margin-top:8px;
@@ -228,8 +278,8 @@ h1{font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;font-size:clam
 .field input::-webkit-outer-spin-button,
 .field input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .field input[type="number"]{-moz-appearance:textfield;appearance:textfield}
-.field input:hover{border-color:#4A4A53}
-.field input:focus-visible{outline:none;border-color:var(--oro);box-shadow:0 0 0 2px rgba(242,179,61,.22)}
+.field input:hover{border-color:var(--borde-fuerte)}
+.field input:focus-visible{outline:none;border-color:var(--oro);box-shadow:0 0 0 2px rgba(var(--oro-rgb),.22)}
 .field .unit{width:28px;font-size:.78rem;color:var(--tenue)}
 
 /* ---------------------------- Resultado --------------------------- */
@@ -262,12 +312,12 @@ h1{font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;font-size:clam
 /* La respuesta: el precio recomendado, grande y en oro, arriba del todo
    de la columna de resultados. Los centimos y la moneda van mas pequenos
    para que se lea primero el numero entero. */
-.hero{padding:20px 20px 18px;border-color:rgba(242,179,61,.35)}
+.hero{padding:20px 20px 18px;border-color:rgba(var(--oro-rgb),.35)}
 .hero-label{display:block;font-size:.78rem;font-weight:600;color:var(--tenue)}
 .hero-price{
   display:flex;align-items:baseline;gap:3px;margin-top:2px;
   font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;
-  font-weight:700;letter-spacing:-.04em;color:var(--oro-vivo);
+  font-weight:700;letter-spacing:-.04em;color:var(--oro-texto);
   font-variant-numeric:tabular-nums;
 }
 .hero-whole{font-size:4.6rem;line-height:1}
@@ -298,14 +348,14 @@ h1{font-family:'Bricolage Grotesque','Inter',system-ui,sans-serif;font-size:clam
 .figure .value{font-weight:600;font-variant-numeric:tabular-nums;font-size:1rem}
 .figure.main{padding:14px 15px}
 .figure.main .value{font-size:2rem;letter-spacing:-.03em;line-height:1.05}
-.figure.highlight .value{color:var(--oro-vivo)}
+.figure.highlight .value{color:var(--oro-texto)}
 
 .verdict{padding:14px 15px}
 .verdict .context{font-size:.84rem;color:var(--tenue)}
 .verdict .sentence{font-size:1.12rem;font-weight:600;letter-spacing:-.015em;margin-top:4px}
 .verdict .note{display:block;margin-top:6px;font-size:.82rem;color:var(--tenue)}
 .loss{color:var(--rojo)}
-.gain{color:var(--oro-vivo)}
+.gain{color:var(--oro-texto)}
 
 footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 /* Pie de pagina de la calculadora y del historial */
@@ -314,8 +364,8 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
   max-width:none;margin-top:44px;padding-top:18px;border-top:1px solid var(--borde);
 }
 .site-foot .brand{font-size:.92rem;color:var(--texto)}
-.site-foot a{color:var(--oro-vivo)}
-.site-foot a:hover{color:var(--oro)}
+.site-foot a{color:var(--oro-texto)}
+.site-foot a:hover{color:var(--oro-texto)}
 
 /* Barra fija abajo en el movil: coste y precio sin bajar hasta el final.
    Se esconde cuando el panel del resultado ya se ve en pantalla. */
@@ -332,7 +382,7 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
   }
   .mobile-total strong{display:block;font-size:1.05rem;color:var(--texto);font-variant-numeric:tabular-nums}
   /* El precio es la respuesta: mas grande y en oro; el coste, segundo */
-  .mobile-total .price strong{color:var(--oro-vivo);font-size:1.3rem;font-weight:700;letter-spacing:-.02em}
+  .mobile-total .price strong{color:var(--oro-texto);font-size:1.3rem;font-weight:700;letter-spacing:-.02em}
   .mobile-total .controls{margin-left:auto}
   .mobile-total.away{transform:translateY(110%);visibility:hidden}
 }
@@ -346,7 +396,7 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
   background:var(--panel-alto);color:var(--texto);
   cursor:pointer;
 }
-.controls:hover:not(:disabled){border-color:var(--oro);color:var(--oro-vivo)}
+.controls:hover:not(:disabled){border-color:var(--oro);color:var(--oro-texto)}
 .controls:focus-visible{outline:2px solid var(--oro);outline-offset:2px}
 .controls:disabled{opacity:.5;cursor:wait}
 .save-bar button[type="submit"]{background:var(--oro);border-color:var(--oro);color:var(--sobre-oro)}
@@ -363,11 +413,11 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
   background:var(--fondo);color:var(--texto);
 }
 .text-input::placeholder{color:var(--tenue)}
-.text-input:hover{border-color:#4A4A53}
-.text-input:focus-visible{outline:none;border-color:var(--oro);box-shadow:0 0 0 2px rgba(242,179,61,.22)}
+.text-input:hover{border-color:var(--borde-fuerte)}
+.text-input:focus-visible{outline:none;border-color:var(--oro);box-shadow:0 0 0 2px rgba(var(--oro-rgb),.22)}
 
 /* Aviso "Saved · View history" debajo del formulario de guardar */
-.saved-note{min-height:1.3em;margin-top:6px;font-size:.82rem;color:var(--oro-vivo)}
+.saved-note{min-height:1.3em;margin-top:6px;font-size:.82rem;color:var(--oro-texto)}
 .link{
   font:inherit;padding:0;border:0;background:none;
   color:var(--texto);text-decoration:underline;cursor:pointer;
@@ -406,7 +456,7 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .history-table tbody tr:hover{background:var(--panel-alto)}
 .history-table .num{text-align:right;font-variant-numeric:tabular-nums}
 .history-table .strong{font-weight:600}
-.history-table .accent{color:var(--oro-vivo)}
+.history-table .accent{color:var(--oro-texto)}
 .history-table .actions{text-align:right;width:1%}
 /* Linea de cliente y fecha bajo el nombre: solo existe en el movil */
 .history-table .row-sub{display:none}
@@ -427,7 +477,7 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
   border:1px solid var(--borde);border-radius:5px;
   background:none;color:var(--texto);cursor:pointer;
 }
-.row-btn:hover:not(:disabled){border-color:var(--oro);color:var(--oro-vivo)}
+.row-btn:hover:not(:disabled){border-color:var(--oro);color:var(--oro-texto)}
 .row-btn.danger:hover:not(:disabled){border-color:var(--rojo);color:var(--rojo)}
 .row-btn:disabled{opacity:.4;cursor:not-allowed}
 .row-btn:focus-visible{outline:2px solid var(--oro);outline-offset:2px}
@@ -541,7 +591,7 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
   background:var(--fondo);
   transition:border-color .15s,background-color .15s;
 }
-.dropzone.over{border-color:var(--oro);background:rgba(242,179,61,.08)}
+.dropzone.over{border-color:var(--oro);background:rgba(var(--oro-rgb),.08)}
 .drop-title{font-size:.89rem;font-weight:600}
 .drop-hint{font-size:.8rem;line-height:1.45;color:var(--tenue);max-width:34em}
 
@@ -573,8 +623,8 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
   padding:5px 8px;border:1px solid var(--borde);border-radius:5px;
   background:var(--fondo);color:var(--texto);
 }
-.import-select:focus-visible{outline:none;border-color:var(--oro);box-shadow:0 0 0 2px rgba(242,179,61,.22)}
-.import-filled{font-size:.82rem;color:var(--oro-vivo)}
+.import-select:focus-visible{outline:none;border-color:var(--oro);box-shadow:0 0 0 2px rgba(var(--oro-rgb),.22)}
+.import-filled{font-size:.82rem;color:var(--oro-texto)}
 .import-filled .link{color:var(--texto)}
 .import-note{font-size:.8rem;line-height:1.45;color:var(--tenue)}
 .import .field{padding:5px 0}
@@ -586,7 +636,7 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .select-all{display:inline-flex;align-items:center;gap:7px;cursor:pointer;color:var(--texto)}
 .history-table .check{width:1%;padding-right:0}
 .history-table input[type="checkbox"],.select-all input{width:16px;height:16px;accent-color:var(--oro);cursor:pointer}
-.history-table tr.ticked{background:rgba(242,179,61,.07)}
+.history-table tr.ticked{background:rgba(var(--oro-rgb),.07)}
 
 .quote-editor{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;margin-bottom:16px}
 @media(max-width:860px){.quote-editor{grid-template-columns:1fr}}
@@ -649,8 +699,8 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 .backup-reminder{
   display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;
   margin-top:18px;padding:11px 15px;
-  background:rgba(242,179,61,.07);
-  border:1px solid rgba(242,179,61,.42);border-radius:var(--radio);
+  background:rgba(var(--oro-rgb),.07);
+  border:1px solid rgba(var(--oro-rgb),.42);border-radius:var(--radio);
   font-size:.88rem;
 }
 .backup-reminder p{flex:1 1 320px;max-width:46em}
@@ -681,7 +731,7 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 /* Mensaje despues de restaurar. Vacio sigue en la pagina (los lectores de
    pantalla solo anuncian cambios en zonas que ya existian), pero sin ocupar
    sitio: el margen negativo anula el hueco (gap) que le deja el flex. */
-.backup-done{font-size:.84rem;color:var(--oro-vivo)}
+.backup-done{font-size:.84rem;color:var(--oro-texto)}
 .backup-body .form-error{font-size:.84rem}
 .backup-body [role="status"]:empty{margin-top:-10px}
 
@@ -698,13 +748,13 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 .beta{
   font-family:'Inter',system-ui,sans-serif;font-size:.7rem;font-weight:600;letter-spacing:.02em;
   padding:2px 8px;border-radius:9px;
-  background:rgba(242,179,61,.15);color:var(--oro);
+  background:rgba(var(--oro-rgb),.15);color:var(--oro-texto);
 }
 .printers .panel{margin-top:22px}
 .agent-body{display:flex;flex-direction:column;gap:9px;padding:13px 15px 15px;font-size:.88rem}
 .agent-body p,.agent-steps{max-width:46em}
 /* Conectado: punto de oro, como el de la pestana History, y texto destacado */
-.agent-ok{display:flex;align-items:center;gap:8px;font-weight:600;color:var(--oro-vivo)}
+.agent-ok{display:flex;align-items:center;gap:8px;font-weight:600;color:var(--oro-texto)}
 .agent-dot{width:8px;height:8px;border-radius:50%;background:var(--oro)}
 .agent-steps{display:flex;flex-direction:column;gap:3px;padding-left:20px}
 .agent-actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:2px}
@@ -724,9 +774,9 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 .printer-head h3{font-size:.98rem;font-weight:600}
 /* Insignia del estado: siempre con texto, el color solo acompana */
 .printer-badge{font-size:.74rem;font-weight:600;padding:2px 9px;border-radius:9px;white-space:nowrap}
-.printer-badge.busy{background:rgba(242,179,61,.15);color:var(--oro-vivo)}
+.printer-badge.busy{background:rgba(var(--oro-rgb),.15);color:var(--oro-texto)}
 .printer-badge.ok{background:var(--panel-alto);color:var(--texto)}
-.printer-badge.bad{background:rgba(255,99,105,.14);color:var(--rojo)}
+.printer-badge.bad{background:rgba(var(--rojo-rgb),.14);color:var(--rojo)}
 .printer-badge.muted{background:var(--panel-alto);color:var(--tenue)}
 .printer-job{font-weight:500;overflow-wrap:anywhere}
 /* Barra de progreso: pista oscura y relleno de oro, con el % y el tiempo al lado */
