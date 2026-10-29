@@ -9,6 +9,7 @@ import BackupPanel, { BackupReminder } from './BackupPanel.jsx'
 import { applyRestore, backupStatus, clearSetup, downloadBackup, readLastBackup, readSetup, saveSetupField } from './backup.js'
 import Printers from './Printers.jsx'
 import NavIcon from './NavIcons.jsx'
+import { applyTheme, readTheme, saveTheme } from './theme.js'
 import { isAgentEnabled, setAgentEnabled } from './agent.js'
 
 /* ==================================================================
@@ -323,6 +324,16 @@ export default function App({ agentOptIn = false }) {
 
   // Which screen is shown: 'calculator', 'history', 'report', 'quote' or
   // 'printers'. Arriving through the ?agent link opens Printers directly.
+  // Light or dark. The page already got its theme from index.html before
+  // painting; this state only drives the toggle and keeps the two in sync.
+  const [theme, setTheme] = useState(readTheme)
+  function toggleTheme() {
+    const next = theme === 'dark' ? 'light' : 'dark'
+    setTheme(next)
+    applyTheme(next)
+    saveTheme(next)
+  }
+
   const [view, setView] = useState(agentOptIn ? 'printers' : 'calculator')
 
   // Whether this browser shows the Printers tab (opt-in, see agent.js).
@@ -517,16 +528,27 @@ export default function App({ agentOptIn = false }) {
             </button>
           )}
         </nav>
-        <select
-          className="currency"
-          aria-label="Currency"
-          value={currency}
-          onChange={e => setCurrency(e.target.value)}
-        >
-          {Object.keys(rates).map(code => (
-            <option key={code} value={code}>{code}</option>
-          ))}
-        </select>
+        <div className="topbar-end">
+          <button
+            type="button"
+            className="theme-btn"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
+          >
+            <NavIcon name={theme === 'dark' ? 'sun' : 'moon'} />
+          </button>
+          <select
+            className="currency"
+            aria-label="Currency"
+            value={currency}
+            onChange={e => setCurrency(e.target.value)}
+          >
+            {Object.keys(rates).map(code => (
+              <option key={code} value={code}>{code}</option>
+            ))}
+          </select>
+        </div>
       </header>
 
       {/* agentOn is checked again here: if the tab was hidden, the screen goes too. */}

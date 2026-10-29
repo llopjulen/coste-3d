@@ -37,7 +37,8 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/printerView.js` | Funciones puras para poner en palabras el estado de una impresora: etiquetas, "1 h 15 min", porcentaje, color de la insignia y la línea de capa y temperaturas. Tests en `printerView.test.js`. |
 | `src/backup.test.js` | Tests de la parte "Your setup" de `backup.js`: ida y vuelta, copias antiguas sin `setup`, Merge/Replace, almacenamiento bloqueado. |
 | `src/Logo.jsx` | El logo en SVG; los colores salen del CSS. |
-| `src/NavIcons.jsx` | Iconos de línea (calculadora, historial, impresora) de la navegación. SVG en línea con `currentColor`; sin librería de iconos. |
+| `src/NavIcons.jsx` | Iconos de línea (calculadora, historial, impresora, sol y luna) de la navegación. SVG en línea con `currentColor`; sin librería de iconos. |
+| `src/theme.js` | Tema claro u oscuro: lee la elección guardada o la del sistema, la pone en `<html data-theme>` y en el color de la barra del navegador. |
 | `src/logoGeometry.js` | Las coordenadas de las capas del logo, como datos. Las leen el logo y la gráfica de costes, para que no se descuadren. |
 | `src/symbolChart.js` | Función pura `symbolPieces`: reparte los costes sobre las 11 capas del símbolo (cada coste ocupa un trozo del largo total proporcional a su parte del coste). Sin React. |
 | `src/symbolChart.test.js` | Tests de `symbolChart.js`: proporciones, orden, huecos entre colores, entradas raras (NaN, negativos, todo a 0). |
@@ -154,6 +155,7 @@ Todo se guarda en EUR. Al arrancar, `App` pide los tipos de cambio a `api.frankf
 | `setup` | `{ campo: número }` con solo los campos de "Your setup" que la persona ha editado (`printerPrice`, `watts`, `hourlyRate`, `fee`…) | `App.set` (vía `saveSetupField`), `resetSetup`, `applyRestore` | `App` al arrancar (`readSetup`) |
 | `lastBackupAt` | Fecha ISO de la última copia en este dispositivo; no va dentro de la copia | `downloadBackup`, `applyRestore` | `App` |
 | `agentEnabled` | `'1'` si este navegador enseña la pestaña Printers; tampoco va en la copia | `agent.js` (`setAgentEnabled`, `consumeAgentOptIn`) | `App` al arrancar |
+| `theme` | `'light'` o `'dark'`, la elección de tema de este dispositivo; si no existe, manda el sistema. Tampoco va en la copia | `theme.js` (`saveTheme`) | `index.html` (antes de pintar) y `App` |
 
 Forma de un presupuesto guardado:
 

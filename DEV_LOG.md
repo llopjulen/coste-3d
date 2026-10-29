@@ -2,6 +2,22 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-29, Tema claro
+- Archivo y sitio: src/theme.js (nuevo). index.html, `<script>` en el `<head>` antes del `<style>` de arranque. src/App.jsx, estado `theme` y botón en `.topbar-end`. src/index.css: tokens de `:root`, bloque nuevo `:root[data-theme="light"]` y sustitución de los colores escritos a mano. src/NavIcons.jsx (sol y luna).
+- Qué cambió: la web tiene tema claro además del oscuro. Si la persona no ha elegido, manda el sistema (`prefers-color-scheme`); el botón de sol/luna en la barra guarda su elección en este dispositivo.
+- Por qué:
+  - El tema se cambia con variables: `[data-theme="light"]` solo redefine valores y ningún componente sabe en qué tema está. Alternativa descartada: una segunda hoja de estilos o clases `.light` por componente (duplicaría 700 líneas).
+  - Se decide en un `<script>` de index.html ANTES de pintar. Si se hiciera al cargar React, quien usa el claro vería un parpadeo oscuro. El mismo cálculo está en `readTheme` (theme.js); si cambias uno, cambia el otro.
+  - Texto dorado: el oro claro (#F7C96A) sobre blanco da 1,5:1. Nueva variable `--oro-texto` (oro claro en oscuro, #8A5A00 en claro). Los botones siguen en oro con texto oscuro (9,7:1). Se cambiaron solo las reglas con `color:`; `border-color` y `background` siguen con `--oro`.
+  - Contrastes del tema claro medidos (WCAG, mínimo 4,5:1): `--tenue` 6,4 sobre `--panel` y 5,5 sobre `--panel-alto`; `--oro-texto` 5,9 y 5,1; `--rojo` (#C4262E) 5,7 y 4,9.
+  - De paso se cierra el hallazgo P2 de la auditoría sobre tintes de oro sin variable: ahora son `rgba(var(--oro-rgb),.15)` y se pueden cambiar en un sitio.
+  - `theme` NO va en la copia de seguridad (backup.js): es una preferencia del aparato, como `lastBackupAt`; restaurar en otro dispositivo no debe cambiarle el tema. Por eso no se toca `BACKUP_SCHEMA_VERSION`.
+  - Límite conocido: los colores de la gráfica por categorías son los mismos en los dos temas (el amarillo de «Material» sobre blanco tiene poco contraste como marca). Las etiquetas con texto sí lo cumplen. Se mira en un PR aparte si molesta.
+  - El informe y el presupuesto ya eran de papel blanco con sus propias variables (`--papel`, `--tinta`): no cambian.
+- Concepto nuevo: variables CSS con ámbito. `:root{--x:1}` define un valor para toda la página y `:root[data-theme="light"]{--x:2}` lo sustituye cuando el atributo está presente, sin tocar las reglas que usan `var(--x)`. Y `rgba(var(--oro-rgb),.15)` funciona porque la variable guarda solo los tres números `242,179,61`.
+- De la carrera: Ingeniería del Software, separar el dato (el tema) de la presentación para que ningún componente dependa de él. Y de Sistemas Operativos, la idea de leer una preferencia del sistema (`prefers-color-scheme`) y dejar que la persona la sobrescriba.
+- Cómo probarlo: `npm run dev`. En la barra, pulsa el icono de sol/luna: cambia de tema, y al recargar se mantiene. Borra `theme` en Application > Local Storage y recarga: manda el tema de tu sistema (cámbialo en los ajustes del sistema para verlo). Mira Calculator, History y Printers en claro; en History abre un informe y «Guardar como PDF»: sale igual que antes.
+
 ### 2026-10-29, Barra lateral y superficies con relieve
 - Archivo y sitio: src/NavIcons.jsx (nuevo). src/App.jsx, en el `return` de la función App: el `<header className="topbar">` con las pestañas. src/index.css: tokens de `:root` (`--radio`, `--brillo`, `--filo`, `--rail-w`), `.panel`, `.tab` y un bloque nuevo «Barra lateral (escritorio)» tras la media query de 520 px.
 - Qué cambió: en pantallas de 861 px o más la barra superior pasa a ser una barra lateral fija con iconos (solo iconos entre 861 y 1139 px); en móvil queda igual que antes. Los paneles ganan radio de 12 px, un brillo tenue arriba y un filo de luz de 1 px.
