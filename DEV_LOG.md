@@ -2,6 +2,20 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-29, Fuentes alojadas en el propio sitio
+- Archivo y sitio: src/main.jsx (imports de fuentes, antes de `./index.css`). index.html, quitadas las tres líneas de fonts.googleapis.com / fonts.gstatic.com. src/index.css, las pilas `font-family`. package.json y package-lock.json.
+- Qué cambió: Inter y Bricolage Grotesque se sirven desde layercents.com y no desde Google. La web ya no hace ninguna petición a Google.
+- Por qué:
+  - Con la hoja de Google, el navegador de cada visitante le manda su IP a Google. En la UE eso se considera un tratamiento de datos personales (un tribunal de Múnich condenó a un sitio por exactamente esto en 2022) y exige base legal o aviso. Alojándolas nosotros desaparece el problema, que importa antes de cobrar y de redactar la política de privacidad.
+  - Dependencias nuevas, explicadas como pide CLAUDE.md: `@fontsource-variable/inter` y `@fontsource-variable/bricolage-grotesque` (licencia OFL, la de las propias fuentes). Alternativa descartada: bajar los `.woff2` a mano a `public/` y escribir los `@font-face`: funciona igual, pero hay que mantener a mano los subconjuntos de alfabeto y las rutas. Los paquetes ya traen los `@font-face` con `unicode-range` y Vite pone el hash al nombre del archivo.
+  - Variables en lugar de una fuente por peso: un solo archivo de Inter cubre 400, 500 y 600, y Bricolage conserva el eje de tamaño óptico (`opsz`) que ya pedía la URL de Google.
+  - El nombre de familia cambia a `'Inter Variable'` y `'Bricolage Grotesque Variable'`; se dejó `'Inter'` detrás por si el equipo la tiene instalada.
+  - Comprobado: al cargar solo se bajan `inter-latin` (48 kB) y `bricolage-grotesque-latin` (77 kB); el resto de alfabetos solo si aparece un carácter suyo.
+  - Lo que sigue saliendo del navegador, para la política de privacidad: la API de tipos de cambio (api.frankfurter.dev, manda la IP) y el script de estadísticas que Cloudflare inyecta por ser el proxy del dominio. No tocado aquí.
+- Concepto nuevo: `unicode-range` en un `@font-face`. El navegador solo descarga ese archivo si la página contiene algún carácter dentro del rango. Ejemplo mínimo: `@font-face{font-family:X;src:url(x-cyr.woff2);unicode-range:U+0400-04FF}` no se baja en una página sin cirílico.
+- De la carrera: Redes: la IP viaja en cada petición HTTP a un tercero. Y Derecho/Ética informática, si la cursas: el RGPD y los datos personales (una IP lo es).
+- Cómo probarlo: `npm run build && npm run preview`, abre la web con las herramientas de desarrollo en Network y filtra «font»: los archivos vienen de tu dominio y no hay ninguna petición a googleapis ni gstatic. Los títulos siguen en Bricolage y el texto en Inter.
+
 ### 2026-10-29, Tema claro
 - Archivo y sitio: src/theme.js (nuevo). index.html, `<script>` en el `<head>` antes del `<style>` de arranque. src/App.jsx, estado `theme` y botón en `.topbar-end`. src/index.css: tokens de `:root`, bloque nuevo `:root[data-theme="light"]` y sustitución de los colores escritos a mano. src/NavIcons.jsx (sol y luna).
 - Qué cambió: la web tiene tema claro además del oscuro. Si la persona no ha elegido, manda el sistema (`prefers-color-scheme`); el botón de sol/luna en la barra guarda su elección en este dispositivo.
