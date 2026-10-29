@@ -1,0 +1,536 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-28T17:40:18+00:00",
+  "title": "Design System: layercents",
+  "extensions": {
+    "colorMeta": {
+      "night-workshop": {
+        "role": "neutral",
+        "displayName": "Night Workshop",
+        "canonical": "#161619",
+        "tonalRamp": [
+          "oklch(15% 0.006 286)",
+          "oklch(26% 0.006 286)",
+          "oklch(38% 0.006 286)",
+          "oklch(49% 0.006 286)",
+          "oklch(61% 0.006 286)",
+          "oklch(72% 0.006 286)",
+          "oklch(84% 0.006 286)",
+          "oklch(95% 0.006 286)"
+        ]
+      },
+      "graphite-panel": {
+        "role": "neutral",
+        "displayName": "Graphite Panel",
+        "canonical": "#212125",
+        "tonalRamp": [
+          "oklch(15% 0.007 286)",
+          "oklch(26% 0.007 286)",
+          "oklch(38% 0.007 286)",
+          "oklch(49% 0.007 286)",
+          "oklch(61% 0.007 286)",
+          "oklch(72% 0.007 286)",
+          "oklch(84% 0.007 286)",
+          "oklch(95% 0.007 286)"
+        ]
+      },
+      "raised-graphite": {
+        "role": "neutral",
+        "displayName": "Raised Graphite",
+        "canonical": "#2A2A30",
+        "tonalRamp": [
+          "oklch(15% 0.004 286)",
+          "oklch(26% 0.006 286)",
+          "oklch(38% 0.008 286)",
+          "oklch(49% 0.009 286)",
+          "oklch(61% 0.011 286)",
+          "oklch(72% 0.009 286)",
+          "oklch(84% 0.007 286)",
+          "oklch(95% 0.005 286)"
+        ]
+      },
+      "seam-grey": {
+        "role": "neutral",
+        "displayName": "Seam Grey",
+        "canonical": "#36363D",
+        "tonalRamp": [
+          "oklch(15% 0.004 286)",
+          "oklch(26% 0.006 286)",
+          "oklch(38% 0.008 286)",
+          "oklch(49% 0.010 286)",
+          "oklch(61% 0.012 286)",
+          "oklch(72% 0.010 286)",
+          "oklch(84% 0.008 286)",
+          "oklch(95% 0.006 286)"
+        ]
+      },
+      "seam-grey-hover": {
+        "role": "neutral",
+        "displayName": "Seam Grey Hover",
+        "canonical": "#4A4A53",
+        "tonalRamp": [
+          "oklch(15% 0.005 286)",
+          "oklch(26% 0.008 286)",
+          "oklch(38% 0.010 286)",
+          "oklch(49% 0.013 286)",
+          "oklch(61% 0.015 286)",
+          "oklch(72% 0.012 286)",
+          "oklch(84% 0.010 286)",
+          "oklch(95% 0.007 286)"
+        ]
+      },
+      "soft-chalk": {
+        "role": "neutral",
+        "displayName": "Soft Chalk",
+        "canonical": "#E9E9EC",
+        "tonalRamp": [
+          "oklch(15% 0.004 286)",
+          "oklch(26% 0.004 286)",
+          "oklch(38% 0.004 286)",
+          "oklch(49% 0.004 286)",
+          "oklch(61% 0.004 286)",
+          "oklch(72% 0.004 286)",
+          "oklch(84% 0.004 286)",
+          "oklch(95% 0.004 286)"
+        ]
+      },
+      "fog": {
+        "role": "neutral",
+        "displayName": "Fog",
+        "canonical": "#8E8E98",
+        "tonalRamp": [
+          "oklch(15% 0.005 286)",
+          "oklch(26% 0.008 286)",
+          "oklch(38% 0.010 286)",
+          "oklch(49% 0.013 286)",
+          "oklch(61% 0.015 286)",
+          "oklch(72% 0.012 286)",
+          "oklch(84% 0.010 286)",
+          "oklch(95% 0.007 286)"
+        ]
+      },
+      "layer-gold": {
+        "role": "primary",
+        "displayName": "Layer Gold",
+        "canonical": "#F2B33D",
+        "tonalRamp": [
+          "oklch(15% 0.049 79)",
+          "oklch(26% 0.076 79)",
+          "oklch(38% 0.102 79)",
+          "oklch(49% 0.126 79)",
+          "oklch(61% 0.146 79)",
+          "oklch(72% 0.123 79)",
+          "oklch(84% 0.099 79)",
+          "oklch(95% 0.073 79)"
+        ]
+      },
+      "lit-gold": {
+        "role": "primary",
+        "displayName": "Lit Gold",
+        "canonical": "#F7C96A",
+        "tonalRamp": [
+          "oklch(15% 0.041 84)",
+          "oklch(26% 0.065 84)",
+          "oklch(38% 0.086 84)",
+          "oklch(49% 0.107 84)",
+          "oklch(61% 0.123 84)",
+          "oklch(72% 0.104 84)",
+          "oklch(84% 0.084 84)",
+          "oklch(95% 0.062 84)"
+        ]
+      },
+      "on-gold": {
+        "role": "primary",
+        "displayName": "On Gold",
+        "canonical": "#161619",
+        "tonalRamp": [
+          "oklch(15% 0.006 286)",
+          "oklch(26% 0.006 286)",
+          "oklch(38% 0.006 286)",
+          "oklch(49% 0.006 286)",
+          "oklch(61% 0.006 286)",
+          "oklch(72% 0.006 286)",
+          "oklch(84% 0.006 286)",
+          "oklch(95% 0.006 286)"
+        ]
+      },
+      "loss-red": {
+        "role": "semantic",
+        "displayName": "Loss Red",
+        "canonical": "#E5484D",
+        "tonalRamp": [
+          "oklch(15% 0.064 23)",
+          "oklch(26% 0.100 23)",
+          "oklch(38% 0.134 23)",
+          "oklch(49% 0.165 23)",
+          "oklch(61% 0.191 23)",
+          "oklch(72% 0.161 23)",
+          "oklch(84% 0.130 23)",
+          "oklch(95% 0.096 23)"
+        ]
+      },
+      "quote-paper": {
+        "role": "paper",
+        "displayName": "Quote Paper",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "oklch(15% 0.000 90)",
+          "oklch(26% 0.000 90)",
+          "oklch(38% 0.000 90)",
+          "oklch(49% 0.000 90)",
+          "oklch(61% 0.000 90)",
+          "oklch(72% 0.000 90)",
+          "oklch(84% 0.000 90)",
+          "oklch(95% 0.000 90)"
+        ]
+      },
+      "ink": {
+        "role": "paper",
+        "displayName": "Ink",
+        "canonical": "#1B1B1F",
+        "tonalRamp": [
+          "oklch(15% 0.008 286)",
+          "oklch(26% 0.008 286)",
+          "oklch(38% 0.008 286)",
+          "oklch(49% 0.008 286)",
+          "oklch(61% 0.008 286)",
+          "oklch(72% 0.008 286)",
+          "oklch(84% 0.008 286)",
+          "oklch(95% 0.008 286)"
+        ]
+      },
+      "soft-ink": {
+        "role": "paper",
+        "displayName": "Soft Ink",
+        "canonical": "#5E5E68",
+        "tonalRamp": [
+          "oklch(15% 0.005 286)",
+          "oklch(26% 0.008 286)",
+          "oklch(38% 0.011 286)",
+          "oklch(49% 0.014 286)",
+          "oklch(61% 0.016 286)",
+          "oklch(72% 0.013 286)",
+          "oklch(84% 0.011 286)",
+          "oklch(95% 0.008 286)"
+        ]
+      },
+      "paper-rule": {
+        "role": "paper",
+        "displayName": "Paper Rule",
+        "canonical": "#E3E3E8",
+        "tonalRamp": [
+          "oklch(15% 0.007 286)",
+          "oklch(26% 0.007 286)",
+          "oklch(38% 0.007 286)",
+          "oklch(49% 0.007 286)",
+          "oklch(61% 0.007 286)",
+          "oklch(72% 0.007 286)",
+          "oklch(84% 0.007 286)",
+          "oklch(95% 0.007 286)"
+        ]
+      },
+      "paper-track": {
+        "role": "paper",
+        "displayName": "Paper Track",
+        "canonical": "#F1F1F4",
+        "tonalRamp": [
+          "oklch(15% 0.004 286)",
+          "oklch(26% 0.004 286)",
+          "oklch(38% 0.004 286)",
+          "oklch(49% 0.004 286)",
+          "oklch(61% 0.004 286)",
+          "oklch(72% 0.004 286)",
+          "oklch(84% 0.004 286)",
+          "oklch(95% 0.004 286)"
+        ]
+      },
+      "print-gold": {
+        "role": "paper",
+        "displayName": "Print Gold",
+        "canonical": "#B7791F",
+        "tonalRamp": [
+          "oklch(15% 0.041 70)",
+          "oklch(26% 0.065 70)",
+          "oklch(38% 0.086 70)",
+          "oklch(49% 0.107 70)",
+          "oklch(61% 0.124 70)",
+          "oklch(72% 0.104 70)",
+          "oklch(84% 0.084 70)",
+          "oklch(95% 0.062 70)"
+        ]
+      },
+      "chart-power": {
+        "role": "chart",
+        "displayName": "Power Teal",
+        "canonical": "#12A594",
+        "tonalRamp": [
+          "oklch(15% 0.037 182)",
+          "oklch(26% 0.059 182)",
+          "oklch(38% 0.079 182)",
+          "oklch(49% 0.097 182)",
+          "oklch(61% 0.112 182)",
+          "oklch(72% 0.095 182)",
+          "oklch(84% 0.076 182)",
+          "oklch(95% 0.056 182)"
+        ]
+      },
+      "chart-wear": {
+        "role": "chart",
+        "displayName": "Wear Blue",
+        "canonical": "#3E8FD0",
+        "tonalRamp": [
+          "oklch(15% 0.041 246)",
+          "oklch(26% 0.065 246)",
+          "oklch(38% 0.087 246)",
+          "oklch(49% 0.107 246)",
+          "oklch(61% 0.125 246)",
+          "oklch(72% 0.105 246)",
+          "oklch(84% 0.084 246)",
+          "oklch(95% 0.062 246)"
+        ]
+      },
+      "chart-failures": {
+        "role": "chart",
+        "displayName": "Failure Indigo",
+        "canonical": "#6E74C4",
+        "tonalRamp": [
+          "oklch(15% 0.040 279)",
+          "oklch(26% 0.063 279)",
+          "oklch(38% 0.084 279)",
+          "oklch(49% 0.104 279)",
+          "oklch(61% 0.120 279)",
+          "oklch(72% 0.101 279)",
+          "oklch(84% 0.082 279)",
+          "oklch(95% 0.060 279)"
+        ]
+      },
+      "chart-labor": {
+        "role": "chart",
+        "displayName": "Labor Grey",
+        "canonical": "#A3A3B1",
+        "tonalRamp": [
+          "oklch(15% 0.007 286)",
+          "oklch(26% 0.010 286)",
+          "oklch(38% 0.014 286)",
+          "oklch(49% 0.017 286)",
+          "oklch(61% 0.020 286)",
+          "oklch(72% 0.017 286)",
+          "oklch(84% 0.013 286)",
+          "oklch(95% 0.010 286)"
+        ]
+      },
+      "chart-packaging": {
+        "role": "chart",
+        "displayName": "Packaging Slate",
+        "canonical": "#6C6C7A",
+        "tonalRamp": [
+          "oklch(15% 0.007 286)",
+          "oklch(26% 0.011 286)",
+          "oklch(38% 0.015 286)",
+          "oklch(49% 0.019 286)",
+          "oklch(61% 0.021 286)",
+          "oklch(72% 0.018 286)",
+          "oklch(84% 0.015 286)",
+          "oklch(95% 0.011 286)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The recommended price only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page titles and the wordmark."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Verdict sentence and one-line conclusions."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All reading and input text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Panel headings in Fog."
+      },
+      "label-caps": {
+        "displayName": "Label Caps",
+        "purpose": "Table column headers only."
+      }
+    },
+    "shadows": [
+      {
+        "name": "focus-halo",
+        "value": "0 0 0 2px rgba(242,179,61,.22)",
+        "purpose": "Focus on inputs and selects; the only shadow in the system."
+      }
+    ],
+    "motion": [
+      {
+        "name": "hover",
+        "value": ".15s",
+        "purpose": "Border and color changes on dropzone and buttons."
+      },
+      {
+        "name": "bar-slide",
+        "value": ".2s ease",
+        "purpose": "Mobile total bar sliding away."
+      },
+      {
+        "name": "chart-slide",
+        "value": ".35s ease",
+        "purpose": "Cost symbol boundaries sliding when a value changes."
+      },
+      {
+        "name": "progress",
+        "value": ".4s ease",
+        "purpose": "Printer progress bar width."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "topbar-wrap",
+        "value": "520px"
+      },
+      {
+        "name": "phone",
+        "value": "560px"
+      },
+      {
+        "name": "table-compact",
+        "value": "600px"
+      },
+      {
+        "name": "tiles-2up",
+        "value": "700px"
+      },
+      {
+        "name": "stack",
+        "value": "860px"
+      },
+      {
+        "name": "short-viewport",
+        "value": "max-height 880px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Default action: graphite at rest, lights up gold on hover.",
+      "html": "<button class=\"ds-btn\">Export Excel</button>",
+      "css": ".ds-btn{font-family:'Inter',system-ui,sans-serif;font-size:.86rem;font-weight:500;padding:6px 13px;border:1px solid var(--borde, #36363D);border-radius:5px;background:var(--panel-alto, #2A2A30);color:var(--texto, #E9E9EC);cursor:pointer;transition:border-color .15s,color .15s} .ds-btn:hover{border-color:var(--oro, #F2B33D);color:var(--oro-vivo, #F7C96A)} .ds-btn:focus-visible{outline:2px solid var(--oro, #F2B33D);outline-offset:2px}"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one gold action per screen.",
+      "html": "<button class=\"ds-btn-primary\">Save quote</button>",
+      "css": ".ds-btn-primary{font-family:'Inter',system-ui,sans-serif;font-size:.86rem;font-weight:500;padding:6px 13px;border:1px solid var(--oro, #F2B33D);border-radius:5px;background:var(--oro, #F2B33D);color:var(--sobre-oro, #161619);cursor:pointer;transition:background-color .15s} .ds-btn-primary:hover{background:var(--oro-vivo, #F7C96A);border-color:var(--oro-vivo, #F7C96A)} .ds-btn-primary:focus-visible{outline:2px solid var(--oro, #F2B33D);outline-offset:2px}"
+    },
+    {
+      "name": "Number Field",
+      "kind": "input",
+      "refersTo": "input-number",
+      "description": "Calculator field: label with help button, recessed right-aligned number, unit.",
+      "html": "<div class=\"ds-field\"><label for=\"ds-g\">Filament used</label><input id=\"ds-g\" class=\"ds-num\" type=\"number\" value=\"42.5\"><span class=\"ds-unit\">g</span></div>",
+      "css": ".ds-field{font-family:'Inter',system-ui,sans-serif;display:flex;align-items:center;gap:10px;padding:7px 15px;background:var(--panel, #212125);color:var(--texto, #E9E9EC);font-size:.89rem} .ds-field label{flex:1} .ds-num{width:92px;font:inherit;font-variant-numeric:tabular-nums;text-align:right;padding:6px 11px;border:1px solid var(--borde, #36363D);border-radius:5px;background:var(--fondo, #161619);color:var(--texto, #E9E9EC);appearance:textfield} .ds-num::-webkit-inner-spin-button{-webkit-appearance:none} .ds-num:hover{border-color:#4A4A53} .ds-num:focus-visible{outline:none;border-color:var(--oro, #F2B33D);box-shadow:0 0 0 2px rgba(242,179,61,.22)} .ds-unit{width:28px;font-size:.78rem;color:var(--tenue, #8E8E98)}"
+    },
+    {
+      "name": "Top Bar Tabs",
+      "kind": "nav",
+      "refersTo": "tab",
+      "description": "Text tabs on the graphite top bar; active tab is one step lighter.",
+      "html": "<nav class=\"ds-nav\"><button class=\"ds-tab ds-active\">Calculator</button><button class=\"ds-tab\">History <span class=\"ds-count\">12</span></button><button class=\"ds-tab\">Printers<span class=\"ds-dot\"></span></button></nav>",
+      "css": ".ds-nav{font-family:'Inter',system-ui,sans-serif;display:flex;gap:2px;padding:11px 18px;background:var(--panel, #212125);border-bottom:1px solid var(--borde, #36363D)} .ds-tab{font:inherit;font-size:.84rem;padding:5px 11px;border:0;border-radius:5px;background:none;color:var(--tenue, #8E8E98);cursor:pointer} .ds-tab:hover{color:var(--texto, #E9E9EC)} .ds-tab.ds-active{background:var(--panel-alto, #2A2A30);color:var(--texto, #E9E9EC)} .ds-tab:focus-visible{outline:2px solid var(--oro, #F2B33D);outline-offset:1px} .ds-count{display:inline-block;min-width:18px;margin-left:4px;padding:0 5px;border-radius:9px;background:var(--borde, #36363D);font-size:.7rem;color:var(--texto, #E9E9EC)} .ds-dot{display:inline-block;width:7px;height:7px;margin-left:5px;border-radius:50%;background:var(--oro, #F2B33D);vertical-align:middle}"
+    },
+    {
+      "name": "Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Graphite surface with a raised heading band and figures separated by seams.",
+      "html": "<section class=\"ds-panel\"><h2>Cost to make it <strong>4.12 EUR</strong></h2><div class=\"ds-fig\"><span>Material</span><b>1.06 EUR</b></div><div class=\"ds-fig\"><span>Power</span><b>0.31 EUR</b></div></section>",
+      "css": ".ds-panel{font-family:'Inter',system-ui,sans-serif;background:var(--panel, #212125);border:1px solid var(--borde, #36363D);border-radius:8px;overflow:hidden;color:var(--texto, #E9E9EC)} .ds-panel h2{display:flex;justify-content:space-between;margin:0;padding:10px 15px;font-size:.76rem;font-weight:600;color:var(--tenue, #8E8E98);background:var(--panel-alto, #2A2A30);border-bottom:1px solid var(--borde, #36363D)} .ds-panel h2 strong{font-size:.95rem;color:var(--texto, #E9E9EC);font-variant-numeric:tabular-nums} .ds-fig{display:flex;justify-content:space-between;padding:9px 15px;font-size:.86rem} .ds-fig + .ds-fig{border-top:1px solid var(--borde, #36363D)} .ds-fig span{color:var(--tenue, #8E8E98)} .ds-fig b{font-weight:600;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Status Badges",
+      "kind": "chip",
+      "refersTo": "chip-badge",
+      "description": "Pill badges with text; color only supports the label.",
+      "html": "<div class=\"ds-badges\"><span class=\"ds-badge ds-busy\">Printing</span><span class=\"ds-badge\">Idle</span><span class=\"ds-badge ds-bad\">Failed</span><span class=\"ds-chip\">PLA · 38 g</span></div>",
+      "css": ".ds-badges{font-family:'Inter',system-ui,sans-serif;display:flex;gap:8px;flex-wrap:wrap} .ds-badge{font-size:.74rem;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--panel-alto, #2A2A30);color:var(--texto, #E9E9EC)} .ds-busy{background:rgba(242,179,61,.15);color:var(--oro-vivo, #F7C96A)} .ds-bad{background:rgba(229,72,77,.14);color:var(--rojo, #E5484D)} .ds-chip{font-size:.78rem;padding:3px 9px;border:1px solid var(--borde, #36363D);border-radius:999px;color:var(--texto, #E9E9EC);font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Hero Price",
+      "kind": "custom",
+      "refersTo": "hero-price",
+      "description": "The answer: recommended price in Lit Gold Bricolage, cents and currency smaller.",
+      "html": "<section class=\"ds-hero\"><span class=\"ds-hero-label\">Recommended price</span><div class=\"ds-hero-price\"><span class=\"ds-w\">12</span><span class=\"ds-c\">.40</span><span class=\"ds-cur\">EUR</span></div><p class=\"ds-hero-sub\">You keep <strong>4.96 EUR</strong> per part</p></section>",
+      "css": ".ds-hero{font-family:'Inter',system-ui,sans-serif;padding:20px 20px 18px;background:var(--panel, #212125);border:1px solid rgba(242,179,61,.35);border-radius:8px;color:var(--texto, #E9E9EC)} .ds-hero-label{font-size:.78rem;font-weight:600;color:var(--tenue, #8E8E98)} .ds-hero-price{display:flex;align-items:baseline;gap:3px;margin-top:2px;font-family:'Bricolage Grotesque','Inter',sans-serif;font-weight:700;letter-spacing:-.04em;color:var(--oro-vivo, #F7C96A);font-variant-numeric:tabular-nums} .ds-w{font-size:4.6rem;line-height:1} .ds-c{font-size:2rem} .ds-cur{margin-left:6px;font-size:1rem;letter-spacing:0;color:var(--tenue, #8E8E98)} .ds-hero-sub{margin:8px 0 0;font-size:.88rem;color:var(--tenue, #8E8E98)} .ds-hero-sub strong{color:var(--texto, #E9E9EC);font-weight:600}"
+    },
+    {
+      "name": "Help Callout",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "Explanation opened from the (i) button: raised fill, gold left edge.",
+      "html": "<div class=\"ds-help\">Failed prints spread the cost of the ones that didn't make it across the ones that did.</div>",
+      "css": ".ds-help{font-family:'Inter',system-ui,sans-serif;max-width:34em;padding:9px 11px;background:var(--panel-alto, #2A2A30);border-left:2px solid var(--oro, #F2B33D);border-radius:0 5px 5px 0;font-size:.82rem;line-height:1.45;color:var(--tenue, #8E8E98)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Workshop",
+    "overview": "layercents is the calm corner of a maker's workshop at the end of the day: the printers are humming, the room is dark and warm, and the one thing lit up is the number that matters. The interface should feel peaceful and comfortable to sit with, elegant rather than technical, so that working out money (a task most makers dislike) becomes something people want to come back to. Dark graphite surfaces stack like print layers; gold is the light on the bench, reserved for the answer and the next action.\n\nDensity is moderate and desk-first: a two-column calculator beside the slicer, where inputs sit on the left and the answer stays in view on the right. Numbers are always tabular, aligned and unhurried. Paper is the other material: the customer quote and the report are white sheets with ink and a deeper print gold, identical on screen and in the PDF, because they leave the workshop.\n\nThe incumbent components are sober and precise (thin seams, 5px corners, dark buttons that light up gold on hover). The stated direction is **warmer and more tactile**: when components are refined, they should gain physical presence (softer corners, fuller fills, a sense of something you can press) without losing the calm. Treat that as the direction of travel, not a reason to restyle untouched screens.",
+    "keyCharacteristics": [
+      "Dark, warm graphite in three tonal layers; no light theme for the app itself.",
+      "Gold is light, not decoration: the recommended price, the one primary action, focus and live state.",
+      "Bricolage Grotesque for the brand voice and the big number; Inter for everything you read and type.",
+      "Tabular figures everywhere money or time appears.",
+      "Paper sheets (quote, report) as a second, printable world.",
+      "Calm motion: values slide, nothing bounces; everything stops under reduced motion."
+    ],
+    "rules": [
+      {
+        "name": "The Light-on-the-Bench Rule",
+        "body": "Gold marks the answer and the next action. One gold-filled button per screen; everything else is graphite that lights up gold on hover.",
+        "section": "colors"
+      },
+      {
+        "name": "The Calm Warning Rule",
+        "body": "Reminders and \"attention\" states use a soft gold wash (gold at 7% fill, 42% border), never red. Red means something actually went wrong.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Money Rule",
+        "body": "Every amount, weight, time and percentage uses `font-variant-numeric: tabular-nums`, right-aligned in tables and inputs.",
+        "section": "typography"
+      },
+      {
+        "name": "The Layered-Not-Lifted Rule",
+        "body": "A surface reads as higher by being one graphite step lighter, not by casting a shadow. If tactile depth is introduced in a refinement, it should come from fill and edge, and stay subtle.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep every color as a variable in `src/index.css` and reference it; never hard-code a hex in a component.",
+      "Do keep one gold-filled button per screen and let everything else light up gold on hover.",
+      "Do use tabular numerals for every amount, and right-align them.",
+      "Do show state with text plus color (badges, verdicts), never color alone.",
+      "Do keep motion short and easing-based (0.15 to 0.4s), and disable it under `prefers-reduced-motion`.",
+      "Do move toward warmer, more tactile components when refining: softer, fuller, pressable, still calm."
+    ],
+    "donts": [
+      "Don't use Bambu Lab green anywhere.",
+      "Don't use pure white text on the dark app or put white text on gold.",
+      "Don't use Loss Red for reminders or neutral attention; that is the soft gold wash.",
+      "Don't add shadows to show elevation; step the graphite instead.",
+      "Don't put the cost-chart hues outside the chart and its legend.",
+      "Don't make the quote or report depend on dark styles; they must print on white."
+    ]
+  }
+}

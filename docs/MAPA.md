@@ -63,6 +63,7 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `docs/IMPRESORAS.md` | Investigación por marca (Bambu, Klipper/Moonraker, Prusa, Creality, Elegoo, Anycubic, Flashforge, OctoPrint): protocolo, puerto, credenciales, qué se puede leer, y el orden del plan. |
 | `CLAUDE.md`, `DEV_LOG.md` | Instrucciones del proyecto y registro de cada cambio con su porqué. |
 | `PRODUCT.md` | Contexto de producto para la skill de diseño `impeccable`: usuarios, posicionamiento, contexto de uso, marca y principios. Sin decisiones visuales. |
+| `DESIGN.md`, `.impeccable/design.json` | Sistema visual tal como está en `src/index.css`: colores con nombre y uso, tipografía, radios, profundidad, componentes y reglas. El JSON añade escalas de tono, movimiento y fragmentos de componentes para la skill `impeccable`. |
 
 Restos de la plantilla de Vite que nada usa y se pueden borrar: `src/assets/` (hero.png, react.svg, vite.svg) y `public/icons.svg`.
 
