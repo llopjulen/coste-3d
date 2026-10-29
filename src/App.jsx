@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import History from './History.jsx'
 import Report from './Report.jsx'
 import ImportFile from './ImportFile.jsx'
@@ -12,6 +12,8 @@ import NavIcon from './NavIcons.jsx'
 import SubNav from './SubNav.jsx'
 import { applyTheme, readTheme, saveTheme } from './theme.js'
 import { isAgentEnabled, setAgentEnabled } from './agent.js'
+import { useI18n } from './i18n/context.js'
+import { LANGS, LANG_NAMES, selectorVisible } from './i18n/index.js'
 
 /* ==================================================================
    1) FIELDS
@@ -22,62 +24,67 @@ import { isAgentEnabled, setAgentEnabled } from './agent.js'
 // The blocks of the calculator's FORM column, in screen order, for the sidebar's
 // second level. The result column (price, costs, save) is left out on purpose: it
 // is sticky, and scrolling to a sticky element does nothing useful.
-// A module-level constant on purpose: SubNav re-creates its observer whenever
-// this array changes, and a new array on every render would do that every time.
+// Only ids and translation keys live here; the labels are looked up with t() at
+// render time, so the list itself never depends on the language.
 const CALC_NAV = [
-  { id: 'sec-import', label: 'Import file' },
-  { id: 'sec-material', label: 'Material' },
-  { id: 'sec-this-print', label: 'This print' },
-  { id: 'sec-this-sale', label: 'This sale' },
-  { id: 'sec-setup', label: 'Your setup' },
+  { id: 'sec-import', labelKey: 'nav.import' },
+  { id: 'sec-material', labelKey: 'nav.material' },
+  { id: 'sec-this-print', labelKey: 'nav.thisPrint' },
+  { id: 'sec-this-sale', labelKey: 'nav.thisSale' },
+  { id: 'sec-setup', labelKey: 'nav.setup' },
 ]
 
 const SECTIONS = [
   {
-    title: 'Material',
+    id: 'sec-material',
+    titleKey: 'section.material',
     fields: [
-      { key: 'spoolPrice', label: 'Spool price',     unit: '€', initial: 20,   help: 'What you paid for the whole spool, shipping included.' },
-      { key: 'spoolWeight', label: 'Spool weight',    unit: 'g', initial: 1000, help: 'Grams of filament it holds, not counting the reel itself. 1000 g is standard, but 750 g and 250 g spools exist too.' },
-      { key: 'partGrams', label: 'Part weight',       unit: 'g', initial: 45,   help: "What your slicer shows after slicing. If you're printing several parts on one plate, enter the weight of a single one." },
-      { key: 'purgeGrams', label: 'Purge & waste',    unit: 'g', initial: 0,    help: 'Filament that ends up in the bin: purge towers and AMS color changes. On multicolor prints this can outweigh the part itself.' },
+      { key: 'spoolPrice', unit: '€', initial: 20 },
+      { key: 'spoolWeight', unit: 'g', initial: 1000 },
+      { key: 'partGrams', unit: 'g', initial: 45 },
+      { key: 'purgeGrams', unit: 'g', initial: 0 },
     ],
   },
   {
-    title: 'This print',
+    id: 'sec-this-print',
+    titleKey: 'section.thisPrint',
     fields: [
-      { key: 'hours', label: 'Print time',          unit: 'h', initial: 3.5,  help: "Your slicer's time estimate for one part." },
-      { key: 'postMinutes', label: 'Post-processing', unit: 'min', initial: 10, help: 'Minutes spent removing supports, sanding, assembling and packing. The part of the work almost everyone gives away for free.' },
-      { key: 'packaging', label: 'Packaging',          unit: '€',   initial: 0.8, help: 'Bag, box, label and filler for one unit.' },
+      { key: 'hours', unit: 'h', initial: 3.5 },
+      { key: 'postMinutes', unit: 'min', initial: 10 },
+      { key: 'packaging', unit: '€', initial: 0.8 },
     ],
   },
   {
-    title: 'This sale',
+    id: 'sec-this-sale',
+    titleKey: 'section.thisSale',
     fields: [
-      { key: 'quantity', label: 'Order quantity', unit: 'pcs', initial: 1,  help: "Parts in this order. Only changes the total — the per-part cost stays the same." },
-      { key: 'currentPrice', label: 'Current price', unit: '€', initial: 12, help: 'What you currently charge for the part. Used to compare against the recommended price.' },
+      { key: 'quantity', unitKey: 'unit.pcs', initial: 1 },
+      { key: 'currentPrice', unit: '€', initial: 12 },
     ],
   },
   /* The two sections below are "Your setup": numbers a person sets once
      (their printer, their electricity, their rate) and not per part.
      `setup: true` is what makes the app remember them on this device. */
   {
-    title: 'Your printer',
+    id: 'sec-printer',
+    titleKey: 'section.printer',
     setup: true,
     fields: [
-      { key: 'printerPrice', label: 'Printer cost', unit: '€', initial: 700,  help: 'What the machine cost you. Add upgrades or replacement parts if you have any.' },
-      { key: 'lifespan', label: 'Expected lifespan', unit: 'h', initial: 3000, help: "Hours you expect it to last before retiring it. Its cost gets spread across those hours, same as any shop does with its machines." },
-      { key: 'watts', label: 'Power draw',          unit: 'W', initial: 110,  help: "Average wattage while printing. PLA on an enclosed printer like the P1S sits around 100-120 W; a hot bed pushes it higher." },
-      { key: 'kwhPrice', label: 'Price per kWh',    unit: '€', initial: 0.15, help: 'What your electricity provider charges per kilowatt-hour. Check your bill.' },
-      { key: 'failRate', label: 'Failure rate',     unit: '%', initial: 8,    help: "Out of 100 prints, how many end up in the bin. Leaving this at 0 means claiming you never fail, and that's exactly the assumption that quietly loses money." },
+      { key: 'printerPrice', unit: '€', initial: 700 },
+      { key: 'lifespan', unit: 'h', initial: 3000 },
+      { key: 'watts', unit: 'W', initial: 110 },
+      { key: 'kwhPrice', unit: '€', initial: 0.15 },
+      { key: 'failRate', unit: '%', initial: 8 },
     ],
   },
   {
-    title: 'You and your platform',
+    id: 'sec-platform',
+    titleKey: 'section.platform',
     setup: true,
     fields: [
-      { key: 'hourlyRate', label: 'Hourly rate',       unit: '€',   initial: 15, help: "What you want to be paid per hour. If you're not sure, start with what you earn per hour at your day job." },
-      { key: 'fee', label: 'Platform fee',         unit: '%',  initial: 8,  help: "What the platform keeps between commission and card processing. It's taken from the final selling price, the same way the platform charges it. Selling in person, this is 0." },
-      { key: 'margin', label: 'Target margin',     unit: '%',  initial: 40, help: "What you want to earn on top of cost. Below 20% you have nothing left to reinvest or absorb a surprise." },
+      { key: 'hourlyRate', unit: '€', initial: 15 },
+      { key: 'fee', unit: '%', initial: 8 },
+      { key: 'margin', unit: '%', initial: 40 },
     ],
   },
 ]
@@ -104,12 +111,12 @@ const pickSetup = saved =>
    old ones: on the dark panel the darkest grey nearly vanished, and
    since packaging is the top layer, the mark lost its shape. */
 const LAYERS = [
-  { key: 'material',      name: 'Material',      color: '#F2B33D' },
-  { key: 'power',         name: 'Power',         color: '#12A594' },
-  { key: 'depreciation',  name: 'Depreciation',  color: '#3E8FD0' },
-  { key: 'failures',      name: 'Failures',      color: '#6E74C4' },
-  { key: 'labor',         name: 'Labor',         color: '#A3A3B1' },
-  { key: 'packaging',     name: 'Packaging',     color: '#6C6C7A' },
+  { key: 'material',      nameKey: 'layer.material',      color: '#F2B33D' },
+  { key: 'power',         nameKey: 'layer.power',         color: '#12A594' },
+  { key: 'depreciation',  nameKey: 'layer.depreciation',  color: '#3E8FD0' },
+  { key: 'failures',      nameKey: 'layer.failures',      color: '#6E74C4' },
+  { key: 'labor',         nameKey: 'layer.labor',         color: '#A3A3B1' },
+  { key: 'packaging',     nameKey: 'layer.packaging',     color: '#6C6C7A' },
 ]
 
 
@@ -160,6 +167,7 @@ function calculate(d) {
    3) UI PIECES
 ================================================================== */
 function Field({ id, label, unit, help, value, onChange, open, onHelp }) {
+  const { t } = useI18n()
   return (
     <div className="field">
       <div className="row">
@@ -170,7 +178,7 @@ function Field({ id, label, unit, help, value, onChange, open, onHelp }) {
           <button
             type="button"
             className="info"
-            aria-label={`What is ${label}`}
+            aria-label={t('field.whatIs', { label })}
             aria-expanded={open}
             aria-controls={`help-${id}`}
             onClick={onHelp}
@@ -200,11 +208,12 @@ function Field({ id, label, unit, help, value, onChange, open, onHelp }) {
 /* Footer under the calculator and the history: what it is, the privacy
    promise and where to send ideas. */
 function SiteFooter() {
+  const { t } = useI18n()
   return (
     <footer className="site-foot">
       <strong className="brand"><Logo size={16} small /> layercents</strong>
-      <span>Free 3D print cost calculator. Nothing you type or drop leaves your browser.</span>
-      <a href="https://github.com/llopjulen/coste-3d/issues">Ideas or bugs? Tell me on GitHub</a>
+      <span>{t('footer.tagline')}</span>
+      <a href="https://github.com/llopjulen/coste-3d/issues">{t('footer.feedback')}</a>
     </footer>
   )
 }
@@ -214,6 +223,11 @@ function SiteFooter() {
 ================================================================== */
 // agentOptIn: true when this page load came from layercents.com/?agent (see main.jsx).
 export default function App({ agentOptIn = false }) {
+  const { t, tr, lang, setLang, decimal } = useI18n()
+  // Built here (not at module level) because the labels depend on the language.
+  // t changes only when the language does, so the observer in SubNav is rebuilt
+  // only then.
+  const calcNav = useMemo(() => CALC_NAV.map(item => ({ id: item.id, label: t(item.labelKey) })), [t])
   // The calculator starts from the defaults with the person's saved setup
   // on top. A function, not a value: React runs it once, instead of
   // reading localStorage on every render.
@@ -255,7 +269,7 @@ export default function App({ agentOptIn = false }) {
         id: now.getTime(),
         createdAt: now.toISOString(),
         date: now.toLocaleDateString(),
-        name: quoteName.trim() || 'Untitled part',
+        name: quoteName.trim() || t('save.untitled'),
         client: quoteClient.trim(),
         // A copy of every input and every cost layer, so the quote can
         // be exported or reviewed later even after the form changes.
@@ -309,7 +323,7 @@ export default function App({ agentOptIn = false }) {
       setLastBackupAt(downloadBackup(savedQuotes))
     } catch (err) {
       console.error(err)
-      alert('Could not create the backup file. Please try again.')
+      alert(t('error.backup'))
     }
   }
 
@@ -405,11 +419,14 @@ export default function App({ agentOptIn = false }) {
     const rate = rates[currency] || 1
     const value = (isFinite(n) ? n : 0) * rate
     const [whole, cents] = value.toFixed(2).split('.')
-    return { whole, cents, currency }
+    // `decimal` is "." or "," depending on the language (see i18n/index.js).
+    // Only the separator changes: the digits are the same, so the saved
+    // quotes and the totals never depend on the language.
+    return { whole, cents, decimal, currency }
   }
   const formatMoney = (n) => {
     const { whole, cents } = moneyParts(n)
-    return `${whole}.${cents} ${currency}`
+    return `${whole}${decimal}${cents} ${currency}`
   }
 
   useEffect(() => {
@@ -429,7 +446,7 @@ export default function App({ agentOptIn = false }) {
       await exportQuotesToExcel(quotes, currency, rates[currency] || 1)
     } catch (err) {
       console.error(err)
-      alert('Could not create the Excel file. Please try again.')
+      alert(t('error.excel'))
     } finally {
       setExporting(false)
     }
@@ -451,20 +468,23 @@ export default function App({ agentOptIn = false }) {
 
   // Back to the app's defaults for every setup field, and forget what was saved.
   const resetSetup = () => {
-    if (!window.confirm('Reset your setup to the default numbers?')) return
+    if (!window.confirm(t('setup.resetConfirm'))) return
     if (!clearSetup()) return
     setD(current => ({ ...current, ...Object.fromEntries(SETUP_FIELDS.map(key => [key, INITIAL[key]])) }))
     setHasSavedSetup(false)
   }
+
+  // The unit is a symbol (€, g, h) except for "pcs", which is a word and is translated.
+  const fieldUnit = field => (field.unitKey ? t(field.unitKey) : field.unit)
 
   // One input row of the form; used by the per-print sections and by the setup.
   const renderField = field => (
     <Field
       key={field.key}
       id={field.key}
-      label={field.label}
-      unit={field.unit}
-      help={field.help}
+      label={t(`field.${field.key}.label`)}
+      unit={fieldUnit(field)}
+      help={t(`field.${field.key}.help`)}
       value={d[field.key]}
       onChange={set(field.key)}
       open={openHelp === field.key}
@@ -513,10 +533,10 @@ export default function App({ agentOptIn = false }) {
             onClick={() => setView('calculator')}
           >
             <NavIcon name="calculator" />
-            <span className="tab-label">Calculator</span>
+            <span className="tab-label">{t('nav.calculator')}</span>
           </button>
           {/* Second level: only on the calculator, which is the long page. */}
-          {view === 'calculator' && <SubNav items={CALC_NAV} />}
+          {view === 'calculator' && <SubNav items={calcNav} />}
           {/* History stays lit on its sub-screens (report, customer quote),
               which are reached from it; Printers is a tab of its own. */}
           <button
@@ -526,10 +546,10 @@ export default function App({ agentOptIn = false }) {
             onClick={() => setView('history')}
           >
             <NavIcon name="history" />
-            <span className="tab-label">History</span>
+            <span className="tab-label">{t('nav.history')}</span>
             <span className="count">{savedQuotes.length}</span>
             {/* The dot is decoration; the hidden text gives screen readers the same news. */}
-            {backupDue && <><span className="tab-dot" aria-hidden="true" /><span className="sr-only">, backup due</span></>}
+            {backupDue && <><span className="tab-dot" aria-hidden="true" /><span className="sr-only">{t('nav.backupDue')}</span></>}
           </button>
           {/* Only for those who turned it on: nobody else ever calls 127.0.0.1. */}
           {agentOn && (
@@ -540,7 +560,7 @@ export default function App({ agentOptIn = false }) {
               onClick={() => setView('printers')}
             >
               <NavIcon name="printer" />
-              <span className="tab-label">Printers</span>
+              <span className="tab-label">{t('nav.printers')}</span>
             </button>
           )}
         </nav>
@@ -549,14 +569,28 @@ export default function App({ agentOptIn = false }) {
             type="button"
             className="theme-btn"
             onClick={toggleTheme}
-            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-            title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
+            aria-label={theme === 'dark' ? t('theme.toLight') : t('theme.toDark')}
+            title={theme === 'dark' ? t('theme.light') : t('theme.dark')}
           >
             <NavIcon name={theme === 'dark' ? 'sun' : 'moon'} />
           </button>
+          {/* Hidden until the translation covers the whole app (i18n/index.js). */}
+          {selectorVisible() && (
+            <select
+              className="currency lang-select"
+              aria-label={t('lang.label')}
+              value={lang}
+              onChange={e => setLang(e.target.value)}
+            >
+              {/* Short codes, like the currency next to it: the compact sidebar is narrow. */}
+              {LANGS.map(code => (
+                <option key={code} value={code} lang={code} title={LANG_NAMES[code]}>{code.toUpperCase()}</option>
+              ))}
+            </select>
+          )}
           <select
             className="currency"
-            aria-label="Currency"
+            aria-label={t('currency.label')}
             value={currency}
             onChange={e => setCurrency(e.target.value)}
           >
@@ -587,8 +621,8 @@ export default function App({ agentOptIn = false }) {
         />
       ) : view === 'history' ? (
         <div className="wrap">
-          <h1>Quote history</h1>
-          <p className="subtitle">Every quote you saved on this device, newest first.</p>
+          <h1>{t('history.title')}</h1>
+          <p className="subtitle">{t('history.subtitle')}</p>
           {/* Above the list, so it's seen; renders nothing unless a backup is due. */}
           <BackupReminder quotes={savedQuotes} lastBackupAt={lastBackupAt} onBackup={backupNow} />
           <History
@@ -610,14 +644,12 @@ export default function App({ agentOptIn = false }) {
         </div>
       ) : (
       <div className="wrap calc-page">
-        <h1>What a printed part actually costs you</h1>
-        <p className="subtitle">
-          Material, power, printer depreciation, failed prints and your own time.
-        </p>
+        <h1>{t('calc.title')}</h1>
+        <p className="subtitle">{t('calc.subtitle')}</p>
         <ol className="steps">
-          <li><span className="step-n" aria-hidden="true">1</span>Drop your sliced file</li>
-          <li><span className="step-n" aria-hidden="true">2</span>See the real cost and price</li>
-          <li><span className="step-n" aria-hidden="true">3</span>Save it and send a quote</li>
+          <li><span className="step-n" aria-hidden="true">1</span>{t('calc.step1')}</li>
+          <li><span className="step-n" aria-hidden="true">2</span>{t('calc.step2')}</li>
+          <li><span className="step-n" aria-hidden="true">3</span>{t('calc.step3')}</li>
         </ol>
 
         <div className="columns">
@@ -626,8 +658,8 @@ export default function App({ agentOptIn = false }) {
             <div id="sec-import"><ImportFile onApply={applyImport} onUndo={undoImport} /></div>
             {/* The numbers that change with every part */}
             {SECTIONS.filter(section => !section.setup).map(section => (
-              <section className="panel" key={section.title} id={`sec-${section.title.toLowerCase().replace(/\s+/g, '-')}`}>
-                <h2>{section.title}</h2>
+              <section className="panel" key={section.id} id={section.id}>
+                <h2>{t(section.titleKey)}</h2>
                 <div className="body">{section.fields.map(renderField)}</div>
               </section>
             ))}
@@ -636,27 +668,27 @@ export default function App({ agentOptIn = false }) {
                 change, so they are typed once. Folded once saved. */}
             <section className="panel setup-panel" id="sec-setup">
               <h2 className="with-value">
-                <span>Your setup</span>
+                <span>{t('setup.title')}</span>
                 <button type="button" className="link" aria-expanded={setupOpen} onClick={() => setSetupOpen(open => !open)}>
-                  {setupOpen ? 'Hide' : 'Edit'}
+                  {setupOpen ? t('setup.hide') : t('setup.edit')}
                 </button>
               </h2>
               {setupOpen ? (
                 <>
                   <p className="setup-note">
                     {hasSavedSetup
-                      ? 'Saved on this device. It comes back every time you open layercents.'
-                      : 'Saved on this device as you type, so you only enter it once.'}
+                      ? t('setup.noteSaved')
+                      : t('setup.noteSaving')}
                   </p>
                   {SECTIONS.filter(section => section.setup).map(section => (
-                    <div className="body setup-group" key={section.title}>
-                      <h3>{section.title}</h3>
+                    <div className="body setup-group" key={section.id}>
+                      <h3>{t(section.titleKey)}</h3>
                       {section.fields.map(renderField)}
                     </div>
                   ))}
                   {hasSavedSetup && (
                     <div className="setup-actions">
-                      <button type="button" className="link" onClick={resetSetup}>Reset to defaults</button>
+                      <button type="button" className="link" onClick={resetSetup}>{t('setup.reset')}</button>
                     </div>
                   )}
                 </>
@@ -666,8 +698,8 @@ export default function App({ agentOptIn = false }) {
                 <dl className="setup-summary">
                   {SECTIONS.filter(section => section.setup).flatMap(section => section.fields).map(field => (
                     <div key={field.key}>
-                      <dt>{field.label}</dt>
-                      <dd>{d[field.key]} {field.unit}</dd>
+                      <dt>{t(`field.${field.key}.label`)}</dt>
+                      <dd>{d[field.key]} {fieldUnit(field)}</dd>
                     </div>
                   ))}
                 </dl>
@@ -680,25 +712,25 @@ export default function App({ agentOptIn = false }) {
                at their current price, then saving it. --- */}
           <div className="result" ref={resultRef}>
             <div className="panel hero">
-              <span className="hero-label">Recommended price</span>
+              <span className="hero-label">{t('hero.label')}</span>
               <div className="hero-price">
                 <span className="hero-whole">{price.whole}</span>
-                <span className="hero-cents">.{price.cents}</span>
+                <span className="hero-cents">{price.decimal}{price.cents}</span>
                 <span className="hero-currency">{price.currency}</span>
               </div>
               <p className="hero-sub">
-                You keep <strong>{formatMoney(r.recommendedProfit)}</strong> per part after fees.
+                {tr('hero.keep', {}, { amount: <strong>{formatMoney(r.recommendedProfit)}</strong> })}
               </p>
               {r.units > 1 && (
                 <p className="hero-sub">
-                  Order total ({r.units} pcs): <strong>{formatMoney(r.orderPrice)}</strong>
+                  {tr('hero.orderTotal', { units: r.units }, { amount: <strong>{formatMoney(r.orderPrice)}</strong> })}
                 </p>
               )}
             </div>
 
             <div className="panel">
               <h2 className="with-value">
-                <span>Cost to make it</span>
+                <span>{t('cost.title')}</span>
                 <strong>{formatMoney(r.cost)}</strong>
               </h2>
               <div className="cross-section">
@@ -708,13 +740,13 @@ export default function App({ agentOptIn = false }) {
                 <CostSymbol
                   parts={r.parts}
                   layers={LAYERS}
-                  label={`Cost breakdown: ${LAYERS.map(l => `${l.name} ${formatMoney(r.parts[l.key])}`).join(', ')}`}
+                  label={t('cost.chartLabel', { list: LAYERS.map(l => `${t(l.nameKey)} ${formatMoney(r.parts[l.key])}`).join(', ') })}
                 />
                 <div className="legend">
                   {LAYERS.map(layer => (
                     <div className="row-legend" key={layer.key}>
                       <i className="swatch" style={{ backgroundColor: layer.color }} />
-                      <span className="name">{layer.name}</span>
+                      <span className="name">{t(layer.nameKey)}</span>
                       <span className="value">{formatMoney(r.parts[layer.key])}</span>
                     </div>
                   ))}
@@ -724,54 +756,54 @@ export default function App({ agentOptIn = false }) {
 
             <div className="panel">
               <div className="verdict">
-                <span className="context">At your current selling price</span>
+                <span className="context">{t('verdict.context')}</span>
                 <div className={`sentence ${r.profit < 0 ? 'loss' : 'gain'}`}>
                   {r.profit < 0
-                    ? `You lose ${formatMoney(Math.abs(r.profit))} per part`
-                    : `You make ${formatMoney(r.profit)} per part`}
+                    ? t('verdict.lose', { amount: formatMoney(Math.abs(r.profit)) })
+                    : t('verdict.make', { amount: formatMoney(r.profit) })}
                 </div>
                 <span className="note">
-                  After fees you keep {formatMoney(r.currentNet)} out of {formatMoney(d.currentPrice)}.
+                  {t('verdict.note', { net: formatMoney(r.currentNet), price: formatMoney(d.currentPrice) })}
                 </span>
               </div>
               {/* This figure is computed from the CURRENT price, so it lives
                   here and not next to the recommended price, where it
                   looked like the profit of the price shown above it. */}
               <div className="figure">
-                <span className="label">Profit per printer hour</span>
+                <span className="label">{t('verdict.perHour')}</span>
                 <span className="value">{formatMoney(r.perHour)}</span>
               </div>
             </div>
 
             {/* Saving comes after the result: you save what you've just seen. */}
             <form className="panel" onSubmit={saveQuote}>
-              <h2>Save this quote</h2>
+              <h2>{t('save.title')}</h2>
               <div className="body">
                 <div className="save-bar">
                   <input
                     className="text-input"
                     type="text"
-                    placeholder="Part name, e.g. Phone stand"
-                    aria-label="Part name"
+                    placeholder={t('save.partPlaceholder')}
+                    aria-label={t('save.partLabel')}
                     value={quoteName}
                     onChange={e => setQuoteName(e.target.value)}
                   />
                   <input
                     className="text-input"
                     type="text"
-                    placeholder="Client (optional)"
-                    aria-label="Client"
+                    placeholder={t('save.clientPlaceholder')}
+                    aria-label={t('save.clientLabel')}
                     value={quoteClient}
                     onChange={e => setQuoteClient(e.target.value)}
                   />
-                  <button type="submit" className="controls">Save quote</button>
+                  <button type="submit" className="controls">{t('save.button')}</button>
                 </div>
                 {/* role="status" makes screen readers announce the message */}
                 <p className="saved-note" role="status">
                   {justSaved && (
                     <>
-                      Saved “{justSaved}” ·{' '}
-                      <button type="button" className="link" onClick={() => setView('history')}>View history</button>
+                      {t('save.saved', { name: justSaved })} ·{' '}
+                      <button type="button" className="link" onClick={() => setView('history')}>{t('save.viewHistory')}</button>
                     </>
                   )}
                 </p>
@@ -785,9 +817,9 @@ export default function App({ agentOptIn = false }) {
             the cost is the second number. It hides itself when the real
             result is on screen, so the price is never shown twice. */}
         <div className={`mobile-total ${resultInView ? 'away' : ''}`}>
-          <span className="price">Recommended price<strong>{formatMoney(r.recommendedPrice)}</strong></span>
-          <span>Cost<strong>{formatMoney(r.cost)}</strong></span>
-          <button type="button" className="controls" onClick={showResult}>See details</button>
+          <span className="price">{t('mobile.price')}<strong>{formatMoney(r.recommendedPrice)}</strong></span>
+          <span>{t('mobile.cost')}<strong>{formatMoney(r.cost)}</strong></span>
+          <button type="button" className="controls" onClick={showResult}>{t('mobile.seeDetails')}</button>
         </div>
 
         <SiteFooter />

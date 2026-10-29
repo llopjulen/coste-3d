@@ -15,8 +15,10 @@
    lista con nombre propio.
 ================================================================== */
 import { useEffect, useState } from 'react'
+import { useI18n } from './i18n/context.js'
 
 export default function SubNav({ items }) {
+  const { t } = useI18n()
   const [active, setActive] = useState(items[0]?.id ?? null)
 
   useEffect(() => {
@@ -51,7 +53,7 @@ export default function SubNav({ items }) {
   }
 
   return (
-    <ul className="subnav" aria-label="On this page">
+    <ul className="subnav" aria-label={t('nav.onThisPage')}>
       {items.map(item => (
         <li key={item.id}>
           <button
