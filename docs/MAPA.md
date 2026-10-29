@@ -61,6 +61,7 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `agent/*.test.js` | Tests del agente con `node:test` (`npm test`), sin dependencias: HTTP (`handler`), MQTT byte a byte (`mqtt`), driver de Bambu con TLS de verdad (`bambu`; se saltan sin openssl), configuración (`config`), registro de trabajos (`jobs`, con reloj falso), driver de Moonraker (`moonraker`, contra HTTP de verdad) y el comando `add` de punta a punta (`setup`). |
 | `docs/MAPA.md` | Este archivo. |
 | `docs/IMPRESORAS.md` | Investigación por marca (Bambu, Klipper/Moonraker, Prusa, Creality, Elegoo, Anycubic, Flashforge, OctoPrint): protocolo, puerto, credenciales, qué se puede leer, y el orden del plan. |
+| `docs/AUDITORIA-2026-10-28.md` | Auditoría técnica de diseño (accesibilidad, rendimiento, tokens, responsive, coherencia): nota, hallazgos P1/P2/P3 con su estado y orden recomendado de arreglos. |
 | `CLAUDE.md`, `DEV_LOG.md` | Instrucciones del proyecto y registro de cada cambio con su porqué. |
 | `PRODUCT.md` | Contexto de producto para la skill de diseño `impeccable`: usuarios, posicionamiento, contexto de uso, marca y principios. Sin decisiones visuales. |
 | `DESIGN.md`, `.impeccable/design.json` | Sistema visual tal como está en `src/index.css`: colores con nombre y uso, tipografía, radios, profundidad, componentes y reglas. El JSON añade escalas de tono, movimiento y fragmentos de componentes para la skill `impeccable`. |

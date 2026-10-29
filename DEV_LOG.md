@@ -2,6 +2,15 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-28, Auditoría de diseño guardada en docs/
+- Archivo y sitio: docs/AUDITORIA-2026-10-28.md (nuevo). docs/MAPA.md, en la tabla de documentación, debajo de `docs/IMPRESORAS.md`.
+- Qué cambió: la auditoría técnica de `/impeccable audit` queda por escrito tal cual se hizo: nota 15/20, las cinco áreas, los hallazgos P1/P2/P3 con sus cifras, lo que el detector marcó sin ser un fallo, lo que está bien y el orden recomendado. Los dos P1 de contraste figuran como hechos (PR #30); el resto, como pendientes.
+- Por qué:
+  - La auditoría solo existía en el chat. En docs/ sirve como lista de tareas de diseño y como punto de partida para comparar cuando se repita.
+  - La nota se deja en 15/20, la del día de la auditoría, aunque el PR #30 ya arregle dos fallos: si se recalculara a mano, ya no se sabría con qué se compara la siguiente pasada. El estado de cada hallazgo va al lado de cada uno.
+  - La fecha va en el nombre del archivo para que cada auditoría futura sea un archivo nuevo y no se pise el histórico.
+- Cómo probarlo: abre docs/AUDITORIA-2026-10-28.md; los dos P1 dicen «Hecho (PR #30)» y el resto «Pendiente». `npm run build` sigue pasando (no toca código).
+
 ### 2026-10-28, Contraste: gris secundario y rojo que pasan WCAG AA
 - Archivo y sitio: src/index.css, en los tokens de `:root` (`--tenue` y `--rojo`) y en `.printer-badge.bad`. DESIGN.md y .impeccable/design.json, con los valores nuevos y la letra monoespaciada declarada.
 - Qué cambió: `--tenue` pasa de #8E8E98 a #9A9AA4 y `--rojo` de #E5484D a #FF6369. El tinte de fondo de la insignia «Failed» usa el rojo nuevo.
