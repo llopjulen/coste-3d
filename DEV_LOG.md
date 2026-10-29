@@ -2,6 +2,22 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-10-29, Barra lateral y superficies con relieve
+- Archivo y sitio: src/NavIcons.jsx (nuevo). src/App.jsx, en el `return` de la función App: el `<header className="topbar">` con las pestañas. src/index.css: tokens de `:root` (`--radio`, `--brillo`, `--filo`, `--rail-w`), `.panel`, `.tab` y un bloque nuevo «Barra lateral (escritorio)» tras la media query de 520 px.
+- Qué cambió: en pantallas de 861 px o más la barra superior pasa a ser una barra lateral fija con iconos (solo iconos entre 861 y 1139 px); en móvil queda igual que antes. Los paneles ganan radio de 12 px, un brillo tenue arriba y un filo de luz de 1 px.
+- Por qué:
+  - Un solo marcado y dos disposiciones por CSS (`position:fixed` en escritorio). La alternativa era un componente `Sidebar` aparte y otro `TopBar`: dos menús que mantener, y los lectores de pantalla leerían dos. La pestaña activa, el contador y el punto de copia siguen funcionando sin tocar la lógica.
+  - En móvil NO hay barra inferior: ya existe la barra fija del precio (`.mobile-total`) y dos barras fijas se comerían media pantalla de 844 px.
+  - El contenido se desplaza con `padding-left` en `body`, no con un contenedor nuevo, para no tocar la estructura de ninguna pantalla. Se anula en `@media print`; comprobado emulando `print` (padding 0 y barra oculta).
+  - Iconos SVG en línea en vez de una librería (lucide, heroicons): son tres dibujos y una dependencia nueva pesaría más que ellos. Con `stroke="currentColor"` toman el color del texto.
+  - El oro solo marca dónde estás (borde, velo y marquita a la izquierda), como único acento.
+  - Contraste: la cabecera de panel ahora es `rgba(255,255,255,.03)` sobre el brillo. Recalculado: `--tenue` da 4,78:1 ahí (mínimo 4,5:1).
+  - Se cambia `--radio` de 8 a 12 px en vez de crear otro token: lo usan 6 reglas y deben ir a juego. Descartado un colapso manual de la barra (más estado que guardar) a favor de estrecharla sola por ancho.
+  - `<div>` pasa a `<header>`: de paso es un punto de referencia para lectores de pantalla (hallazgo P3 de la auditoría).
+- Concepto nuevo: `position:fixed` saca un elemento del flujo y lo ancla a la ventana; por eso hay que reservar su hueco con `padding-left`. Ejemplo mínimo: `.rail{position:fixed;left:0;width:216px} body{padding-left:216px}`. Y `currentColor` es la palabra clave de CSS que vale «el color de texto de este elemento».
+- De la carrera: Fundamentos de Computadores / Ingeniería del Software en lo de separar contenido y presentación (un HTML, dos disposiciones por CSS). No hay nada más de la carrera en este cambio.
+- Cómo probarlo: `npm run dev` y abre la web. Con la ventana a más de 1140 px verás la barra con nombres; entre 861 y 1139, solo iconos (el nombre sigue ahí para lectores de pantalla); por debajo de 861 vuelve la barra de arriba. Cambia entre Calculator y History: el oro marca la activa. En History pulsa un informe y «Guardar como PDF»: no debe haber hueco a la izquierda.
+
 ### 2026-10-28, Auditoría de diseño guardada en docs/
 - Archivo y sitio: docs/AUDITORIA-2026-10-28.md (nuevo). docs/MAPA.md, en la tabla de documentación, debajo de `docs/IMPRESORAS.md`.
 - Qué cambió: la auditoría técnica de `/impeccable audit` queda por escrito tal cual se hizo: nota 15/20, las cinco áreas, los hallazgos P1/P2/P3 con sus cifras, lo que el detector marcó sin ser un fallo, lo que está bien y el orden recomendado. Los dos P1 de contraste figuran como hechos (PR #30); el resto, como pendientes.
@@ -10,7 +26,6 @@ Registro de cambios del proyecto. La entrada más nueva va arriba.
   - La nota se deja en 15/20, la del día de la auditoría, aunque el PR #30 ya arregle dos fallos: si se recalculara a mano, ya no se sabría con qué se compara la siguiente pasada. El estado de cada hallazgo va al lado de cada uno.
   - La fecha va en el nombre del archivo para que cada auditoría futura sea un archivo nuevo y no se pise el histórico.
 - Cómo probarlo: abre docs/AUDITORIA-2026-10-28.md; los dos P1 dicen «Hecho (PR #30)» y el resto «Pendiente». `npm run build` sigue pasando (no toca código).
-
 ### 2026-10-28, Contraste: gris secundario y rojo que pasan WCAG AA
 - Archivo y sitio: src/index.css, en los tokens de `:root` (`--tenue` y `--rojo`) y en `.printer-badge.bad`. DESIGN.md y .impeccable/design.json, con los valores nuevos y la letra monoespaciada declarada.
 - Qué cambió: `--tenue` pasa de #8E8E98 a #9A9AA4 y `--rojo` de #E5484D a #FF6369. El tinte de fondo de la insignia «Failed» usa el rojo nuevo.

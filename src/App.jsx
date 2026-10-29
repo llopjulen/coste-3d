@@ -8,6 +8,7 @@ import CostSymbol from './CostSymbol.jsx'
 import BackupPanel, { BackupReminder } from './BackupPanel.jsx'
 import { applyRestore, backupStatus, clearSetup, downloadBackup, readLastBackup, readSetup, saveSetupField } from './backup.js'
 import Printers from './Printers.jsx'
+import NavIcon from './NavIcons.jsx'
 import { isAgentEnabled, setAgentEnabled } from './agent.js'
 
 /* ==================================================================
@@ -477,8 +478,8 @@ export default function App({ agentOptIn = false }) {
 
   return (
     <>
-      <div className="topbar no-print">
-        <strong className="brand"><Logo size={20} small /> layercents</strong>
+      <header className="topbar no-print">
+        <strong className="brand"><Logo size={20} small /> <span className="brand-name">layercents</span></strong>
         <nav className="tabs">
           <button
             type="button"
@@ -486,7 +487,8 @@ export default function App({ agentOptIn = false }) {
             aria-current={view === 'calculator' ? 'page' : undefined}
             onClick={() => setView('calculator')}
           >
-            Calculator
+            <NavIcon name="calculator" />
+            <span className="tab-label">Calculator</span>
           </button>
           {/* History stays lit on its sub-screens (report, customer quote),
               which are reached from it; Printers is a tab of its own. */}
@@ -496,7 +498,9 @@ export default function App({ agentOptIn = false }) {
             aria-current={['history', 'report', 'quote'].includes(view) ? 'page' : undefined}
             onClick={() => setView('history')}
           >
-            History <span className="count">{savedQuotes.length}</span>
+            <NavIcon name="history" />
+            <span className="tab-label">History</span>
+            <span className="count">{savedQuotes.length}</span>
             {/* The dot is decoration; the hidden text gives screen readers the same news. */}
             {backupDue && <><span className="tab-dot" aria-hidden="true" /><span className="sr-only">, backup due</span></>}
           </button>
@@ -508,7 +512,8 @@ export default function App({ agentOptIn = false }) {
               aria-current={view === 'printers' ? 'page' : undefined}
               onClick={() => setView('printers')}
             >
-              Printers
+              <NavIcon name="printer" />
+              <span className="tab-label">Printers</span>
             </button>
           )}
         </nav>
@@ -522,7 +527,7 @@ export default function App({ agentOptIn = false }) {
             <option key={code} value={code}>{code}</option>
           ))}
         </select>
-      </div>
+      </header>
 
       {/* agentOn is checked again here: if the tab was hidden, the screen goes too. */}
       {view === 'printers' && agentOn ? (
