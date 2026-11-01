@@ -20,7 +20,14 @@ const DEFAULT_DIAMETER = 1.75 // mm
 const SECONDS_PER_HOUR = 3600
 
 /* An error whose message is written for the person using the app. */
-export class ImportError extends Error {}
+export class ImportError extends Error {
+  // `code` is what the screen translates (importError.<code> in src/i18n);
+  // `message` stays in English as the fallback and for the tests.
+  constructor(message, code) {
+    super(message)
+    this.code = code
+  }
+}
 
 /* ---------------------------- Small helpers ----------------------- */
 
@@ -225,7 +232,8 @@ export async function readSlicedFile(file) {
 
   if (/\.(stl|obj|step|stp|amf)$/.test(name)) {
     throw new ImportError(
-      "This is a 3D model, not a sliced file. Slice it first, then drop the G-code or the sliced 3MF (.gcode.3mf)."
+      "This is a 3D model, not a sliced file. Slice it first, then drop the G-code or the sliced 3MF (.gcode.3mf).",
+      'model'
     )
   }
   if (name.endsWith('.3mf')) return read3mf(file)
@@ -234,7 +242,8 @@ export async function readSlicedFile(file) {
   const result = parseSlicerText(await readEnds(file))
   if (!result) {
     throw new ImportError(
-      "Couldn't find a print time or filament weight in this file. Make sure it's the G-code your slicer exported, or type the numbers in by hand."
+      "Couldn't find a print time or filament weight in this file. Make sure it's the G-code your slicer exported, or type the numbers in by hand.",
+      'noData'
     )
   }
   const { slicer, ...plate } = result
@@ -259,7 +268,7 @@ async function read3mf(file) {
     try {
       return unzipSync(data, { filter: entry => wanted(entry.name) })
     } catch {
-      throw new ImportError("This 3MF looks damaged. Try exporting it again from your slicer.")
+      throw new ImportError("This 3MF looks damaged. Try exporting it again from your slicer.", 'damaged')
     }
   }
 
@@ -306,7 +315,8 @@ async function read3mf(file) {
 
   if (plates.length === 0) {
     throw new ImportError(
-      "This 3MF is a project that hasn't been sliced. Slice it in Bambu Studio or OrcaSlicer and export the plate as a sliced file (.gcode.3mf), or export the G-code."
+      "This 3MF is a project that hasn't been sliced. Slice it in Bambu Studio or OrcaSlicer and export the plate as a sliced file (.gcode.3mf), or export the G-code.",
+      'unsliced'
     )
   }
   return { fileName: file.name, slicer: slicer ?? 'Bambu Studio / OrcaSlicer', plates }

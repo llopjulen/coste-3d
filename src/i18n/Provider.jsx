@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 import { I18nContext } from './context.js'
-import { LOCALES, decimalSeparator, normalizeLang, rawText, readLang, saveLang, splitSlots, translate } from './index.js'
+import { LOCALES, decimalSeparator, normalizeLang, rawText, readLang, saveLang, splitSlots, translate, translatePlural } from './index.js'
 import en from './en.js'
 import es from './es.js'
 import fr from './fr.js'
@@ -29,6 +29,9 @@ export default function I18nProvider({ children }) {
 
   const t = useCallback((key, vars) => translate(DICTS, lang, key, vars), [lang])
 
+  // Plurales: tp('count.quotes', 3) -> "3 quotes" (claves count.quotes.one / .other).
+  const tp = useCallback((key, n, vars) => translatePlural(DICTS, lang, key, n, vars), [lang])
+
   // Como t, pero algunos huecos se rellenan con elementos de React:
   //   tr('hero.keep', { amount: '' }, { amount: <strong>12,00 EUR</strong> })
   // Cada idioma decide DONDE va el hueco (en frances, "Il vous reste X par
@@ -40,8 +43,8 @@ export default function I18nProvider({ children }) {
 
   const value = useMemo(() => {
     const locale = LOCALES[lang]
-    return { lang, setLang, t, tr, locale, decimal: decimalSeparator(locale) }
-  }, [lang, setLang, t, tr])
+    return { lang, setLang, t, tr, tp, locale, decimal: decimalSeparator(locale) }
+  }, [lang, setLang, t, tr, tp])
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
 }
