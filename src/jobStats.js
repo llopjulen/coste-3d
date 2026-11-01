@@ -80,10 +80,11 @@ export function summarizeByPrinter(jobs, options) {
     .sort((a, b) => b.total - a.total)
 }
 
-/* 0.084 -> "8 % longer"; -0.05 -> "5 % shorter"; within 2 % -> "about the same". Null if unknown. */
-export function describeEstimateError(error) {
+/* 0.084 -> "8 % longer"; -0.05 -> "5 % shorter"; within 2 % -> "about the same". Null if unknown.
+   `t` is the translator (the text is in the dictionaries, keys printers.estimate.*). */
+export function describeEstimateError(error, t) {
   if (typeof error !== 'number' || !Number.isFinite(error)) return null
   const pct = Math.round(Math.abs(error) * 100)
-  if (pct < 2) return 'About the same'
-  return `${pct} % ${error > 0 ? 'longer' : 'shorter'}`
+  if (pct < 2) return t('printers.estimate.same')
+  return t(error > 0 ? 'printers.estimate.longer' : 'printers.estimate.shorter', { pct })
 }

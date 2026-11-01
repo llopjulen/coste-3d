@@ -2,6 +2,19 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-01, Traducción, paso 3: pestaña Printers
+- Archivo y sitio: src/Printers.jsx (todo el texto y las fechas), src/printerView.js (`STATE_KEYS`, `CONNECTION_KEYS`, `badgeText`; `fmtMinutes` y `detailLine` reciben `t`), src/jobStats.js (`describeEstimateError` recibe `t`), src/i18n/{en,es,fr}.js (claves `printers.*`) y los tests `printerView.test.js`, `jobStats.test.js` e `i18n.test.js`.
+- Qué cambió: la pestaña Printers (agente, impresoras en vivo, historial de impresión) se ve en inglés, español y francés, con fechas, horas decimales («8,5») y plurales («1 fallida» / «7 terminadas») según el idioma.
+- Por qué:
+  - Las funciones puras (`fmtMinutes`, `detailLine`, `describeEstimateError`) reciben el traductor `t` como último parámetro, en vez de importar el contexto de React: así siguen siendo puras y se prueban pasando un `t` real hecho con `translate()`. Alternativa descartada: que devolvieran un objeto `{ clave, variables }` y la pantalla lo tradujera. Es más «puro», pero añade una capa para cuatro funciones pequeñas.
+  - Los diccionarios que traducen estados (`STATE_KEYS`, `CONNECTION_KEYS`, `RESULT_KEYS`) guardan la clave, no el texto. Se consultan con `Object.hasOwn`: el agente manda el estado como string, y un valor como `"constructor"` no debe sacar nada del prototipo del objeto; un estado desconocido (de un agente más nuevo) cae en «—» o se enseña tal cual.
+  - Un test nuevo en `i18n.test.js` busca todo literal `'printers.…'` del código y comprueba que existe, porque las claves de esas tablas no se escriben como `t('…')` y el escáner anterior no las veía.
+  - Los comandos (`npm run agent -- add`) son huecos de `tr()`: en cada idioma la frase los coloca donde le toca.
+  - Lo que NO se traduce: `printer.error` y `printer.printMessage`, que llegan escritos por el agente (o por Klipper, con sus palabras). Traducirlos pide códigos de error en el agente y subir `PROTOCOL`; queda para un PR propio.
+- Concepto nuevo: inyección de dependencias por parámetro. Una función no importa su traductor, lo recibe. Ejemplo mínimo: `const saludar = (nombre, t) => t('hola', { nombre })`; en un test se le pasa un `t` falso o uno real, y en la app el de `useI18n()`.
+- De la carrera: Ingeniería del Software: inyección de dependencias y funciones puras (testeables sin entorno). Programación: el prototipo de JavaScript y por qué `Object.hasOwn` evita que una clave externa elija un método heredado (`constructor`, `toString`).
+- Cómo probarlo: `npm test` y `npm run build`. Con la web abierta en `/?agent&lang=fr` (o `es`) y el agente corriendo (`npm run agent`), mira la pestaña Printers: estados, «Couche 120 sur 300», historial, fechas y horas con coma. Sin agente: la pestaña explica en el idioma elegido cómo arrancarlo.
+
 ### 2026-10-31, Traducción, paso 2: History, copia de seguridad e importar
 - Archivo y sitio: src/History.jsx, src/BackupPanel.jsx y src/ImportFile.jsx (todo el texto pasa a `t()`). src/i18n/index.js (`translatePlural`), src/i18n/format.js (nuevo), src/i18n/Provider.jsx (`tp`), src/i18n/{en,es,fr}.js (claves `count.*`, `history.*`, `backup.*`, `backupError.*`, `import.*`, `importError.*`). src/backup.js (clase `BackupError`) y src/slicerFile.js (clase `ImportError`): llevan ahora un `code`.
 - Qué cambió: las pantallas History, copia de seguridad (aviso, panel y restauración) e importar del laminador se ven en inglés, español y francés (con `?lang=es` o `?lang=fr` hasta que se active el selector). Las fechas, los números (coma o punto decimal) y los plurales («1 presupuesto» / «5 presupuestos») siguen las reglas de cada idioma.

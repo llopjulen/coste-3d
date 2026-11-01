@@ -47,6 +47,9 @@ test('every key used with t("...") in the code exists in English', () => {
       else if (/\.(jsx?|mjs)$/.test(entry.name) && !entry.name.endsWith('.test.js')) {
         const code = readFileSync(path, 'utf8')
         for (const m of code.matchAll(/\bt[rnp]?\(\s*'([\w.]+)'/g)) used.add(m[1])
+        // Keys kept in lookup tables (RESULT_KEYS, STATE_KEYS…) are not written as t('…'):
+        // any 'printers.…' literal is a key and must exist.
+        for (const m of code.matchAll(/'(printers\.[\w.-]+)'/g)) used.add(m[1])
         for (const m of code.matchAll(/(?:labelKey|titleKey|nameKey|unitKey):\s*'([\w.]+)'/g)) used.add(m[1])
       }
     }
