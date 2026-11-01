@@ -2,6 +2,21 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-01, Traducción, paso 4: presupuesto del cliente, informe PDF y Excel
+- Archivo y sitio: src/CustomerQuote.jsx y src/Report.jsx (todo el texto, fechas e importes), src/exportExcel.js (`buildColumns(currency, t)` y parámetro `lang`), src/i18n/dicts.js (nuevo: `DICTS`, `translatorFor`), src/DocLangSelect.jsx (nuevo), src/i18n/format.js (`fmtLongDay`, `fmtMonthShort`, `fmtMoney`), src/i18n/{en,es,fr}.js (claves `doc.*`, `quote.*`, `report.*`, `excel.*`), src/App.jsx (Report recibe `rate` en vez de `formatMoney`; el Excel recibe `lang`), src/index.css (`.doc-lang`).
+- Qué cambió: el presupuesto para el cliente y el informe tienen su propio selector «Idioma del documento», que empieza en el idioma de la interfaz: quien trabaja en español puede mandar el presupuesto en inglés o francés. El formulario (botones, campos) sigue el idioma de la pantalla; solo la hoja que se imprime usa el del documento. El Excel sale en el idioma de la interfaz.
+- Por qué:
+  - `translatorFor(lang)` en un módulo sin React: `useI18n()` solo sabe el idioma de la pantalla. Un traductor de idioma fijo sirve a los componentes (`doc.t(...)`) y a `exportExcel.js`, que no es un componente y no puede usar hooks. Alternativa descartada: un segundo `I18nProvider` anidado alrededor de la hoja; funciona, pero obliga a partir cada componente en «formulario» y «hoja» y a cambiar de contexto en medio del JSX.
+  - Importes de la hoja con `Intl.NumberFormat` (`fmtMoney`), con dos decimales y sin separador de miles, como `formatMoney` de la app. Los céntimos siguen siendo enteros: el texto («93,00 EUR» o «93.00 EUR») es lo único que cambia, así que las líneas siguen cuadrando con el total.
+  - El porcentaje de cada capa usa `Intl.NumberFormat(locale, { style: 'percent' })`: en francés lleva espacio («38 %»), en inglés no.
+  - La hoja lleva `lang={doc.lang}`: un lector de pantalla pronuncia bien y el navegador no ofrece «traducir esta página» a quien ya la tiene en su idioma.
+  - Los nombres de capa del informe y de las columnas del Excel reutilizan las claves `layer.*` y `history.col.*` de la pantalla: una columna se llama igual en la tabla, el informe y la hoja de cálculo.
+  - El Excel no tiene selector propio: es un documento tuyo, no del cliente, y un botón con un menú encima no compensa. Si alguien lo pide, `exportQuotesToExcel` ya acepta cualquier idioma.
+  - No se toca el campo `date` que `saveQuote` guarda con `toLocaleDateString()`: nadie lo lee (todo usa `createdAt`) y cambiarlo exigiría tocar la validación de `backup.js`.
+- Concepto nuevo: función que devuelve un objeto de funciones (cierre). `translatorFor('es')` devuelve `{ t, tp, locale }` donde `t` «recuerda» el idioma. Ejemplo mínimo: `const sumaCon = n => x => x + n; const mas2 = sumaCon(2); mas2(5) // 7`.
+- De la carrera: Programación / Paradigmas: cierres (closures) y funciones de orden superior. Ingeniería del Software: separar lo que se muestra al usuario (interfaz) de lo que se entrega a un tercero (documento), dos «vistas» con requisitos distintos sobre los mismos datos.
+- Cómo probarlo: `npm test` y `npm run build`. Abre `/?lang=es`, guarda un par de presupuestos, ve a History, marca piezas y pulsa «Presupuesto para el cliente»: cambia «Idioma del documento» a Français y comprueba que solo cambia la hoja (fecha larga, «Devis», «93,00 EUR»). Haz lo mismo con «Informe PDF». «Exportar a Excel» y abre el archivo: columnas en el idioma de la pantalla.
+
 ### 2026-11-01, Traducción, paso 3: pestaña Printers
 - Archivo y sitio: src/Printers.jsx (todo el texto y las fechas), src/printerView.js (`STATE_KEYS`, `CONNECTION_KEYS`, `badgeText`; `fmtMinutes` y `detailLine` reciben `t`), src/jobStats.js (`describeEstimateError` recibe `t`), src/i18n/{en,es,fr}.js (claves `printers.*`) y los tests `printerView.test.js`, `jobStats.test.js` e `i18n.test.js`.
 - Qué cambió: la pestaña Printers (agente, impresoras en vivo, historial de impresión) se ve en inglés, español y francés, con fechas, horas decimales («8,5») y plurales («1 fallida» / «7 terminadas») según el idioma.

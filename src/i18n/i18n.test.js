@@ -7,7 +7,8 @@ import en from './en.js'
 import es from './es.js'
 import fr from './fr.js'
 import { LANGS, READY, decimalSeparator, detectLang, fill, normalizeLang, rawText, splitSlots, translate, translatePlural } from './index.js'
-import { fmtDay, fmtGrams, fmtMonthYear, fmtNumber } from './format.js'
+import { fmtDay, fmtGrams, fmtLongDay, fmtMoney, fmtMonthShort, fmtMonthYear, fmtNumber } from './format.js'
+import { translatorFor } from './dicts.js'
 
 const DICTS = { en, es, fr }
 const srcDir = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -150,4 +151,29 @@ test('dates and numbers use the language\'s conventions', () => {
   assert.equal(fmtNumber('es-ES', 3.5), '3,5')
   assert.equal(fmtGrams('fr-FR', 45), '45,0 g')
   assert.equal(fmtGrams('en-GB', 45), '45.0 g')
+})
+
+test('fmtMoney: two decimals, decimal comma in es/fr, no thousands separator', () => {
+  assert.equal(fmtMoney('en-GB', 12.5, 'EUR'), '12.50 EUR')
+  assert.equal(fmtMoney('es-ES', 12.5, 'EUR'), '12,50 EUR')
+  assert.equal(fmtMoney('fr-FR', 1234.567, 'USD'), '1234,57 USD')
+  assert.equal(fmtMoney('en-GB', 0, 'EUR'), '0.00 EUR')
+})
+
+test('document dates: long day and short month follow the language', () => {
+  const d = new Date(2026, 9, 5)
+  assert.equal(fmtLongDay('en-GB', d), '5 October 2026')
+  assert.equal(fmtLongDay('es-ES', d), '5 de octubre de 2026')
+  assert.equal(fmtLongDay('fr-FR', d), '5 octobre 2026')
+  assert.match(fmtMonthShort('es-ES', d), /^oct/)
+})
+
+test('translatorFor: a fixed-language translator, English when the code is unknown', () => {
+  const es = translatorFor('es-MX')
+  assert.equal(es.lang, 'es')
+  assert.equal(es.locale, 'es-ES')
+  assert.equal(es.t('quote.doc.title'), 'Presupuesto')
+  assert.equal(es.tp('count.quotes', 2), '2 presupuestos')
+  assert.equal(translatorFor('xx').t('quote.doc.title'), 'Quote')
+  assert.equal(translatorFor(undefined).lang, 'en')
 })

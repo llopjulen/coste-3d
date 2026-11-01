@@ -1,4 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import DocLangSelect from './DocLangSelect.jsx'
+import { useI18n } from './i18n/context.js'
+import { translatorFor } from './i18n/dicts.js'
+import { fmtLongDay, fmtMoney, fmtNumber } from './i18n/format.js'
 
 /* ==================================================================
    CUSTOMER QUOTE — the document you send to a client.
@@ -59,6 +63,12 @@ async function shrinkImage(file) {
 }
 
 export default function CustomerQuote({ quotes, currency, rate, onBack }) {
+  // `t` speaks the language of the screen (the form); `doc` speaks the language
+  // of the SHEET the client reads, which starts the same but can be changed:
+  // you can work in Spanish and send the quote in English.
+  const { t, lang } = useI18n()
+  const [docLang, setDocLang] = useState(lang)
+  const doc = useMemo(() => translatorFor(docLang), [docLang])
   const [business, setBusiness] = useState(loadBusiness)
   const [businessError, setBusinessError] = useState('')
   const [counter] = useState(loadCounter)
@@ -69,7 +79,7 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
   const [lines, setLines] = useState(() =>
     [...quotes]
       .sort((a, b) => new Date(a.createdAt ?? a.id) - new Date(b.createdAt ?? b.id))
-      .map(q => ({ id: q.id, name: q.name ?? 'Untitled part', qty: q.units ?? 1, unitPrice: q.price }))
+      .map(q => ({ id: q.id, name: q.name ?? t('save.untitled'), qty: q.units ?? 1, unitPrice: q.price }))
   )
 
   // Business details: update the screen and save them for next time.
@@ -80,7 +90,7 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
       localStorage.setItem(BUSINESS_KEY, JSON.stringify(next))
       setBusinessError('')
     } catch {
-      setBusinessError("Couldn't save your business details in this browser (storage full or blocked). The quote still works.")
+      setBusinessError(t('quote.err.save'))
     }
   }
 
@@ -89,7 +99,7 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
     try {
       saveBusiness({ logo: await shrinkImage(file) })
     } catch {
-      setBusinessError("That image couldn't be read. Try a PNG or JPG.")
+      setBusinessError(t('quote.err.logo'))
     }
   }
 
@@ -102,7 +112,8 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
   // Every amount is rounded to the cent BEFORE adding, so the lines on
   // the sheet always add up exactly to the total the client reads.
   const cents = (eur) => Math.round(eur * rate * 100)
-  const money = (c) => `${(c / 100).toFixed(2)} ${currency}`
+  // In the language of the document: "12.50 EUR" or "12,50 EUR". The cents stay integers; only the text changes.
+  const money = (c) => fmtMoney(doc.locale, c / 100, currency)
   const lineCents = (l) => l.qty * cents(l.unitPrice)
   const subtotal = lines.reduce((sum, l) => sum + lineCents(l), 0)
   const shippingCents = cents(shipping)
@@ -112,14 +123,14 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
 
   const today = new Date()
   const validUntil = new Date(today.getTime() + Math.max(Number(business.validDays) || 0, 0) * DAY)
-  const fmtDate = dt => dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+  const fmtDate = dt => fmtLongDay(doc.locale, dt)
 
   // The PDF takes its file name from the page title: "Quote 2026-004 Ana".
   useEffect(() => {
     const previous = document.title
-    document.title = `Quote ${number}${client ? ` ${client}` : ''}`
+    document.title = `${doc.t('quote.pageTitle', { number })}${client ? ` ${client}` : ''}`
     return () => { document.title = previous }
-  }, [number, client])
+  }, [number, client, doc])
 
   const [counterUsed, setCounterUsed] = useState(false)
   const savePdf = () => {
@@ -134,34 +145,35 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
   return (
     <div className="report-screen">
       <div className="report-actions no-print">
-        <button type="button" className="controls" onClick={onBack}>← Back to history</button>
-        <button type="button" className="controls primary" onClick={savePdf} disabled={lines.length === 0}>Save as PDF</button>
-        <span className="muted">In the print window, choose “Save as PDF” as the destination.</span>
+        <button type="button" className="controls" onClick={onBack}>← {t('doc.back')}</button>
+        <button type="button" className="controls primary" onClick={savePdf} disabled={lines.length === 0}>{t('doc.savePdf')}</button>
+        <DocLangSelect value={docLang} onChange={setDocLang} />
+        <span className="muted">{t('doc.printHint')}</span>
       </div>
 
       <div className="quote-editor no-print">
         <section className="panel">
-          <h2>This quote</h2>
+          <h2>{t('quote.this')}</h2>
           <div className="form-grid">
             <div className="form-pair">
               <div className="form-row">
-                <label htmlFor="q-client">Client</label>
-                <input id="q-client" className="text-input" value={client} onChange={e => setClient(e.target.value)} placeholder="Client name" />
+                <label htmlFor="q-client">{t('quote.client')}</label>
+                <input id="q-client" className="text-input" value={client} onChange={e => setClient(e.target.value)} placeholder={t('quote.clientPlaceholder')} />
               </div>
               <div className="form-row">
-                <label htmlFor="q-number">Quote number</label>
+                <label htmlFor="q-number">{t('quote.number')}</label>
                 <input id="q-number" className="text-input" value={number} onChange={e => setNumber(e.target.value)} />
               </div>
             </div>
 
             <div className="line-edit line-head" aria-hidden="true">
-              <span>Item</span><span>Qty</span><span>Unit price ({currency})</span><span />
+              <span>{t('quote.col.item')}</span><span>{t('quote.col.qty')}</span><span>{t('quote.col.unitCur', { currency })}</span><span />
             </div>
             {lines.map(line => (
               <div className="line-edit" key={line.id}>
                 <input
                   className="text-input"
-                  aria-label="Item name"
+                  aria-label={t('quote.itemName')}
                   value={line.name}
                   onChange={e => updateLine(line.id, { name: e.target.value })}
                 />
@@ -171,7 +183,7 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
                   inputMode="numeric"
                   min="1"
                   step="1"
-                  aria-label={`Quantity of ${line.name}`}
+                  aria-label={t('quote.qtyOf', { name: line.name })}
                   value={line.qty}
                   onChange={e => updateLine(line.id, { qty: Math.max(0, Math.floor(Number(e.target.value)) || 0) })}
                 />
@@ -184,18 +196,18 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
                   inputMode="decimal"
                   min="0"
                   step="0.01"
-                  aria-label={`Unit price of ${line.name}`}
+                  aria-label={t('quote.unitOf', { name: line.name })}
                   defaultValue={(line.unitPrice * rate).toFixed(2)}
                   onChange={e => updateLine(line.id, { unitPrice: toEur(e.target.value) })}
                 />
-                <button type="button" className="row-btn danger" aria-label={`Remove ${line.name}`} onClick={() => removeLine(line.id)}>✕</button>
+                <button type="button" className="row-btn danger" aria-label={t('quote.remove', { name: line.name })} onClick={() => removeLine(line.id)}>✕</button>
               </div>
             ))}
-            {lines.length === 0 && <p className="form-hint">No parts left. Go back to History and tick the parts for this client.</p>}
+            {lines.length === 0 && <p className="form-hint">{t('quote.noParts')}</p>}
 
             <div className="form-pair">
               <div className="form-row">
-                <label htmlFor="q-shipping">Shipping ({currency})</label>
+                <label htmlFor="q-shipping">{t('quote.shipping', { currency })}</label>
                 <input
                   id="q-shipping"
                   key={`shipping-${currency}`}
@@ -209,7 +221,7 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
                 />
               </div>
               <div className="form-row">
-                <label htmlFor="q-tax">Tax (%)</label>
+                <label htmlFor="q-tax">{t('quote.tax')}</label>
                 <input
                   id="q-tax"
                   className="text-input num-input"
@@ -222,38 +234,38 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
                 />
               </div>
             </div>
-            <p className="form-hint">Prices here only change this quote, not your history.</p>
+            <p className="form-hint">{t('quote.pricesHint')}</p>
           </div>
         </section>
 
         <section className="panel">
-          <h2>Your business · saved for next time</h2>
+          <h2>{t('quote.business')}</h2>
           <div className="form-grid">
             <div className="form-row">
-              <span className="form-label">Logo</span>
+              <span className="form-label">{t('quote.logo')}</span>
               <div className="logo-row">
-                {business.logo && <img className="logo-preview" src={business.logo} alt="Your logo" />}
+                {business.logo && <img className="logo-preview" src={business.logo} alt={t('quote.logoAlt')} />}
                 <label className="controls file-label">
-                  {business.logo ? 'Change logo' : 'Upload logo'}
+                  {business.logo ? t('quote.logo.change') : t('quote.logo.upload')}
                   <input type="file" accept="image/*" className="sr-only" onChange={e => { uploadLogo(e.target.files[0]); e.target.value = '' }} />
                 </label>
-                {business.logo && <button type="button" className="row-btn danger" onClick={() => saveBusiness({ logo: '' })}>Remove</button>}
+                {business.logo && <button type="button" className="row-btn danger" onClick={() => saveBusiness({ logo: '' })}>{t('quote.logo.remove')}</button>}
               </div>
             </div>
             <div className="form-row">
-              <label htmlFor="b-name">Business name</label>
-              <input id="b-name" className="text-input" value={business.name} onChange={e => saveBusiness({ name: e.target.value })} placeholder="e.g. Layer Lab 3D" />
+              <label htmlFor="b-name">{t('quote.bizName')}</label>
+              <input id="b-name" className="text-input" value={business.name} onChange={e => saveBusiness({ name: e.target.value })} placeholder={t('quote.bizNamePh')} />
             </div>
             <div className="form-row">
-              <label htmlFor="b-contact">Contact details</label>
-              <textarea id="b-contact" className="text-input" rows="2" value={business.contact} onChange={e => saveBusiness({ contact: e.target.value })} placeholder={'Email, phone, website\nTax ID if you invoice'} />
+              <label htmlFor="b-contact">{t('quote.contact')}</label>
+              <textarea id="b-contact" className="text-input" rows="2" value={business.contact} onChange={e => saveBusiness({ contact: e.target.value })} placeholder={t('quote.contactPh')} />
             </div>
             <div className="form-row">
-              <label htmlFor="b-notes">Notes on every quote</label>
-              <textarea id="b-notes" className="text-input" rows="2" value={business.notes} onChange={e => saveBusiness({ notes: e.target.value })} placeholder="e.g. Delivery in 5 working days. 50% paid upfront." />
+              <label htmlFor="b-notes">{t('quote.notesLabel')}</label>
+              <textarea id="b-notes" className="text-input" rows="2" value={business.notes} onChange={e => saveBusiness({ notes: e.target.value })} placeholder={t('quote.notesPh')} />
             </div>
             <div className="form-row">
-              <label htmlFor="b-valid">Quote valid for (days)</label>
+              <label htmlFor="b-valid">{t('quote.valid')}</label>
               <input
                 id="b-valid"
                 className="text-input num-input"
@@ -271,27 +283,27 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
       </div>
 
       {/* ---------------- The sheet that becomes the PDF ---------------- */}
-      <article className="report quote-doc">
+      <article className="report quote-doc" lang={doc.lang}>
         <header className="quote-top">
           <div className="quote-from">
             {business.logo && <img className="quote-logo" src={business.logo} alt={business.name || 'Logo'} />}
             {business.name && <div className="quote-business">{business.name}</div>}
             {business.contact && <div className="quote-contact">{business.contact}</div>}
-            {!business.logo && !business.name && <div className="quote-contact no-print">Your logo and business name go here.</div>}
+            {!business.logo && !business.name && <div className="quote-contact no-print">{t('quote.doc.placeholder')}</div>}
           </div>
           <div className="quote-title">
-            <h1>Quote</h1>
+            <h1>{doc.t('quote.doc.title')}</h1>
             <dl>
-              <dt>No.</dt><dd>{number}</dd>
-              <dt>Date</dt><dd>{fmtDate(today)}</dd>
-              {Number(business.validDays) > 0 && <><dt>Valid until</dt><dd>{fmtDate(validUntil)}</dd></>}
+              <dt>{doc.t('quote.doc.no')}</dt><dd>{number}</dd>
+              <dt>{doc.t('quote.doc.date')}</dt><dd>{fmtDate(today)}</dd>
+              {Number(business.validDays) > 0 && <><dt>{doc.t('quote.doc.validUntil')}</dt><dd>{fmtDate(validUntil)}</dd></>}
             </dl>
           </div>
         </header>
 
         {client && (
           <div className="quote-to">
-            <div className="label">Quote for</div>
+            <div className="label">{doc.t('quote.doc.for')}</div>
             <div className="name">{client}</div>
           </div>
         )}
@@ -300,10 +312,10 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
           <table className="report-table">
             <thead>
               <tr>
-                <th>Item</th>
-                <th className="num">Qty</th>
-                <th className="num">Unit price</th>
-                <th className="num">Total</th>
+                <th>{doc.t('quote.col.item')}</th>
+                <th className="num">{doc.t('quote.col.qty')}</th>
+                <th className="num">{doc.t('quote.col.unit')}</th>
+                <th className="num">{doc.t('quote.col.total')}</th>
               </tr>
             </thead>
             <tbody>
@@ -320,20 +332,20 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
         </div>
 
         <dl className="quote-totals">
-          <dt>Subtotal</dt><dd>{money(subtotal)}</dd>
-          {shippingCents > 0 && <><dt>Shipping</dt><dd>{money(shippingCents)}</dd></>}
-          {taxRate > 0 && <><dt>Tax ({taxRate}%)</dt><dd>{money(tax)}</dd></>}
-          <dt className="grand">Total</dt><dd className="grand">{money(total)}</dd>
+          <dt>{doc.t('quote.doc.subtotal')}</dt><dd>{money(subtotal)}</dd>
+          {shippingCents > 0 && <><dt>{doc.t('quote.doc.shipping')}</dt><dd>{money(shippingCents)}</dd></>}
+          {taxRate > 0 && <><dt>{doc.t('quote.doc.tax', { rate: fmtNumber(doc.locale, taxRate, 2) })}</dt><dd>{money(tax)}</dd></>}
+          <dt className="grand">{doc.t('quote.doc.total')}</dt><dd className="grand">{money(total)}</dd>
         </dl>
 
         {business.notes && (
           <section className="quote-notes">
-            <h2>Notes</h2>
+            <h2>{doc.t('quote.doc.notes')}</h2>
             <p>{business.notes}</p>
           </section>
         )}
 
-        <footer className="report-foot">Quote made with layercents · layercents.com</footer>
+        <footer className="report-foot">{doc.t('quote.doc.footer')}</footer>
       </article>
     </div>
   )

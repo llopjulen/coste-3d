@@ -5,6 +5,7 @@
    the Excel library is not downloaded until someone actually needs it.
 ================================================================== */
 import writeExcelFile from 'write-excel-file/browser'
+import { translatorFor } from './i18n/dicts.js'
 
 const HEADER_BG = '#212125'
 const HEADER_TEXT = '#FFFFFF'
@@ -15,27 +16,29 @@ const MONEY = '#,##0.00'
 /* One entry per column. `get` reads the value from a saved quote;
    returning null leaves the cell empty (older quotes don't have
    every field). Money columns are multiplied by the exchange rate. */
-function buildColumns(currency) {
+function buildColumns(currency, t) {
   const money = label => `${label} (${currency})`
+  // The same texts as the screen (history.col.*, layer.*), so a column is
+  // called the same in the table, the report and the spreadsheet.
   return [
-    { title: 'Date',          width: 12, type: Date,   format: 'yyyy-mm-dd', get: q => new Date(q.createdAt ?? q.id) },
-    { title: 'Part',          width: 24, type: String, get: q => q.name ?? null },
-    { title: 'Client',        width: 18, type: String, get: q => q.client || null },
-    { title: 'Qty',           width: 6,  type: Number, format: '0', sum: true, get: q => q.units ?? 1 },
-    { title: 'Weight (g)',    width: 11, type: Number, format: '0.0',
+    { title: t('history.col.date'),   width: 12, type: Date,   format: 'yyyy-mm-dd', get: q => new Date(q.createdAt ?? q.id) },
+    { title: t('history.col.part'),   width: 24, type: String, get: q => q.name ?? null },
+    { title: t('history.col.client'), width: 18, type: String, get: q => q.client || null },
+    { title: t('history.col.qty'),    width: 8,  type: Number, format: '0', sum: true, get: q => q.units ?? 1 },
+    { title: t('excel.col.weight'),   width: 12, type: Number, format: '0.0',
       get: q => (q.inputs ? q.inputs.partGrams + q.inputs.purgeGrams : null) },
-    { title: 'Print time (h)', width: 13, type: Number, format: '0.00', get: q => q.inputs?.hours ?? null },
-    { title: money('Material'),     width: 15, money: true, get: q => q.parts?.material ?? null },
-    { title: money('Power'),        width: 13, money: true, get: q => q.parts?.power ?? null },
-    { title: money('Depreciation'), width: 18, money: true, get: q => q.parts?.depreciation ?? null },
-    { title: money('Failures'),     width: 14, money: true, get: q => q.parts?.failures ?? null },
-    { title: money('Labor'),        width: 13, money: true, get: q => q.parts?.labor ?? null },
-    { title: money('Packaging'),    width: 15, money: true, get: q => q.parts?.packaging ?? null },
-    { title: money('Cost / part'),  width: 16, money: true, bold: true, get: q => q.cost },
-    { title: 'Margin',        width: 9,  type: Number, format: '0%', get: q => (q.inputs ? q.inputs.margin / 100 : null) },
-    { title: 'Fee',           width: 8,  type: Number, format: '0%', get: q => (q.inputs ? q.inputs.fee / 100 : null) },
-    { title: money('Price / part'), width: 16, money: true, bold: true, accent: true, get: q => q.price },
-    { title: money('Order total'),  width: 16, money: true, bold: true, sum: true,
+    { title: t('excel.col.time'),     width: 16, type: Number, format: '0.00', get: q => q.inputs?.hours ?? null },
+    { title: money(t('layer.material')),     width: 16, money: true, get: q => q.parts?.material ?? null },
+    { title: money(t('layer.power')),        width: 16, money: true, get: q => q.parts?.power ?? null },
+    { title: money(t('layer.depreciation')), width: 18, money: true, get: q => q.parts?.depreciation ?? null },
+    { title: money(t('layer.failures')),     width: 16, money: true, get: q => q.parts?.failures ?? null },
+    { title: money(t('layer.labor')),        width: 16, money: true, get: q => q.parts?.labor ?? null },
+    { title: money(t('layer.packaging')),    width: 16, money: true, get: q => q.parts?.packaging ?? null },
+    { title: money(t('history.col.cost')),   width: 18, money: true, bold: true, get: q => q.cost },
+    { title: t('excel.col.margin'),   width: 10, type: Number, format: '0%', get: q => (q.inputs ? q.inputs.margin / 100 : null) },
+    { title: t('excel.col.fee'),      width: 12, type: Number, format: '0%', get: q => (q.inputs ? q.inputs.fee / 100 : null) },
+    { title: money(t('history.col.price')), width: 18, money: true, bold: true, accent: true, get: q => q.price },
+    { title: money(t('history.col.total')), width: 18, money: true, bold: true, sum: true,
       get: q => q.orderTotal ?? q.price },
   ]
 }
@@ -43,12 +46,14 @@ function buildColumns(currency) {
 // Column number -> Excel letter: 1 -> A, 17 -> Q.
 const letter = n => String.fromCharCode(64 + n)
 
-export async function exportQuotesToExcel(quotes, currency, rate) {
-  const columns = buildColumns(currency)
+// `lang` is the language of the column names and titles (the screen's language).
+export async function exportQuotesToExcel(quotes, currency, rate, lang = 'en') {
+  const { t, tp } = translatorFor(lang)
+  const columns = buildColumns(currency, t)
   const titleRows = [
-    [{ value: 'layercents — Saved quotes', fontWeight: 'bold', fontSize: 16, columnSpan: columns.length }],
+    [{ value: t('excel.title'), fontWeight: 'bold', fontSize: 16, columnSpan: columns.length }],
     [{
-      value: `Exported ${new Date().toISOString().slice(0, 10)} · ${quotes.length} quotes · amounts in ${currency}`,
+      value: t('excel.exported', { date: new Date().toISOString().slice(0, 10), count: tp('count.quotes', quotes.length), currency }),
       textColor: '#6E6E78',
       columnSpan: columns.length,
     }],
@@ -85,7 +90,7 @@ export async function exportQuotesToExcel(quotes, currency, rate) {
   const lastData = firstData + quotes.length - 1
   const totalRow = columns.map((c, i) => {
     const base = { fontWeight: 'bold', topBorderStyle: 'medium', topBorderColor: HEADER_BG }
-    if (i === 0) return { ...base, value: 'Total' }
+    if (i === 0) return { ...base, value: t('excel.total') }
     if (!c.sum) return { ...base, value: null }
     const col = letter(i + 1)
     return { ...base, type: 'Formula', value: `SUM(${col}${firstData}:${col}${lastData})`, format: c.money ? MONEY : c.format }
@@ -95,7 +100,7 @@ export async function exportQuotesToExcel(quotes, currency, rate) {
     [...titleRows, headerRow, ...dataRows, totalRow],
     {
       columns: columns.map(c => ({ width: c.width })),
-      sheet: 'Quotes',
+      sheet: t('excel.sheet'),
       stickyRowsCount: titleRows.length + 1,
       fontFamily: 'Calibri',
       fontSize: 11,

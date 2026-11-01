@@ -23,11 +23,11 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/main.jsx` | Punto de entrada. Importa `index.css`, lee y quita el `?agent` de la dirección (una vez por carga) y monta `<App>` dentro de `<StrictMode>`. En desarrollo, StrictMode ejecuta dos veces renders y efectos para destapar efectos secundarios mal hechos; en producción no hace nada. |
 | `src/App.jsx` | Estado global, cálculo y navegación. Cuatro secciones: 1) campos (`SECTIONS`, `INITIAL`) y colores del gráfico (`LAYERS`, en el orden en que se imprime: de abajo arriba); 2) `calculate(d)`; 3) componentes pequeños (`Field`, `SiteFooter`); 4) `App`. |
 | `src/History.jsx` | Lista de presupuestos: tarjetas resumen, buscador, tabla agrupada por mes, marcar piezas para el presupuesto de cliente, Load y borrar. No es dueño de ningún dato. |
-| `src/Report.jsx` | Informe imprimible (KPIs y 3 gráficas hechas con `div` y porcentajes, sin librería de gráficas). El PDF sale de `window.print()`. |
-| `src/CustomerQuote.jsx` | Presupuesto para el cliente: formulario arriba, hoja abajo. Lee y escribe `business` y `quoteCounter`. Calcula en céntimos enteros. |
+| `src/Report.jsx` | Informe imprimible (KPIs y 3 gráficas hechas con `div` y porcentajes, sin librería de gráficas). El PDF sale de `window.print()`. Su hoja tiene idioma propio (`DocLangSelect`), por defecto el de la interfaz. |
+| `src/CustomerQuote.jsx` | Presupuesto para el cliente: formulario arriba, hoja abajo. Lee y escribe `business` y `quoteCounter`. Calcula en céntimos enteros. La hoja que lee el cliente tiene idioma propio (`DocLangSelect`); el formulario sigue el de la interfaz. |
 | `src/ImportFile.jsx` | Panel "Import from your slicer": arrastrar y soltar en toda la página, elegir bandeja y número de piezas, Undo. |
 | `src/slicerFile.js` | Parser de `.gcode`, `.bgcode` y `.gcode.3mf`. Funciones puras (`parseSlicerText`, `parseSliceInfo`, `formValuesFromPlates`) más la lectura del `File` (`readSlicedFile`). |
-| `src/exportExcel.js` | Export `.xlsx` con formato y fórmulas `SUM`. Se carga solo al pulsar el botón. |
+| `src/exportExcel.js` | Export `.xlsx` con formato y fórmulas `SUM`. Se carga solo al pulsar el botón. Las columnas salen en el idioma de la interfaz. |
 | `src/backup.js` | Copia de seguridad: funciones puras (construir, validar, fusionar, planificar, recordatorio) y capa de almacenamiento (`writeAtomically`, `applyRestore`, `downloadBackup`). |
 | `src/BackupPanel.jsx` | Panel "Backup" al final de History y aviso `BackupReminder` encima. |
 | `src/agent.js` | Cliente del agente local: `checkAgent()` (¿está corriendo y habla nuestro protocolo?), `fetchPrinters()` (estado de las impresoras) y la activación por enlace (`?agent`). Sin React. |
@@ -42,7 +42,9 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/i18n/index.js` | Núcleo de la traducción, sin React: idiomas (`en`, `es`, `fr`), detección (`?lang=`, elección guardada, navegador), `translate`/`fill`/`splitSlots` y el separador decimal. `READY` decide si el selector es visible. |
 | `src/i18n/en.js`, `es.js`, `fr.js` | Los textos de la interfaz, `clave -> texto` con `{huecos}`. El inglés es la referencia; los tres deben tener las mismas claves (lo comprueba `i18n.test.js`). |
 | `src/i18n/context.js`, `Provider.jsx` | `useI18n()` da `t`, `tr` (con elementos dentro), `tp` (plurales), `lang`, `setLang`, `locale` y `decimal`. El Provider envuelve `<App />` en `main.jsx` y pone `<html lang>`. |
-| `src/i18n/format.js` | Fechas y números según el idioma (`fmtDay`, `fmtDateTime`, `fmtMonthYear`, `fmtNumber`, `fmtGrams`). Reciben el `locale` como parámetro. |
+| `src/i18n/dicts.js` | `DICTS` y `translatorFor(lang)`: un traductor de idioma fijo, sin React, para los documentos (que pueden ir en otro idioma que la pantalla) y para `exportExcel.js`. |
+| `src/DocLangSelect.jsx` | El selector «Idioma del documento» del presupuesto y del informe. Oculto mientras el selector general lo esté. |
+| `src/i18n/format.js` | Fechas y números según el idioma (`fmtDay`, `fmtDateTime`, `fmtMonthYear`, `fmtNumber`, `fmtGrams`, `fmtLongDay`, `fmtMonthShort`, `fmtMoney`). Reciben el `locale` como parámetro. |
 | `src/theme.js` | Tema claro u oscuro: lee la elección guardada o la del sistema, la pone en `<html data-theme>` y en el color de la barra del navegador. |
 | `src/logoGeometry.js` | Las coordenadas de las capas del logo, como datos. Las leen el logo y la gráfica de costes, para que no se descuadren. |
 | `src/symbolChart.js` | Función pura `symbolPieces`: reparte los costes sobre las 11 capas del símbolo (cada coste ocupa un trozo del largo total proporcional a su parte del coste). Sin React. |

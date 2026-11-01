@@ -1,11 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 import { I18nContext } from './context.js'
 import { LOCALES, decimalSeparator, normalizeLang, rawText, readLang, saveLang, splitSlots, translate, translatePlural } from './index.js'
-import en from './en.js'
-import es from './es.js'
-import fr from './fr.js'
-
-const DICTS = { en, es, fr }
+import { DICTS } from './dicts.js'
 
 /* Da a toda la app `t` (traducir), el idioma, su locale de Intl y el
    separador decimal. Cambiar de idioma re-renderiza el arbol entero: es lo
