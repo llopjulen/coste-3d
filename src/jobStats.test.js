@@ -1,6 +1,10 @@
 /* Tests for jobStats.js. Run them with:  npm test */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { translate } from './i18n/index.js'
+import en from './i18n/en.js'
+import es from './i18n/es.js'
+import fr from './i18n/fr.js'
 import { MIN_PRINTS, describeEstimateError, median, summarize, summarizeByPrinter } from './jobStats.js'
 
 const NOW = new Date('2026-10-28T12:00:00Z')
@@ -95,10 +99,18 @@ test('summarizeByPrinter: each printer has its own rate, busiest first', () => {
   assert.deepEqual([second.printerName, second.failureRate], ['New K2', 0])
 })
 
+const t = (key, vars) => translate({ en, es, fr }, 'en', key, vars)
+
 test('describeEstimateError: in words, and nothing when unknown', () => {
-  assert.equal(describeEstimateError(0.084), '8 % longer')
-  assert.equal(describeEstimateError(-0.05), '5 % shorter')
-  assert.equal(describeEstimateError(0.01), 'About the same')
-  assert.equal(describeEstimateError(null), null)
-  assert.equal(describeEstimateError(Number.NaN), null)
+  assert.equal(describeEstimateError(0.084, t), '8 % longer')
+  assert.equal(describeEstimateError(-0.05, t), '5 % shorter')
+  assert.equal(describeEstimateError(0.01, t), 'About the same')
+  assert.equal(describeEstimateError(null, t), null)
+  assert.equal(describeEstimateError(Number.NaN, t), null)
+})
+
+test('describeEstimateError speaks Spanish and French too', () => {
+  const dicts = { en, es, fr }
+  assert.equal(describeEstimateError(0.084, (k, v) => translate(dicts, 'es', k, v)), '8 % más')
+  assert.equal(describeEstimateError(-0.05, (k, v) => translate(dicts, 'fr', k, v)), '5 % de moins')
 })
