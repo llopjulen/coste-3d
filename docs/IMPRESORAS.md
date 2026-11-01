@@ -240,7 +240,13 @@ El agente apunta cada trabajo en `~/.layercents/jobs.json` y lo enseña en `http
 10. Para el agente (Ctrl+C) a mitad de una impresión y arráncalo otra vez: el trabajo debe seguir abierto (no duplicarse) y cerrarse bien al terminar. Si lo arrancas con la impresión ya empezada, sale con `startedApprox: true` y sin `realMinutes`: es lo esperado.
 11. Mira si `subtask_id` / `task_id` cambian entre trabajos lanzados desde Bambu Studio y desde la pantalla de la impresora. Si desde la pantalla siempre valen `"0"`, el agente distingue los trabajos por el nombre del archivo, y dos impresiones seguidas de la misma pieza sin ver el `FINISH` entre medias contarían como una.
 
-La prueba de FTPS para los gramos (paso 5) llegará con su propio PR.
+### Y la prueba de FTPS para los gramos (paso 5)
+
+Un solo comando, que no lee ni escribe nada en la impresora: solo intenta iniciar sesión en el puerto 990 y sale.
+
+12. Con la impresora en modo normal y añadida al agente: `npm run agent -- probe-ftps <id>` (el id sale en `npm run agent -- list`).
+13. Apunta el resultado. Si dice «FTPS works», se construye la descarga del 3MF (gramos reales). Si dice que el puerto 990 está cerrado, el plan B es arrastrar el 3MF. Si dice «presentó otro certificado», cuéntaselo a Claude: puede que FTPS use su propio certificado.
+14. Prueba también con «Store Sent Files on External Storage» activado en la impresora (Ajustes), por si el resultado cambia: algunas H2S solo dejaron de fallar así.
 
 ## Fuentes
 
