@@ -31,3 +31,15 @@ export const fmtNumber = (locale, n, digits = 2) =>
 // Gramos con un decimal fijo: "45.0 g" / "45,0 g".
 export const fmtGrams = (locale, g) =>
   `${new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(g)} g`
+
+// "12 October 2026" / "12 de octubre de 2026" / "12 octobre 2026": la fecha de un documento.
+export const fmtLongDay = (locale, dt) =>
+  dt.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
+
+// "Oct" / "oct" / "oct.": el mes solo, para el pie de una barra de gráfica.
+export const fmtMonthShort = (locale, dt) => dt.toLocaleDateString(locale, { month: 'short' })
+
+// 12.5 -> "12.50 EUR" / "12,50 EUR". Siempre dos decimales y sin separador de
+// miles, igual que formatMoney de la app: solo cambia la coma o el punto.
+export const fmtMoney = (locale, amount, currency) =>
+  `${new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }).format(amount)} ${currency}`

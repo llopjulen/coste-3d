@@ -443,7 +443,7 @@ export default function App({ agentOptIn = false }) {
     setExporting(true)
     try {
       const { exportQuotesToExcel } = await import('./exportExcel.js')
-      await exportQuotesToExcel(quotes, currency, rates[currency] || 1)
+      await exportQuotesToExcel(quotes, currency, rates[currency] || 1, lang)
     } catch (err) {
       console.error(err)
       alert(t('error.excel'))
@@ -616,7 +616,7 @@ export default function App({ agentOptIn = false }) {
           quotes={report.quotes}
           filter={report.filter}
           currency={currency}
-          formatMoney={formatMoney}
+          rate={rates[currency] || 1}
           onBack={() => setView('history')}
         />
       ) : view === 'history' ? (

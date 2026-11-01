@@ -518,6 +518,9 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 }
 .report-screen{max-width:900px;margin:0 auto;padding:22px 18px 64px}
 .report-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:16px;font-size:.82rem}
+.doc-lang{display:inline-flex;align-items:center;gap:8px;color:var(--tenue)}
+.doc-lang label{white-space:nowrap}
+.doc-lang select{width:auto}
 .controls.primary{background:var(--oro);border-color:var(--oro);color:var(--sobre-oro)}
 .controls.primary:hover:not(:disabled){background:var(--oro-vivo);border-color:var(--oro-vivo);color:var(--sobre-oro)}
 
