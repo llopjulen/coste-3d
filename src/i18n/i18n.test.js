@@ -114,10 +114,11 @@ test('rawText resolves like translate', () => {
   assert.equal(rawText({ en: { a: 'x' } }, 'fr', 'a'), 'x')
 })
 
-test('the selector stays hidden until the whole app is translated', () => {
-  // This test is a reminder: when it fails because READY became true, check
-  // that every screen is translated, then update the assertion.
-  assert.equal(typeof READY, 'boolean')
+test('the language selector is on, and with no saved choice the browser language decides', () => {
+  assert.equal(READY, true)
+  assert.equal(detectLang(['fr-CA', 'en']), 'fr')
+  assert.equal(detectLang(['de', 'es-MX']), 'es')
+  assert.equal(detectLang(['de']), 'en')
 })
 
 test('every plural has its "other" form (the one every language falls back to)', () => {
