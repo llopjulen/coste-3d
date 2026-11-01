@@ -65,6 +65,8 @@ Hecho el 2026-10-25 (ver DEV_LOG.md), en PRs sin mergear todavía (#16 a #20, to
 - Pestaña Printers en vivo (#20).
 - Plan de pago: documento aparte, privado (no va en el repositorio, que es público). Sin código de pagos.
 
+Hecho el 2026-11-01 (ver DEV_LOG.md): la web está traducida a inglés, español y francés (src/i18n/, PRs #36 a #39 y el que enciende el selector). Selector EN/ES/FR en la barra (`READY=true`); sin elección guardada manda el idioma del navegador. El presupuesto del cliente y el informe PDF tienen su propio «Idioma del documento» (src/DocLangSelect.jsx). Falta: una URL por idioma (`/`, `/es/`, `/fr/`, con hreflang y HTML prerrenderizado) para que Google indexe cada idioma; mientras, el HTML estático (título, descripción, texto de `#root`) sigue en inglés.
+
 ## Conexión con impresoras: en curso, un PR por paso
 Investigación por marca, protocolos, puertos y orden en docs/IMPRESORAS.md: léelo antes de tocar el agente, y corrígelo si un firmware cambia algo. Empieza por Bambu, con la P1S de Julen. Él prueba cada PR con su impresora; Claude no puede verla.
 1. Servidor del agente (hecho, ver arriba).

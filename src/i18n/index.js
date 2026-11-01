@@ -21,10 +21,12 @@
    READY: mientras la traduccion no cubra TODA la app, el idioma queda en
    ingles y el selector oculto, salvo con `?lang=es` o `?lang=fr` en la
    direccion (para probar). Asi nadie ve una app traducida a medias.
-   Se pone a true en el PR que termina la traduccion.
+   Se puso a true el 2026-11-01, al terminar la traduccion de todas las
+   pantallas. Si una pantalla nueva llega sin traducir, `npm test` falla
+   antes (claves que faltan), no hace falta volver a ponerlo a false.
 ================================================================== */
 export const LANGS = ['en', 'es', 'fr']
-export const READY = false
+export const READY = true
 
 // Nombre de cada idioma en SU idioma: es lo que se enseña en el selector.
 export const LANG_NAMES = { en: 'English', es: 'Español', fr: 'Français' }

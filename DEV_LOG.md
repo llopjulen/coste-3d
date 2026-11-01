@@ -2,6 +2,17 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-01, Se enciende el selector de idioma (EN / ES / FR)
+- Archivo y sitio: src/i18n/index.js (`READY = true`), src/i18n/i18n.test.js (el test «selector oculto» pasa a comprobar que está encendido y la detección del navegador), CLAUDE.md y docs/MAPA.md.
+- Qué cambió: el selector EN/ES/FR de la barra es visible para todo el mundo. Sin elección guardada, la web usa el idioma del navegador (`navigator.languages`) y cae a inglés si no es es/fr. `?lang=` sigue mandando sobre todo.
+- Por qué:
+  - Va en un PR aparte, de una línea, para poder revertirlo sin tocar las traducciones si algo falla en producción. Los pasos 1 a 4 ya estaban mergeados, pero con el interruptor apagado.
+  - Es una elección en tiempo de ejecución en el cliente. Google sigue viendo el HTML estático en inglés (título, descripción, texto de `#root`), así que esto NO mejora el SEO de español y francés: eso es la siguiente tarea, una URL por idioma con HTML prerrenderizado y `hreflang`.
+  - Se elige el idioma del navegador y no el de la IP: la IP dice dónde estás, no qué idioma lees (un francés en España, un turista…).
+- Concepto nuevo: feature flag (interruptor de funcionalidad). Una constante que enciende o apaga una función ya construida, para integrar el código pronto y activarlo cuando esté lista. Ejemplo mínimo: `if (FLAGS.newCheckout) renderNew() else renderOld()`.
+- De la carrera: Ingeniería del Software: integración continua y despliegue por etapas (feature flags, rollback con un solo cambio). Redes: negociación de contenido, la cabecera HTTP `Accept-Language` que el navegador envía y de donde sale `navigator.languages`.
+- Cómo probarlo: abre layercents.com con el navegador en español: la web sale en español sin hacer nada y el selector marca ES. Cambia a FR y recarga: se recuerda (clave `lang`). Borra la clave `lang` y pon el navegador en alemán: sale en inglés.
+
 ### 2026-11-01, Traducción, paso 4: presupuesto del cliente, informe PDF y Excel
 - Archivo y sitio: src/CustomerQuote.jsx y src/Report.jsx (todo el texto, fechas e importes), src/exportExcel.js (`buildColumns(currency, t)` y parámetro `lang`), src/i18n/dicts.js (nuevo: `DICTS`, `translatorFor`), src/DocLangSelect.jsx (nuevo), src/i18n/format.js (`fmtLongDay`, `fmtMonthShort`, `fmtMoney`), src/i18n/{en,es,fr}.js (claves `doc.*`, `quote.*`, `report.*`, `excel.*`), src/App.jsx (Report recibe `rate` en vez de `formatMoney`; el Excel recibe `lang`), src/index.css (`.doc-lang`).
 - Qué cambió: el presupuesto para el cliente y el informe tienen su propio selector «Idioma del documento», que empieza en el idioma de la interfaz: quien trabaja en español puede mandar el presupuesto en inglés o francés. El formulario (botones, campos) sigue el idioma de la pantalla; solo la hoja que se imprime usa el del documento. El Excel sale en el idioma de la interfaz.
