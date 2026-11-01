@@ -2,6 +2,20 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-01, Agente: sonda de FTPS para saber si hay gramos reales (paso 5, parte 1)
+- Archivo y sitio: agent/ftps.js (nuevo), agent/ftps.test.js (nuevo), agent/setup.js (comando `probe-ftps` en `runCommand`), docs/IMPRESORAS.md (pasos 12 a 14 de la checklist de la P1S), docs/MAPA.md.
+- Qué cambió: `npm run agent -- probe-ftps <id>` intenta iniciar sesión por FTPS (puerto 990) en una Bambu ya añadida y dice si funciona. No descarga ni escribe nada. `PROTOCOL` no cambia: la web no se entera.
+- Por qué:
+  - Los gramos reales solo están en el `.gcode.3mf` que recibió la impresora, y ese archivo se baja por FTPS. Hay indicios de que los firmwares nuevos cierran ese puerto en modo normal (docs/IMPRESORAS.md, «Los gramos reales»). Construir la descarga entera (listar, bajar, leer el 3MF, casarlo con el trabajo) sin saber si el puerto abre sería escribir cientos de líneas a ciegas. La sonda cuesta ~100 líneas y responde sí o no con la impresora real.
+  - Se reutiliza `openPinnedTls` (la misma huella de certificado que MQTT): la huella se comprueba ANTES de mandar el usuario y el código, así un aparato que se hace pasar por la impresora no recibe nada. Un test lo comprueba: el servidor falso no recibe ni una línea.
+  - FTPS «implícito» (TLS desde el primer byte, puerto 990), no «explícito» (`AUTH TLS` sobre el puerto 21): es lo que usa Bambu. Con `tls.connect` basta; no hace falta ninguna librería de FTP.
+  - Sin dependencias nuevas: el protocolo FTP es de líneas de texto (`USER`, `PASS`, `QUIT`), y las respuestas pueden ocupar varias líneas (`220-` … `220 `, RFC 959). Un test cubre el saludo multilínea.
+  - Se despide con `socket.end('QUIT')` y espera al cierre en vez de `destroy()`: `destroy()` justo después de `write()` puede tirar el QUIT sin enviarlo (lo encontró un test).
+  - Si FTPS usara otro certificado que MQTT, la sonda se para y lo dice en vez de fiarse a ciegas; con el dato real se decide.
+- Concepto nuevo: FTP «implícito» frente a «explícito». Ejemplo mínimo: `tls.connect({ host, port: 990 })` ya habla TLS; el servidor contesta `220 ...` y desde ahí es FTP normal, línea a línea, con `\r\n` al final.
+- De la carrera: Redes / Sistemas de comunicaciones: FTP (RFC 959) separa canal de control y de datos, y sus códigos de respuesta (`220`, `331`, `230`, `530`) son una máquina de estados; aquí solo se usa el canal de control. Seguridad: fijar el certificado (certificate pinning) para no confiar en una cadena que no existe.
+- Cómo probarlo: `npm test` (7 tests nuevos con un servidor FTPS falso y un certificado de openssl). Con la P1S: `npm run agent -- list` para ver el id y `npm run agent -- probe-ftps <id>`.
+
 ### 2026-11-01, Se enciende el selector de idioma (EN / ES / FR)
 - Archivo y sitio: src/i18n/index.js (`READY = true`), src/i18n/i18n.test.js (el test «selector oculto» pasa a comprobar que está encendido y la detección del navegador), CLAUDE.md y docs/MAPA.md.
 - Qué cambió: el selector EN/ES/FR de la barra es visible para todo el mundo. Sin elección guardada, la web usa el idioma del navegador (`navigator.languages`) y cae a inglés si no es es/fr. `?lang=` sigue mandando sobre todo.

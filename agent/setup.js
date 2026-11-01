@@ -20,6 +20,7 @@ import { createInterface } from 'node:readline'
 import { stdin, stdout } from 'node:process'
 import { configPath, isValidHost, readConfig, writeConfig, checkPrinter } from './config.js'
 import { probeBambu } from './drivers/bambu.js'
+import { FTPS_PORT, ftpsResultText, probeFtps } from './ftps.js'
 import { MOONRAKER_PORT, probeMoonraker } from './drivers/moonraker.js'
 
 /* "P1S del taller" -> "p1s-del-taller": the id used in the config and in the web app. */
@@ -166,6 +167,21 @@ async function list() {
   console.log(`\nFile: ${configPath()}`)
 }
 
+/* `probe-ftps <id>`: one question for the real printer (see ftps.js). */
+async function probeFtpsCommand(id) {
+  const { printers } = await readConfig()
+  const printer = printers.find(p => p.id === id)
+  if (!printer || printer.brand !== 'bambu') {
+    console.log(`Usage: npm run agent -- probe-ftps <id>   with the id of a Bambu printer (see "npm run agent -- list").`)
+    process.exitCode = 1
+    return
+  }
+  console.log(`Trying to log in to ${printer.host}:${FTPS_PORT} by FTPS…`)
+  const result = await probeFtps({ host: printer.host, accessCode: printer.accessCode, fingerprint: printer.fingerprint })
+  console.log(ftpsResultText(result, { host: printer.host }))
+  if (!result.ok) process.exitCode = 1
+}
+
 async function remove(id) {
   if (!id) {
     console.log('Which one? Usage: npm run agent -- remove <id>   (see the ids with "npm run agent -- list")')
@@ -186,9 +202,10 @@ async function remove(id) {
 /* Entry point from server.js: `npm run agent -- <command>`. */
 export async function runCommand([command, ...args]) {
   if (command === 'add') return add()
+  if (command === 'probe-ftps') return probeFtpsCommand(args[0])
   if (command === 'list') return list()
   if (command === 'remove') return remove(args[0])
-  console.log('Commands:\n  npm run agent              start the agent\n  npm run agent -- add       add a printer\n  npm run agent -- list      list printers\n  npm run agent -- remove <id>')
+  console.log('Commands:\n  npm run agent              start the agent\n  npm run agent -- add       add a printer\n  npm run agent -- list      list printers\n  npm run agent -- remove <id>\n  npm run agent -- probe-ftps <id>   check if a Bambu printer lets the agent log in by FTPS')
   process.exitCode = 1
   return undefined
 }
