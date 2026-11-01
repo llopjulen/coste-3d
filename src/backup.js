@@ -62,8 +62,11 @@ const NOT_A_BACKUP = 'This file isn’t a layercents backup. Choose the .json fi
 /* Errors whose message is written for the person and shown as-is.
    Anything else thrown from here is a bug: the caller logs it. */
 export class BackupError extends Error {
-  constructor(message) {
+  // `code` is what the screen translates (backupError.<code> in src/i18n);
+  // `message` stays in English as the fallback and for the tests.
+  constructor(message, code) {
     super(message)
+    this.code = code
     // Keeps the class name in console output and stack traces.
     this.name = 'BackupError'
   }
@@ -236,23 +239,23 @@ export function parseBackup(text) {
   try {
     raw = JSON.parse(text)
   } catch {
-    throw new BackupError(NOT_A_BACKUP)
+    throw new BackupError(NOT_A_BACKUP, 'notBackup')
   }
   // Our tags, or it isn't our file: nothing else in it is looked at.
-  if (!isPlainObject(raw) || raw.app !== APP_ID || raw.kind !== KIND) throw new BackupError(NOT_A_BACKUP)
+  if (!isPlainObject(raw) || raw.app !== APP_ID || raw.kind !== KIND) throw new BackupError(NOT_A_BACKUP, 'notBackup')
   // Versions start at 1; anything else means a hand-made or damaged file.
-  if (!Number.isSafeInteger(raw.schemaVersion) || raw.schemaVersion < 1) throw new BackupError(NOT_A_BACKUP)
+  if (!Number.isSafeInteger(raw.schemaVersion) || raw.schemaVersion < 1) throw new BackupError(NOT_A_BACKUP, 'notBackup')
   // A newer format may give a field a meaning this code doesn't know.
   // Guessing could restore wrong numbers, so ask for the newer app instead.
   if (raw.schemaVersion > BACKUP_SCHEMA_VERSION) {
-    throw new BackupError('This backup was made with a newer version of layercents. Reload this page to get the latest version, then try again.')
+    throw new BackupError('This backup was made with a newer version of layercents. Reload this page to get the latest version, then try again.', 'newer')
   }
 
   // Older files are upgraded to the current shape before being read.
   const backup = migrate(raw)
   // The quote list is the one part every backup must have.
   const data = isPlainObject(backup.data) ? backup.data : null
-  if (!data || !Array.isArray(data.savedQuotes)) throw new BackupError(NOT_A_BACKUP)
+  if (!data || !Array.isArray(data.savedQuotes)) throw new BackupError(NOT_A_BACKUP, 'notBackup')
 
   // Damaged quotes are skipped and counted, so the summary can say how
   // many, instead of one bad entry blocking the rest of the restore.
@@ -639,9 +642,9 @@ export async function readBackupFile(file) {
   // The Excel report is the file people will most likely pick by mistake,
   // so it gets its own message instead of the generic one.
   if (/\.xlsx?$/i.test(file.name)) {
-    throw new BackupError('That’s an Excel report: it can’t be restored. Choose the .json backup file instead.')
+    throw new BackupError('That’s an Excel report: it can’t be restored. Choose the .json backup file instead.', 'excel')
   }
   // Checked before reading, so a wrong multi-GB file doesn't freeze the tab.
-  if (file.size > MAX_BACKUP_BYTES) throw new BackupError('This file is too big to be a layercents backup.')
+  if (file.size > MAX_BACKUP_BYTES) throw new BackupError('This file is too big to be a layercents backup.', 'tooBig')
   return parseBackup(await file.text())
 }

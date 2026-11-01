@@ -6,7 +6,8 @@ import { dirname, join } from 'node:path'
 import en from './en.js'
 import es from './es.js'
 import fr from './fr.js'
-import { LANGS, READY, decimalSeparator, detectLang, fill, normalizeLang, rawText, splitSlots, translate } from './index.js'
+import { LANGS, READY, decimalSeparator, detectLang, fill, normalizeLang, rawText, splitSlots, translate, translatePlural } from './index.js'
+import { fmtDay, fmtGrams, fmtMonthYear, fmtNumber } from './format.js'
 
 const DICTS = { en, es, fr }
 const srcDir = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -45,14 +46,15 @@ test('every key used with t("...") in the code exists in English', () => {
       if (entry.isDirectory()) walk(path)
       else if (/\.(jsx?|mjs)$/.test(entry.name) && !entry.name.endsWith('.test.js')) {
         const code = readFileSync(path, 'utf8')
-        for (const m of code.matchAll(/\bt[rn]?\(\s*'([\w.]+)'/g)) used.add(m[1])
+        for (const m of code.matchAll(/\bt[rnp]?\(\s*'([\w.]+)'/g)) used.add(m[1])
         for (const m of code.matchAll(/(?:labelKey|titleKey|nameKey|unitKey):\s*'([\w.]+)'/g)) used.add(m[1])
       }
     }
   }
   walk(srcDir)
   assert.ok(used.size > 20, 'the scan found suspiciously few keys')
-  for (const key of used) assert.ok(Object.hasOwn(en, key), `used in code but missing in en.js: ${key}`)
+  // A plural key (tp) is stored as key.one / key.other, so the bare key is not in the file.
+  for (const key of used) assert.ok(Object.hasOwn(en, key) || Object.hasOwn(en, `${key}.other`), `used in code but missing in en.js: ${key}`)
 })
 
 test('every calculator field has a label and a help text', () => {
@@ -112,4 +114,37 @@ test('the selector stays hidden until the whole app is translated', () => {
   // This test is a reminder: when it fails because READY became true, check
   // that every screen is translated, then update the assertion.
   assert.equal(typeof READY, 'boolean')
+})
+
+test('every plural has its "other" form (the one every language falls back to)', () => {
+  for (const lang of LANGS) {
+    for (const key of Object.keys(DICTS[lang]).filter(k => k.endsWith('.one'))) {
+      assert.ok(Object.hasOwn(DICTS[lang], key.replace(/\.one$/, '.other')), `${lang}: ${key} has no .other`)
+    }
+  }
+})
+
+test('plurals follow each language\'s rules', () => {
+  assert.equal(translatePlural(DICTS, 'en', 'count.quotes', 1), '1 quote')
+  assert.equal(translatePlural(DICTS, 'en', 'count.quotes', 0), '0 quotes')
+  assert.equal(translatePlural(DICTS, 'es', 'count.quotes', 1), '1 presupuesto')
+  assert.equal(translatePlural(DICTS, 'es', 'count.quotes', 5), '5 presupuestos')
+  // French: zero counts as singular
+  assert.equal(translatePlural(DICTS, 'fr', 'backup.reminder.none', 1).startsWith('Aucune sauvegarde'), true)
+  assert.equal(translatePlural(DICTS, 'en', 'backup.reminder.none', 3), 'No backup yet. Your 3 quotes are stored only in this browser: clearing its data or switching computer would lose them.')
+  // A category the language has but the file doesn't write (es "many", for millions) falls back to other
+  assert.equal(translatePlural(DICTS, 'es', 'count.quotes', 1_000_000), '1000000 presupuestos')
+})
+
+test('dates and numbers use the language\'s conventions', () => {
+  const d = new Date(2026, 9, 22, 7, 15)
+  assert.equal(fmtDay('en-GB', d), '22 Oct 2026')
+  assert.match(fmtDay('es-ES', d), /^22 oct\.? 2026$/)
+  assert.match(fmtDay('fr-FR', d), /^22 oct\.? 2026$/)
+  assert.equal(fmtMonthYear('en-GB', d), 'October 2026')
+  assert.match(fmtMonthYear('es-ES', d), /^Octubre/)
+  assert.equal(fmtNumber('en-GB', 3.5), '3.5')
+  assert.equal(fmtNumber('es-ES', 3.5), '3,5')
+  assert.equal(fmtGrams('fr-FR', 45), '45,0 g')
+  assert.equal(fmtGrams('en-GB', 45), '45.0 g')
 })

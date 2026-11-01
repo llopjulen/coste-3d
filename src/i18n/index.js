@@ -129,3 +129,15 @@ export function decimalSeparator(locale) {
 export function selectorVisible() {
   return READY || fromUrl() !== null
 }
+
+/* Plurales: la clave lleva el sufijo de la categoria de Intl.PluralRules
+   (`count.quotes.one`, `count.quotes.other`). Cada idioma decide como se
+   plural-iza: en ingles 1 es "one" y el resto "other"; en frances 0 y 1 son
+   "one" ("0 devis"); y los idiomas con mas categorias (es tiene "many" para
+   millones) caen en ".other" si no se escribe la suya. `{n}` se rellena solo. */
+export function translatePlural(dicts, lang, key, n, vars) {
+  const category = new Intl.PluralRules(LOCALES[lang]).select(n)
+  const exact = `${key}.${category}`
+  const has = k => [lang, 'en'].some(l => dicts[l] && Object.hasOwn(dicts[l], k))
+  return translate(dicts, lang, has(exact) ? exact : `${key}.other`, { n, ...vars })
+}

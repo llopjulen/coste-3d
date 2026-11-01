@@ -41,7 +41,8 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/SubNav.jsx` | El segundo nivel de la barra lateral: lista «On this page» bajo la pestaña Calculator, con salto a cada bloque del formulario y marca del bloque visible (scrollspy con `IntersectionObserver`). Solo en escritorio ancho. La lista `CALC_NAV` y los `id="sec-…"` están en `App.jsx`. |
 | `src/i18n/index.js` | Núcleo de la traducción, sin React: idiomas (`en`, `es`, `fr`), detección (`?lang=`, elección guardada, navegador), `translate`/`fill`/`splitSlots` y el separador decimal. `READY` decide si el selector es visible. |
 | `src/i18n/en.js`, `es.js`, `fr.js` | Los textos de la interfaz, `clave -> texto` con `{huecos}`. El inglés es la referencia; los tres deben tener las mismas claves (lo comprueba `i18n.test.js`). |
-| `src/i18n/context.js`, `Provider.jsx` | `useI18n()` da `t`, `tr` (con elementos dentro), `lang`, `setLang`, `locale` y `decimal`. El Provider envuelve `<App />` en `main.jsx` y pone `<html lang>`. |
+| `src/i18n/context.js`, `Provider.jsx` | `useI18n()` da `t`, `tr` (con elementos dentro), `tp` (plurales), `lang`, `setLang`, `locale` y `decimal`. El Provider envuelve `<App />` en `main.jsx` y pone `<html lang>`. |
+| `src/i18n/format.js` | Fechas y números según el idioma (`fmtDay`, `fmtDateTime`, `fmtMonthYear`, `fmtNumber`, `fmtGrams`). Reciben el `locale` como parámetro. |
 | `src/theme.js` | Tema claro u oscuro: lee la elección guardada o la del sistema, la pone en `<html data-theme>` y en el color de la barra del navegador. |
 | `src/logoGeometry.js` | Las coordenadas de las capas del logo, como datos. Las leen el logo y la gráfica de costes, para que no se descuadren. |
 | `src/symbolChart.js` | Función pura `symbolPieces`: reparte los costes sobre las 11 capas del símbolo (cada coste ocupa un trozo del largo total proporcional a su parte del coste). Sin React. |
