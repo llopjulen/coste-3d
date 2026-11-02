@@ -36,6 +36,19 @@ export const LOCALES = { en: 'en-GB', es: 'es-ES', fr: 'fr-FR' }
 
 const KEY = 'lang'
 
+/* Una URL por idioma: `/` es ingles, `/es/` espanol, `/fr/` frances. Cada
+   una es un HTML real (scripts/prerender.js) para que Google indexe cada
+   idioma por separado. Estas dos funciones son la unica fuente de esa
+   correspondencia: la usan la app, el script de construccion y los tests. */
+export const pathForLang = lang => (lang === 'en' || !LANGS.includes(lang) ? '/' : `/${lang}/`)
+
+/* '/es/' -> 'es'. Solo los prefijos exactos (con o sin la barra final o
+   index.html): '/espanol/' o '/es/algo' no son un idioma. */
+export function langFromPath(pathname) {
+  const m = /^\/(es|fr)(?:\/(?:index\.html)?)?$/.exec(pathname ?? '')
+  return m ? m[1] : null
+}
+
 /* "es-MX", "ES", "fr_CA" -> 'es' / 'fr'; cualquier otra cosa -> null. */
 export function normalizeLang(value) {
   if (typeof value !== 'string') return null
@@ -61,6 +74,14 @@ function fromUrl() {
   }
 }
 
+function fromPath() {
+  try {
+    return langFromPath(window.location.pathname)
+  } catch {
+    return null
+  }
+}
+
 function stored() {
   try {
     return normalizeLang(localStorage.getItem(KEY))
@@ -69,10 +90,12 @@ function stored() {
   }
 }
 
-/* Orden: ?lang= en la direccion (solo para probar), luego la eleccion
-   guardada, luego el navegador. Mientras READY sea false, solo cuenta la URL. */
+/* Orden: la ruta (/es/), luego ?lang= (solo para probar), luego la eleccion
+   guardada, luego el navegador. La ruta gana a lo guardado: quien llega a
+   /es/ desde Google o desde un enlace compartido ha pedido espanol, aunque
+   la ultima vez eligiera ingles. Mientras READY sea false solo cuenta la URL. */
 export function readLang() {
-  const url = fromUrl()
+  const url = fromPath() ?? fromUrl()
   if (url) return url
   if (!READY) return 'en'
   return stored() ?? detectLang(typeof navigator !== 'undefined' ? navigator.languages : [])

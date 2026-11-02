@@ -395,4 +395,12 @@ export default {
   'filament.weight': 'Poids de la bobine',
   'filament.grams': 'Grammes utilisés',
   'import.note.manyFilaments': 'Ce fichier utilise plusieurs filaments. Les autres ont été ajoutés sous Matériau avec le prix de bobine du premier : indiquez le vrai prix de chaque bobine.',
+  // --- SEO: el <head> y el texto de #root de cada idioma. Los lee scripts/prerender.js al construir.
+  'seo.title': 'Calculateur de coût d’impression 3D et devis · layercents',
+  'seo.description': 'Calculateur gratuit du coût d’impression 3D : matière, électricité, usure de l’imprimante, impressions ratées et votre temps. Obtenez le coût réel, un prix et un devis client. Sans compte.',
+  'seo.social': 'Déposez votre fichier tranché et obtenez le coût réel et un devis client en quelques secondes. Gratuit, sans compte.',
+  'seo.h1': 'Ce que vous coûte vraiment une pièce imprimée',
+  'seo.intro': 'layercents est un calculateur gratuit du coût d’impression 3D. Déposez votre fichier tranché (.gcode, .bgcode ou .gcode.3mf) et obtenez le coût réel d’une pièce : matière, électricité, amortissement de l’imprimante, impressions ratées, votre temps et l’emballage. Il propose ensuite un prix et prépare un devis client. Sans compte, et rien de ce que vous saisissez ne quitte votre navigateur.',
+  'seo.noscript': 'Cet outil a besoin de JavaScript pour fonctionner. Activez-le dans votre navigateur.',
+  'seo.appDescription': 'Calculateur gratuit du coût d’impression 3D. Calcule le coût réel d’une pièce imprimée (matière, électricité, usure de l’imprimante, impressions ratées, main-d’œuvre et emballage), un prix recommandé et un devis client.',
 }
