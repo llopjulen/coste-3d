@@ -407,4 +407,12 @@ export default {
   'filament.weight': 'Spool weight',
   'filament.grams': 'Grams used',
   'import.note.manyFilaments': 'This file uses several filaments. The others were added under Material with the first filament’s spool price: set each spool’s real price.',
+  // --- SEO: el <head> y el texto de #root de cada idioma. Los lee scripts/prerender.js al construir.
+  'seo.title': '3D Print Cost Calculator & Quote Maker · layercents',
+  'seo.description': 'Free 3D print cost calculator: material, power, printer wear, failed prints and your time. Get the real cost, a price and a customer quote. No account.',
+  'seo.social': 'Drop your sliced file, get the real cost and a customer quote in seconds. Free, no account.',
+  'seo.h1': 'What a printed part actually costs you',
+  'seo.intro': 'layercents is a free 3D print cost calculator. Drop your sliced file (.gcode, .bgcode or .gcode.3mf) and get the real cost of a part: material, power, printer depreciation, failed prints, your time and packaging. It then suggests a price and builds a customer quote. No account, and nothing you type leaves your browser.',
+  'seo.noscript': 'This tool needs JavaScript to run. Please enable it in your browser.',
+  'seo.appDescription': 'Free 3D print cost calculator. Works out the real cost of a printed part (material, power, printer wear, failed prints, labor and packaging), a recommended price and a customer quote.',
 }

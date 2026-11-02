@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 import { I18nContext } from './context.js'
-import { LOCALES, decimalSeparator, normalizeLang, rawText, readLang, saveLang, splitSlots, translate, translatePlural } from './index.js'
+import { LOCALES, decimalSeparator, normalizeLang, pathForLang, rawText, readLang, saveLang, splitSlots, translate, translatePlural } from './index.js'
 import { DICTS } from './dicts.js'
 
 /* Da a toda la app `t` (traducir), el idioma, su locale de Intl y el
@@ -14,6 +14,10 @@ export default function I18nProvider({ children }) {
   // y la hifenacion/comillas del CSS dependen de el.
   useEffect(() => {
     document.documentElement.lang = lang
+    // El <title> y la descripcion siguen al idioma: el HTML estatico trae el
+    // del idioma de la ruta, pero la persona puede cambiarlo desde el selector.
+    document.title = translate(DICTS, lang, 'seo.title')
+    document.querySelector('meta[name="description"]')?.setAttribute('content', translate(DICTS, lang, 'seo.description'))
   }, [lang])
 
   const setLang = useCallback(next => {
@@ -21,6 +25,15 @@ export default function I18nProvider({ children }) {
     if (!safe) return
     setLangState(safe)
     saveLang(safe)
+    // La direccion acompana al idioma (/es/): un enlace copiado desde aqui
+    // abre lo mismo que se esta viendo. replaceState y no pushState: cambiar
+    // de idioma no es "una pagina nueva", el boton Atras no debe pasar por el.
+    try {
+      const { search, hash } = window.location
+      window.history.replaceState(window.history.state, '', pathForLang(safe) + search + hash)
+    } catch {
+      // un entorno sin History API: la app sigue funcionando igual
+    }
   }, [])
 
   const t = useCallback((key, vars) => translate(DICTS, lang, key, vars), [lang])

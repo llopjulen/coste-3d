@@ -394,4 +394,12 @@ export default {
   'filament.weight': 'Peso de la bobina',
   'filament.grams': 'Gramos usados',
   'import.note.manyFilaments': 'Este archivo usa varios filamentos. Los demás se han añadido en Material con el precio de bobina del primero: pon el precio real de cada bobina.',
+  // --- SEO: el <head> y el texto de #root de cada idioma. Los lee scripts/prerender.js al construir.
+  'seo.title': 'Calculadora de costes de impresión 3D y presupuestos · layercents',
+  'seo.description': 'Calculadora gratis del coste de impresión 3D: material, electricidad, desgaste de la impresora, fallos y tu tiempo. Obtén el coste real, un precio y un presupuesto para el cliente. Sin cuenta.',
+  'seo.social': 'Suelta tu archivo laminado y obtén el coste real y un presupuesto para el cliente en segundos. Gratis, sin cuenta.',
+  'seo.h1': 'Lo que te cuesta de verdad una pieza impresa',
+  'seo.intro': 'layercents es una calculadora gratuita del coste de impresión 3D. Suelta tu archivo laminado (.gcode, .bgcode o .gcode.3mf) y obtén el coste real de una pieza: material, electricidad, amortización de la impresora, impresiones fallidas, tu tiempo y el embalaje. Después sugiere un precio y prepara un presupuesto para el cliente. Sin cuenta, y nada de lo que escribes sale de tu navegador.',
+  'seo.noscript': 'Esta herramienta necesita JavaScript para funcionar. Actívalo en tu navegador.',
+  'seo.appDescription': 'Calculadora gratuita del coste de impresión 3D. Calcula el coste real de una pieza impresa (material, electricidad, desgaste de la impresora, impresiones fallidas, mano de obra y embalaje), un precio recomendado y un presupuesto para el cliente.',
 }

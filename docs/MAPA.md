@@ -40,7 +40,7 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/NavIcons.jsx` | Iconos de línea (calculadora, historial, impresora, sol y luna) de la navegación. SVG en línea con `currentColor`; sin librería de iconos. |
 | `src/calculate.js` | `calculate(d)`, `capacity(d)` y sus ayudas (`materialCost`, `pricePerGram`, `totalGrams`, `normalizeExtras`, `MAX_EXTRA_FILAMENTS`). Puro, sin React, para que `node --test` lo importe. Tests en `calculate.test.js`. |
 | `src/SubNav.jsx` | El segundo nivel de la barra lateral: lista «On this page» bajo la pestaña Calculator, con salto a cada bloque del formulario y marca del bloque visible (scrollspy con `IntersectionObserver`). Solo en escritorio ancho. La lista `CALC_NAV` y los `id="sec-…"` están en `App.jsx`. |
-| `src/i18n/index.js` | Núcleo de la traducción, sin React: idiomas (`en`, `es`, `fr`), detección (`?lang=`, elección guardada, navegador), `translate`/`fill`/`splitSlots` y el separador decimal. `READY` (ya en `true`) decide si el selector es visible y si manda el idioma del navegador. |
+| `src/i18n/index.js` | Núcleo de la traducción, sin React: idiomas (`en`, `es`, `fr`), detección (ruta `/es/`, `?lang=`, elección guardada, navegador), `pathForLang`/`langFromPath`, `translate`/`fill`/`splitSlots` y el separador decimal. `READY` (ya en `true`) decide si el selector es visible y si manda el idioma del navegador. |
 | `src/i18n/en.js`, `es.js`, `fr.js` | Los textos de la interfaz, `clave -> texto` con `{huecos}`. El inglés es la referencia; los tres deben tener las mismas claves (lo comprueba `i18n.test.js`). |
 | `src/i18n/context.js`, `Provider.jsx` | `useI18n()` da `t`, `tr` (con elementos dentro), `tp` (plurales), `lang`, `setLang`, `locale` y `decimal`. El Provider envuelve `<App />` en `main.jsx` y pone `<html lang>`. |
 | `src/i18n/dicts.js` | `DICTS` y `translatorFor(lang)`: un traductor de idioma fijo, sin React, para los documentos (que pueden ir en otro idioma que la pantalla) y para `exportExcel.js`. |
@@ -52,7 +52,8 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/symbolChart.test.js` | Tests de `symbolChart.js`: proporciones, orden, huecos entre colores, entradas raras (NaN, negativos, todo a 0). |
 | `src/CostSymbol.jsx` | La gráfica "Breakdown": dibuja el símbolo con un `clipPath` por capa y un rectángulo por coste. Solo pinta; las cuentas están en `symbolChart.js`. |
 | `src/index.css` | Todos los estilos. Arriba los tokens (`--fondo`, `--oro`…) en `:root`; luego una sección por pantalla, con comentarios en español. `@media print` decide qué sale en los PDF. |
-| `public/` | Se copia tal cual a la web: `CNAME` (el dominio para GitHub Pages: no se borra), iconos e imagen para compartir, y para los buscadores `robots.txt` y `sitemap.xml` (cada página nueva añade su `<url>`). |
+| `public/` | Se copia tal cual a la web: `CNAME` (el dominio para GitHub Pages: no se borra), iconos e imagen para compartir, y para los buscadores `robots.txt`. El `sitemap.xml` ya no está aquí: lo genera `scripts/prerender.js` en cada build. |
+| `scripts/prerender.js` | Tras `vite build`, escribe una página HTML por idioma (`dist/es/`, `dist/fr/`) con `hreflang` y el sitemap. Sin dependencias; falla si un patrón de `index.html` deja de coincidir. Tests en `scripts/prerender.test.js`. |
 | `screenshots/` | Capturas del README. |
 | `agent/server.js` | Arranque del agente local. `npm run agent`: lee las impresoras, se conecta a ellas y abre el puerto 31415 solo en `127.0.0.1`. `npm run agent -- add / list / remove / probe-ftps`: pasa a `setup.js`. |
 | `agent/setup.js` | Comandos de terminal para añadir, listar y quitar impresoras. `add` pide IP, número de serie y código de acceso, los prueba (`probeBambu`) y los guarda. |
@@ -231,10 +232,16 @@ Simplificación a tener en cuenta: con una tasa de fallos `p`, el coste esperado
 | Guardar algo nuevo en el navegador | la clave en su componente **y** en `backup.js` (copia y validación) |
 | Cambiar el formato de la copia | subir `BACKUP_SCHEMA_VERSION` y añadir la migración en `MIGRATIONS` |
 
+## Una URL por idioma
+
+`/` (inglés), `/es/` y `/fr/` son tres HTML reales, para que Google indexe cada idioma. `scripts/prerender.js` toma el `dist/index.html` que acaba de generar Vite y escribe los otros dos cambiando título, descripción, `canonical`, etiquetas `og:`/`twitter:`, datos estructurados y el texto de `#root`, con los textos `seo.*` de `src/i18n/<idioma>.js`. Añade `hreflang` (cada página enlaza a las tres y a `x-default`) y genera `dist/sitemap.xml`. Cada sustitución tiene que coincidir exactamente una vez o la compilación falla (así un cambio en `index.html` no deja una página española con el título en inglés). Tests: `scripts/prerender.test.js`.
+
+En la app, la ruta manda sobre lo guardado (`readLang`: `/es/` > `?lang=` > elección guardada > navegador), y al cambiar de idioma en el selector la dirección pasa a `/es/` con `history.replaceState` (conserva `?query` y `#hash`).
+
 ## Comandos y publicación
 
 - `npm run dev`: servidor de desarrollo con recarga en caliente (HMR) en `localhost:5173`.
-- `npm run build`: compila a `dist/` (JS minificado y separado en trozos).
+- `npm run build`: `vite build` compila a `dist/` (JS minificado y separado en trozos) y después `scripts/prerender.js` escribe `dist/es/index.html`, `dist/fr/index.html` y `dist/sitemap.xml` (ver «Una URL por idioma»).
 - `npm run lint`: oxlint, con las reglas de hooks de React.
 - `npm run agent`: arranca el agente local y se conecta a las impresoras guardadas. Para comprobarlo, abre `http://127.0.0.1:31415/health` o `/printers` en el navegador. Se para con Ctrl+C.
 - `npm run agent -- add` (y `list`, `remove <id>`): gestiona las impresoras del agente.
