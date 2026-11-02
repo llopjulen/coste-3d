@@ -198,10 +198,30 @@ export function parseSliceInfo(xml) {
   return plates
 }
 
+/* The same filament on several plates (same type and colour) counts once:
+   grams add up, order of first appearance is kept. */
+export function mergeFilaments(list) {
+  const merged = []
+  for (const f of list) {
+    const same = merged.find(m => m.type === f.type && m.color === f.color)
+    if (same) same.grams += f.grams
+    else merged.push({ ...f })
+  }
+  return merged
+}
+
 /* ==================================================================
    NUMBERS FOR THE FORM
    choice: a plate number, or 'all' to add every plate up.
    parts:  how many parts are on that plate, to get one part's share.
+
+   Several filaments: the first one stays in partGrams (the form's own
+   filament); the others come back in `extraFilaments` as { label, grams }
+   with no price, because a file knows the type and colour of a filament but
+   not what the person paid for the spool: App.jsx fills the price in. The
+   first filament's share is whatever is left of the total after the purge
+   and the others, so partGrams + purgeGrams + the extras always add up to
+   the file's total, with no gram counted twice.
 ================================================================== */
 export function formValuesFromPlates(plates, choice, parts) {
   const chosen = choice === 'all' ? plates : plates.filter(p => p.index === choice)
@@ -216,8 +236,15 @@ export function formValuesFromPlates(plates, choice, parts) {
     // When the file doesn't split out the purge, it's already inside the
     // total, so purge goes to 0 to avoid counting it twice.
     const purge = sum(chosen.map(p => p.purgeGrams ?? 0))
-    values.partGrams = round(Math.max(total - purge, 0) / n, 1)
+    const others = mergeFilaments(chosen.flatMap(p => p.filaments ?? [])).slice(1).filter(f => f.grams > 0)
+    const othersGrams = Math.min(sum(others.map(f => f.grams)), Math.max(total - purge, 0))
+    values.partGrams = round(Math.max(total - purge - othersGrams, 0) / n, 1)
     values.purgeGrams = round(purge / n, 1)
+    // Always set, even when empty: choosing a one-filament plate after a
+    // multi-colour one must clear the extras the first choice added.
+    values.extraFilaments = others
+      .map(f => ({ label: String(f.type || '').slice(0, 40), grams: round(f.grams / n, 1) }))
+      .filter(f => f.grams > 0)
   }
   return values
 }

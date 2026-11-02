@@ -810,3 +810,11 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 .printer-pct{font-weight:600;min-width:3ch;text-align:right}
 .printer-details{font-size:.8rem}
 .printer-error{font-size:.82rem;color:var(--tenue);border-left:2px solid var(--borde);padding-left:9px;max-width:46em}
+
+/* ---- Several filaments per part (Material panel) ---- */
+.extra-filament{margin-top:6px;border-top:1px solid var(--borde)}
+.extra-head{display:flex;align-items:center;gap:8px;padding:10px 0 2px}
+.extra-head .text-input{flex:1;min-width:0}
+.extra-filament .field + .field{border-top:none}
+.extra-add{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 0 4px;border-top:1px solid var(--borde);margin-top:6px;font-size:.8rem}
+.extra-filaments:empty + .extra-add{margin-top:0}

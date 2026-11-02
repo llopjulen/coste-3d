@@ -217,7 +217,6 @@ export default {
   'import.note.noWeight': 'Este archivo no trae el peso del filamento. Escríbelo a mano.',
   'import.note.estimated': 'Gramos estimados a partir de la longitud del filamento, suponiendo PLA de 1,75 mm.',
   'import.note.purgeInPart': 'Este archivo no indica la purga por separado, así que está incluida en el peso de la pieza.',
-  'import.note.manyFilaments': 'Por ahora, todos los filamentos se valoran al precio de bobina de abajo.',
   'import.err.read': 'No se ha podido leer este archivo. Prueba a exportarlo de nuevo desde tu laminador.',
   'importError.model': 'Esto es un modelo 3D, no un archivo laminado. Lamínalo primero y suelta el G-code o el 3MF laminado (.gcode.3mf).',
   'importError.noData': 'No se ha encontrado el tiempo de impresión ni el peso del filamento en este archivo. Comprueba que sea el G-code que exportó tu laminador, o escribe los números a mano.',
@@ -380,4 +379,15 @@ export default {
   'excel.col.time': 'Tiempo de impresión (h)',
   'excel.col.margin': 'Margen',
   'excel.col.fee': 'Comisión',
+
+  // Several filaments per part
+  'filament.add': 'Añadir otro filamento',
+  'filament.hint': '¿Imprimes en varios colores o materiales? Añade cada filamento con el precio de su bobina.',
+  'filament.extra.title': 'Filamento {n}',
+  'filament.extra.name': 'Nombre del filamento {n} (opcional)',
+  'filament.remove': 'Quitar {name}',
+  'filament.price': 'Precio de la bobina',
+  'filament.weight': 'Peso de la bobina',
+  'filament.grams': 'Gramos usados',
+  'import.note.manyFilaments': 'Este archivo usa varios filamentos. Los demás se han añadido en Material con el precio de bobina del primero: pon el precio real de cada bobina.',
 }

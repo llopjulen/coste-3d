@@ -83,7 +83,7 @@ Creality por WebSocket 9999, Elegoo SDCP, Anycubic, Flashforge y OctoPrint: solo
 ## Pendiente, por orden
 Plan acordado tras analizar la competencia (MakerQuote, 3DPCC, CraftersQuote): una función cada vez, cada una con su post en Reddit.
 1. Probar con cosas reales: un G-code de Cura (solo se probó con muestras del formato), y en el navegador subir un logo y sacar el PDF del presupuesto. La importación de un .gcode.3mf de Bambu Studio la probó Julen con su P1S el 2026-10-22 y va bien.
-2. Varios filamentos por pieza, cada uno con su precio, y perfiles de impresoras y materiales predefinidos.
+2. Perfiles de impresoras y materiales predefinidos. (Varios filamentos por pieza, cada uno con su precio: hecho el 2026-11-02, `extraFilaments`.)
 3. Mostrar cuántas piezas por semana saca la impresora según el tiempo de impresión (idea de un usuario de Reddit).
 4. Revisar en un móvil de verdad la pantalla del presupuesto (en Chromium a 360 y 390 px ya cabe entera desde #17).
 5. Monetizar: el diseño técnico (Lemon Squeezy, webhook con firma, plan comprobado en el servidor) está en docs/NUBE.md, y el código de pago se escribe en su paso (el 7). Qué es de pago y a qué precio va en el documento privado, no en el repositorio. Excel y PDF como "Pro" no se protegen: el código es público y se saltaría en el cliente.

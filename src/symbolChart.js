@@ -8,7 +8,7 @@
    equal to its share of the total cost.
 
    This file is a pure function (numbers in, numbers out), like
-   calculate() in App.jsx: it doesn't know React or the screen, so it
+   calculate() in calculate.js: it doesn't know React or the screen, so it
    can be tested on its own (src/symbolChart.test.js).
 
    Why length and not area: every layer has the same height, so length

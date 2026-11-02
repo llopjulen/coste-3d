@@ -13,6 +13,8 @@
      localStorage. They take `storage` as a parameter so tests can pass
      a fake one.
 ================================================================== */
+import { normalizeExtras } from './calculate.js'
+
 
 // Bump ONLY for breaking changes (a key renamed or removed, a value that
 // changes meaning). Adding a new optional key to `data` needs no bump:
@@ -139,8 +141,13 @@ export function sanitizeQuote(raw) {
   // both must be maps of numbers.
   for (const key of ['inputs', 'parts']) {
     if (q[key] === undefined) continue
-    if (isPlainObject(q[key])) q[key] = numericRecord(q[key])
-    else delete q[key]
+    if (isPlainObject(q[key])) {
+      // numericRecord keeps only numbers, so it would silently delete the
+      // list of extra filaments: that one is cleaned by its own function.
+      const extras = key === 'inputs' ? q[key].extraFilaments : undefined
+      q[key] = numericRecord(q[key])
+      if (Array.isArray(extras)) q[key].extraFilaments = normalizeExtras(extras)
+    } else delete q[key]
   }
   // units is a part count: a whole number, at least 1 (calculate() floors it the same way).
   if (q.units !== undefined && !(Number.isSafeInteger(q.units) && q.units >= 1)) delete q.units

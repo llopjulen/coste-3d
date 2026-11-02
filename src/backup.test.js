@@ -5,7 +5,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   KEYS, BACKUP_SCHEMA_VERSION, sanitizeSetup, buildBackup, parseBackup, planRestore,
-  readSetup, saveSetupField, clearSetup, applyRestore, hasStoredSettings,
+  readSetup, saveSetupField, clearSetup, applyRestore, hasStoredSettings, sanitizeQuote,
 } from './backup.js'
 
 // A stand-in for localStorage: same three methods, backed by a Map.
@@ -125,4 +125,31 @@ test('applyRestore writes the setup and hands it back for the screen', () => {
   const result = applyRestore(backup, 'merge', [], storage)
   assert.deepEqual(result.setup, SETUP)
   assert.deepEqual(readSetup(storage), SETUP)
+})
+
+/* ---- Several filaments per part ---- */
+const withExtras = {
+  ...quote,
+  inputs: { spoolPrice: 20, partGrams: 40, extraFilaments: [{ id: 1, label: 'PETG', spoolPrice: 30, spoolWeight: 750, grams: 10 }] },
+}
+
+test('extra filaments survive a backup round trip (numericRecord would have dropped them)', () => {
+  const parsed = parseBackup(JSON.stringify(buildBackup({ quotes: [withExtras] })))
+  assert.deepEqual(parsed.quotes[0].inputs.extraFilaments, withExtras.inputs.extraFilaments)
+  assert.equal(parsed.quotes[0].inputs.spoolPrice, 20)
+})
+
+test('a quote with no extra filaments (every old one) stays exactly as it was', () => {
+  const old = { ...quote, inputs: { spoolPrice: 20, partGrams: 40 } }
+  assert.deepEqual(sanitizeQuote(old).inputs, { spoolPrice: 20, partGrams: 40 })
+})
+
+test('a damaged list of extras is cleaned, never trusted', () => {
+  const bad = { ...quote, inputs: { partGrams: 40, extraFilaments: [{ grams: 'lots', spoolPrice: -4, label: { x: 1 } }, 'junk', null] } }
+  assert.deepEqual(sanitizeQuote(bad).inputs.extraFilaments, [{ id: 1, label: '', spoolPrice: 0, spoolWeight: 0, grams: 0 }])
+  assert.equal('extraFilaments' in sanitizeQuote({ ...quote, inputs: { partGrams: 40, extraFilaments: 'x' } }).inputs, false)
+})
+
+test('adding extra filaments did not change the format version either', () => {
+  assert.equal(BACKUP_SCHEMA_VERSION, 1)
 })
