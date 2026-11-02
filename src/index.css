@@ -348,6 +348,9 @@ h1{font-family:'Bricolage Grotesque Variable','Inter Variable','Inter',system-ui
 @media(max-width:560px){.hero-whole{font-size:3.6rem}}
 
 /* "Your setup": lo que se escribe una vez y el navegador recuerda */
+.real-data{display:grid;gap:10px;padding-top:11px}
+.real-row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:.88rem}
+.real-row .controls{flex:none}
 .setup-note{padding:10px 15px 0;font-size:.82rem;color:var(--tenue)}
 .setup-group h3{margin:10px 0 0;font-size:.74rem;font-weight:600;letter-spacing:.02em;color:var(--tenue)}
 .setup-actions{padding:0 15px 12px}

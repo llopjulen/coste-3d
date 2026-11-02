@@ -8,6 +8,7 @@ import CostSymbol from './CostSymbol.jsx'
 import BackupPanel, { BackupReminder } from './BackupPanel.jsx'
 import { applyRestore, backupStatus, clearSetup, downloadBackup, readLastBackup, readSetup, saveSetupField } from './backup.js'
 import Printers from './Printers.jsx'
+import RealData from './RealData.jsx'
 import NavIcon from './NavIcons.jsx'
 import SubNav from './SubNav.jsx'
 import { applyTheme, readTheme, saveTheme } from './theme.js'
@@ -709,6 +710,18 @@ export default function App({ agentOptIn = false }) {
                 </div>
               </section>
             ))}
+
+            {/* Only for people who turned the agent on, and only if their job log
+                has enough prints: the real failure rate and print time. The
+                failure rate is a setup field, so it goes through `set` (saved
+                on this device); the time is this part's, so it doesn't. */}
+            <RealData
+              enabled={agentOn}
+              failRate={d.failRate}
+              hours={d.hours}
+              onUseFailRate={set('failRate')}
+              onUseTime={hours => setD(current => ({ ...current, hours }))}
+            />
 
             {/* The numbers that stay: saved on this device the moment they
                 change, so they are typed once. Folded once saved. */}
