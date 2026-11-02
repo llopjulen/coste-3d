@@ -88,3 +88,18 @@ export function describeEstimateError(error, t) {
   if (pct < 2) return t('printers.estimate.same')
   return t(error > 0 ? 'printers.estimate.longer' : 'printers.estimate.shorter', { pct })
 }
+
+/* What "Use real data" can offer the calculator, from a summary (`summarize`).
+   - failPct: the measured failure rate as a percentage with one decimal, or
+     null while there are too few prints to say it (see MIN_PRINTS).
+   - hoursFactor: what to multiply the slicer's print time by (1.08 = real
+     prints take 8 % longer), or null when unknown or within 2 % of the
+     estimate: a correction that small is noise, not a finding.
+   Nothing is applied here: the screen shows the figures and the person
+   decides, because 12 prints of one material say little about the next one. */
+export function realDataSuggestions(sum) {
+  const failPct = typeof sum?.failureRate === 'number' ? Math.round(sum.failureRate * 1000) / 10 : null
+  const err = sum?.estimateError
+  const hoursFactor = typeof err === 'number' && Number.isFinite(err) && Math.abs(err) >= 0.02 ? 1 + err : null
+  return { failPct, hoursFactor }
+}

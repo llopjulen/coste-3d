@@ -5,7 +5,7 @@ import { translate } from './i18n/index.js'
 import en from './i18n/en.js'
 import es from './i18n/es.js'
 import fr from './i18n/fr.js'
-import { MIN_PRINTS, describeEstimateError, median, summarize, summarizeByPrinter } from './jobStats.js'
+import { MIN_PRINTS, describeEstimateError, median, realDataSuggestions, summarize, summarizeByPrinter } from './jobStats.js'
 
 const NOW = new Date('2026-10-28T12:00:00Z')
 const daysAgo = n => new Date(NOW.getTime() - n * 86_400_000).toISOString()
@@ -113,4 +113,26 @@ test('describeEstimateError speaks Spanish and French too', () => {
   const dicts = { en, es, fr }
   assert.equal(describeEstimateError(0.084, (k, v) => translate(dicts, 'es', k, v)), '8 % más')
   assert.equal(describeEstimateError(-0.05, (k, v) => translate(dicts, 'fr', k, v)), '5 % de moins')
+})
+
+/* ---- realDataSuggestions: what "Use real data" offers ---- */
+test('realDataSuggestions: a failure rate with one decimal, and a time factor', () => {
+  const s = realDataSuggestions({ failureRate: 0.1234, estimateError: 0.08 })
+  assert.equal(s.failPct, 12.3)
+  assert.ok(Math.abs(s.hoursFactor - 1.08) < 1e-9)
+})
+
+test('realDataSuggestions: nothing to offer while the summary has no figures', () => {
+  assert.deepEqual(realDataSuggestions({ failureRate: null, estimateError: null }), { failPct: null, hoursFactor: null })
+  assert.deepEqual(realDataSuggestions(null), { failPct: null, hoursFactor: null })
+})
+
+test('realDataSuggestions: a time gap under 2 % is noise, not a suggestion', () => {
+  assert.equal(realDataSuggestions({ failureRate: 0, estimateError: 0.015 }).hoursFactor, null)
+  assert.equal(realDataSuggestions({ failureRate: 0, estimateError: -0.019 }).hoursFactor, null)
+  assert.ok(realDataSuggestions({ failureRate: 0, estimateError: -0.05 }).hoursFactor < 1)
+})
+
+test('realDataSuggestions: a 0 % failure rate is a real finding, not "no data"', () => {
+  assert.equal(realDataSuggestions({ failureRate: 0, estimateError: null }).failPct, 0)
 })

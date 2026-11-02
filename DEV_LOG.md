@@ -2,6 +2,22 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-02, «Use real data»: tasa de fallos y tiempo reales en la calculadora (paso 9)
+- Archivo y sitio: src/RealData.jsx (nuevo), src/jobStats.js (función `realDataSuggestions`, al final), src/App.jsx (`<RealData>` justo encima del panel «Your setup»), src/index.css (`.real-data`, `.real-row`), src/i18n/{en,es,fr}.js (claves `real.*`), src/jobStats.test.js, docs/MAPA.md, CLAUDE.md.
+- Qué cambió: si la persona tiene el agente activado y su registro de trabajos tiene suficientes impresiones, la calculadora enseña «El 20 % de tus impresiones falló en los últimos 30 días» con un botón para usar ese porcentaje como tasa de fallos, y «Tus impresiones tardan un 10 % más de lo que dice el laminador» con un botón que ajusta el tiempo de esta pieza.
+- Por qué:
+  - Es lo que ningún otro calculador puede dar: los datos salen de las impresoras de la persona, no de un valor por defecto. La tasa de fallos del 8 % que trae la app es una suposición; esta es medida.
+  - No se aplica nada solo. Con 12 impresiones de un material no se puede asegurar nada de la siguiente, y cambiar un precio sin avisar es peor que no ofrecerlo. El botón se desactiva cuando el valor ya está aplicado.
+  - La tasa de fallos es un campo de «Your setup», así que el botón pasa por `set('failRate')` y se recuerda en el dispositivo. El tiempo es de esta pieza: se escribe con `setD` directo, que no toca lo guardado.
+  - Una sola lectura de `GET /jobs` al abrir la calculadora, sin sondeo: es un resumen de 30 días, no cambia por minutos. Solo si `agentOn`: quien no activó el agente no hace ninguna petición a 127.0.0.1 (regla de agent.js). Si el agente está apagado, no responde o hay pocos datos, el panel no sale: una caja que diga «sin datos» en cada visita es ruido.
+  - Reutiliza `summarize`: las reglas de qué cuenta (cancelados no son fallos, mínimo `MIN_PRINTS`, mediana para el tiempo) ya estaban pensadas para no engañar. `realDataSuggestions` solo añade dos decisiones: el redondeo a un decimal y que una desviación de menos del 2 % no se ofrece (es ruido).
+  - El botón del tiempo guarda el valor que escribió (`appliedHours`) y se gasta mientras el formulario lo contenga; sin eso, pulsarlo dos veces aplicaría la corrección dos veces (3,5 → 3,85 → 4,24).
+  - Un 0 % de fallos es un resultado real y se ofrece, no «sin datos» (hay un test).
+  - Sin clave nueva en localStorage ni dependencias nuevas.
+- Concepto nuevo: limpiar un efecto asíncrono con una bandera. `let alive = true; fetch().then(r => alive && setState(r)); return () => { alive = false }`: si el componente se desmonta antes de que llegue la respuesta, no se escribe en un estado que ya no existe.
+- De la carrera: Estadística: la mediana frente a la media como estimador robusto (ya estaba en `median`), y una tasa estimada con pocas muestras (por eso el mínimo de impresiones). Sistemas distribuidos / Redes: cliente que sobrevive a que el servidor no esté, con tiempo máximo de espera (`AbortSignal.timeout` en `fetchJobs`).
+- Cómo probarlo: `npm test` (214 pasan). Con la P1S: `npm run agent`, entra con `layercents.com/?agent` y, cuando el registro de trabajos tenga 5 impresiones terminadas o falladas, vuelve a la calculadora: el panel sale encima de «Your setup». Sin tu agente puedes verlo simulando `GET /jobs` en el navegador (yo lo probé así en el navegador, con 12 terminadas y 3 falladas: sale el 20 % y un 10 % más de tiempo). Pulsa «Use 20 %» y comprueba que en «Your setup» queda 20 y que sigue al recargar.
+
 ### 2026-11-02, Una URL por idioma (/, /es/, /fr/) con hreflang y sitemap
 - Archivo y sitio: scripts/prerender.js (nuevo) y scripts/prerender.test.js (nuevo); package.json (`build` = `vite build && node scripts/prerender.js`); src/i18n/index.js (`pathForLang`, `langFromPath`, y `readLang` lee primero la ruta); src/i18n/Provider.jsx (`setLang` actualiza la dirección y un efecto pone `<title>` y descripción); src/i18n/{en,es,fr}.js (claves `seo.*`); index.html (comentario); public/sitemap.xml (borrado, ahora se genera); docs/MAPA.md, CLAUDE.md.
 - Qué cambió: la web tiene tres direcciones reales. `/` en inglés, `/es/` en español y `/fr/` en francés, cada una con su título, descripción, `canonical`, etiquetas para compartir, datos estructurados y el texto que ve un buscador dentro de `#root`. Cada página enlaza a las otras con `hreflang`, y el sitemap lista las tres. Al cambiar de idioma en el selector, la dirección cambia a `/es/`.
