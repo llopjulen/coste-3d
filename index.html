@@ -6,8 +6,14 @@
     <meta name="description" content="Free 3D print cost calculator: material, power, printer wear, failed prints and your time. Get the real cost, a price and a customer quote. No account." />
     <!-- The one official address of the page. layercents.com, www.layercents.com and
          any ?query version all show the same page: this tells Google which one to
-         keep, so they don't compete with each other. -->
+         keep, so they don't compete with each other. This is the ENGLISH page: after
+         `vite build`, scripts/prerender.js makes /es/ and /fr/ from it (title,
+         description, canonical, og, JSON-LD and the text of #root) and adds hreflang. -->
     <link rel="canonical" href="https://layercents.com/" />
+    <link rel="alternate" hreflang="en" href="https://layercents.com/" />
+    <link rel="alternate" hreflang="es" href="https://layercents.com/es/" />
+    <link rel="alternate" hreflang="fr" href="https://layercents.com/fr/" />
+    <link rel="alternate" hreflang="x-default" href="https://layercents.com/" />
     <meta name="theme-color" content="#161619" />
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -65,7 +71,7 @@
     <style>html,body{color:#e9e9ec;background:#161619;margin:0;font-family:system-ui,sans-serif}html[data-theme=light],html[data-theme=light] body{color:#1b1b20;background:#f4f4f6}</style>
 
     <title>3D Print Cost Calculator &amp; Quote Maker · layercents</title>
-    <script type="module" crossorigin src="/assets/index-Cnlon0eN.js"></script>
+    <script type="module" crossorigin src="/assets/index-Dx9meUGn.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-DhKtU4tG.css">
   </head>
   <body>

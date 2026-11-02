@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Calculateur gratuit du coût d’impression 3D : matière, électricité, usure de l’imprimante, impressions ratées et votre temps. Obtenez le coût réel, un prix et un devis client. Sans compte." />
+    <!-- The one official address of the page. layercents.com, www.layercents.com and
+         any ?query version all show the same page: this tells Google which one to
+         keep, so they don't compete with each other. This is the ENGLISH page: after
+         `vite build`, scripts/prerender.js makes /es/ and /fr/ from it (title,
+         description, canonical, og, JSON-LD and the text of #root) and adds hreflang. -->
+    <link rel="canonical" href="https://layercents.com/fr/" />
+    <link rel="alternate" hreflang="en" href="https://layercents.com/" />
+    <link rel="alternate" hreflang="es" href="https://layercents.com/es/" />
+    <link rel="alternate" hreflang="fr" href="https://layercents.com/fr/" />
+    <link rel="alternate" hreflang="x-default" href="https://layercents.com/" />
+    <meta name="theme-color" content="#161619" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <meta property="og:site_name" content="layercents" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Calculateur de coût d’impression 3D et devis · layercents" />
+    <meta property="og:description" content="Déposez votre fichier tranché et obtenez le coût réel et un devis client en quelques secondes. Gratuit, sans compte." />
+    <meta property="og:url" content="https://layercents.com/fr/" />
+    <meta property="og:image" content="https://layercents.com/social-preview.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Calculateur de coût d’impression 3D et devis · layercents" />
+    <meta name="twitter:description" content="Déposez votre fichier tranché et obtenez le coût réel et un devis client en quelques secondes. Gratuit, sans compte." />
+    <meta name="twitter:image" content="https://layercents.com/social-preview.png" />
+
+    <!-- Structured data (schema.org): tells search engines this is a free web tool.
+         Only facts that are true today: no ratings or reviews are invented. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "layercents",
+      "url": "https://layercents.com/fr/",
+      "description": "Calculateur gratuit du coût d’impression 3D. Calcule le coût réel d’une pièce imprimée (matière, électricité, usure de l’imprimante, impressions ratées, main-d’œuvre et emballage), un prix recommandé et un devis client.",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires JavaScript",
+      "inLanguage": "fr",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+    }
+    </script>
+
+    <!-- Theme, decided BEFORE the first paint. If this ran after React loads,
+         someone who uses the light theme would see a flash of dark. The same
+         rule lives in src/theme.js (readTheme): saved choice first, the
+         system's preference otherwise. localStorage can throw (private
+         window), hence the try/catch. -->
+    <script>
+      (function () {
+        var t = null
+        try { t = localStorage.getItem('theme') } catch (e) {}
+        if (t !== 'light' && t !== 'dark') {
+          t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+        }
+        document.documentElement.setAttribute('data-theme', t)
+        var m = document.querySelector('meta[name="theme-color"]')
+        if (m) m.setAttribute('content', t === 'light' ? '#F4F4F6' : '#161619')
+      })()
+    </script>
+
+    <!-- Just enough CSS to paint the background before index.css loads,
+         so the text below doesn't flash on white (or on dark, in light theme). -->
+    <style>html,body{color:#e9e9ec;background:#161619;margin:0;font-family:system-ui,sans-serif}html[data-theme=light],html[data-theme=light] body{color:#1b1b20;background:#f4f4f6}</style>
+
+    <title>Calculateur de coût d’impression 3D et devis · layercents</title>
+    <script type="module" crossorigin src="/assets/index-Dx9meUGn.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DhKtU4tG.css">
+  </head>
+  <body>
+        <div id="root">
+      <main style="max-width:44rem;margin:0 auto;padding:2rem 1.25rem">
+        <h1>Ce que vous coûte vraiment une pièce imprimée</h1>
+        <p>layercents est un calculateur gratuit du coût d’impression 3D. Déposez votre fichier tranché (.gcode, .bgcode ou .gcode.3mf) et obtenez le coût réel d’une pièce : matière, électricité, amortissement de l’imprimante, impressions ratées, votre temps et l’emballage. Il propose ensuite un prix et prépare un devis client. Sans compte, et rien de ce que vous saisissez ne quitte votre navigateur.</p>
+        <noscript><p>Cet outil a besoin de JavaScript pour fonctionner. Activez-le dans votre navigateur.</p></noscript>
+      </main>
+    </div>
+    <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "cb72017d95f74d0eac0692088522eb88"}'></script><!-- End Cloudflare Web Analytics -->
+  </body>
+</html>
