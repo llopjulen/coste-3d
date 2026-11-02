@@ -218,7 +218,6 @@ export default {
   'import.note.noWeight': 'Ce fichier n’indique pas le poids du filament. Saisissez-le à la main.',
   'import.note.estimated': 'Grammes estimés à partir de la longueur du filament, en supposant du PLA de 1,75 mm.',
   'import.note.purgeInPart': 'Ce fichier n’indique pas la purge séparément ; elle est donc comptée dans le poids de la pièce.',
-  'import.note.manyFilaments': 'Pour l’instant, tous les filaments sont valorisés au prix de bobine ci-dessous.',
   'import.err.read': 'Impossible de lire ce fichier. Essayez de l’exporter à nouveau depuis votre slicer.',
   'importError.model': 'Il s’agit d’un modèle 3D, pas d’un fichier tranché. Tranchez-le d’abord, puis déposez le G-code ou le 3MF tranché (.gcode.3mf).',
   'importError.noData': 'Impossible de trouver un temps d’impression ou un poids de filament dans ce fichier. Vérifiez qu’il s’agit du G-code exporté par votre slicer, ou saisissez les chiffres à la main.',
@@ -381,4 +380,15 @@ export default {
   'excel.col.time': 'Durée d’impression (h)',
   'excel.col.margin': 'Marge',
   'excel.col.fee': 'Commission',
+
+  // Several filaments per part
+  'filament.add': 'Ajouter un autre filament',
+  'filament.hint': 'Vous imprimez en plusieurs couleurs ou matériaux ? Ajoutez chaque filament avec le prix de sa bobine.',
+  'filament.extra.title': 'Filament {n}',
+  'filament.extra.name': 'Nom du filament {n} (facultatif)',
+  'filament.remove': 'Retirer {name}',
+  'filament.price': 'Prix de la bobine',
+  'filament.weight': 'Poids de la bobine',
+  'filament.grams': 'Grammes utilisés',
+  'import.note.manyFilaments': 'Ce fichier utilise plusieurs filaments. Les autres ont été ajoutés sous Matériau avec le prix de bobine du premier : indiquez le vrai prix de chaque bobine.',
 }

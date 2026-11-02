@@ -230,7 +230,6 @@ export default {
   'import.note.noWeight': 'This file has no filament weight. Type it in by hand.',
   'import.note.estimated': 'Grams estimated from filament length, assuming 1.75 mm PLA.',
   'import.note.purgeInPart': 'This file doesn’t list purge on its own, so it’s counted in the part weight.',
-  'import.note.manyFilaments': 'For now, every filament is priced at the spool price below.',
   'import.err.read': 'Couldn’t read this file. Try exporting it again from your slicer.',
   'importError.model': 'This is a 3D model, not a sliced file. Slice it first, then drop the G-code or the sliced 3MF (.gcode.3mf).',
   'importError.noData': 'Couldn’t find a print time or filament weight in this file. Make sure it’s the G-code your slicer exported, or type the numbers in by hand.',
@@ -393,4 +392,15 @@ export default {
   'excel.col.time': 'Print time (h)',
   'excel.col.margin': 'Margin',
   'excel.col.fee': 'Fee',
+
+  // Several filaments per part
+  'filament.add': 'Add another filament',
+  'filament.hint': 'Printing in more than one colour or material? Add each filament with its own spool price.',
+  'filament.extra.title': 'Filament {n}',
+  'filament.extra.name': 'Name of filament {n} (optional)',
+  'filament.remove': 'Remove {name}',
+  'filament.price': 'Spool price',
+  'filament.weight': 'Spool weight',
+  'filament.grams': 'Grams used',
+  'import.note.manyFilaments': 'This file uses several filaments. The others were added under Material with the first filament’s spool price: set each spool’s real price.',
 }

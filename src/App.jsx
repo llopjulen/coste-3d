@@ -12,6 +12,7 @@ import NavIcon from './NavIcons.jsx'
 import SubNav from './SubNav.jsx'
 import { applyTheme, readTheme, saveTheme } from './theme.js'
 import { isAgentEnabled, setAgentEnabled } from './agent.js'
+import { MAX_EXTRA_FILAMENTS, calculate, normalizeExtras } from './calculate.js'
 import { useI18n } from './i18n/context.js'
 import { LANGS, LANG_NAMES, selectorVisible } from './i18n/index.js'
 
@@ -95,9 +96,11 @@ const SETUP_FIELDS = SECTIONS.filter(s => s.setup).flatMap(s => s.fields.map(f =
 
 /* Initial state is built straight from the list above, so a default
    value can never be forgotten when a field is added. */
-const INITIAL = Object.fromEntries(
-  SECTIONS.flatMap(s => s.fields.map(f => [f.key, f.initial]))
-)
+const INITIAL = {
+  ...Object.fromEntries(SECTIONS.flatMap(s => s.fields.map(f => [f.key, f.initial]))),
+  // The part's other filaments (see calculate.js). Not a form field: it has its own panel.
+  extraFilaments: [],
+}
 
 /* Keeps only the saved numbers that are really "Your setup" fields.
    backup.js checks that they are numbers; WHICH names are valid is decided
@@ -122,48 +125,6 @@ const LAYERS = [
 
 
 /* ==================================================================
-   2) CALCULATION — a pure function: numbers in, numbers out.
-   It knows nothing about React or the screen.
-================================================================== */
-function calculate(d) {
-  const pricePerGram = d.spoolWeight > 0 ? d.spoolPrice / d.spoolWeight : 0
-
-  const material = (d.partGrams + d.purgeGrams) * pricePerGram
-  const power = (d.watts / 1000) * d.hours * d.kwhPrice
-  const depreciation = d.lifespan > 0 ? d.hours * (d.printerPrice / d.lifespan) : 0
-
-  // If 8 out of 100 prints go to the bin, the 92 good ones have to
-  // cover the material and hours spent on the 8 failed ones.
-  const failures = (material + power + depreciation) * (d.failRate / 100)
-
-  const labor = (d.postMinutes / 60) * d.hourlyRate
-  const packaging = d.packaging
-
-  const parts = { material, power, depreciation, failures, labor, packaging }
-  const cost = Object.values(parts).reduce((a, b) => a + b, 0)
-
-  // The platform fee is taken from the FINAL price, not from your
-  // cost: that's why we DIVIDE by (1 - fee) instead of multiplying.
-  const f = Math.min(Math.max(d.fee, 0) / 100, 0.95)
-  const recommendedPrice = (cost * (1 + d.margin / 100)) / (1 - f)
-
-  // What you keep per part at the RECOMMENDED price, once the platform
-  // has taken its fee. (The "profit" below is at your CURRENT price.)
-  const recommendedProfit = recommendedPrice * (1 - f) - cost
-
-  const currentNet = d.currentPrice * (1 - f)
-  const profit = currentNet - cost
-  const perHour = d.hours > 0 ? profit / d.hours : 0
-  const units = Math.max(Math.floor(d.quantity), 1)
-
-  return {
-    parts, cost, recommendedPrice, recommendedProfit, profit, perHour, currentNet, units,
-    orderPrice: recommendedPrice * units,
-    materialPct: cost > 0 ? (material / cost) * 100 : 0,
-  }
-}
-
-/* ==================================================================
    3) UI PIECES
 ================================================================== */
 function Field({ id, label, unit, help, value, onChange, open, onHelp }) {
@@ -174,17 +135,20 @@ function Field({ id, label, unit, help, value, onChange, open, onHelp }) {
         <div className="label-group">
           <label htmlFor={id}>{label}</label>
           {/* aria-expanded tells screen readers whether the text is
-              open; aria-controls links it to the help block. */}
-          <button
-            type="button"
-            className="info"
-            aria-label={t('field.whatIs', { label })}
-            aria-expanded={open}
-            aria-controls={`help-${id}`}
-            onClick={onHelp}
-          >
-            i
-          </button>
+              open; aria-controls links it to the help block. A field with
+              no help text (the extra filaments' own) gets no button. */}
+          {help && (
+            <button
+              type="button"
+              className="info"
+              aria-label={t('field.whatIs', { label })}
+              aria-expanded={open}
+              aria-controls={`help-${id}`}
+              onClick={onHelp}
+            >
+              i
+            </button>
+          )}
         </div>
         <input
           id={id}
@@ -200,7 +164,44 @@ function Field({ id, label, unit, help, value, onChange, open, onHelp }) {
 
       {/* Conditional rendering: when not open, this chunk simply
           doesn't exist on the page. */}
-      {open && <p className="help" id={`help-${id}`}>{help}</p>}
+      {open && help && <p className="help" id={`help-${id}`}>{help}</p>}
+    </div>
+  )
+}
+
+/* The part's other filaments: each one with its own spool price, spool weight
+   and grams, so a two-colour print is priced with what each spool really cost.
+   `list` and `onChange` come from App (the form's state lives there). */
+function ExtraFilaments({ list, onChange }) {
+  const { t } = useI18n()
+  const update = (id, patch) => onChange(list.map(f => (f.id === id ? { ...f, ...patch } : f)))
+  const remove = id => onChange(list.filter(f => f.id !== id))
+  const toNumber = text => (text === '' ? 0 : Number(text))
+  return (
+    <div className="extra-filaments">
+      {list.map((f, i) => {
+        const title = t('filament.extra.title', { n: i + 2 })
+        return (
+          <div className="extra-filament" key={f.id} role="group" aria-label={f.label || title}>
+            <div className="extra-head">
+              {/* The name is optional and only for the person ("PETG black"); it doesn't change the price. */}
+              <input
+                className="text-input"
+                type="text"
+                maxLength={40}
+                aria-label={t('filament.extra.name', { n: i + 2 })}
+                placeholder={title}
+                value={f.label ?? ''}
+                onChange={e => update(f.id, { label: e.target.value })}
+              />
+              <button type="button" className="row-btn danger" aria-label={t('filament.remove', { name: f.label || title })} onClick={() => remove(f.id)}>✕</button>
+            </div>
+            <Field id={`extra-${f.id}-price`} label={t('filament.price')} unit="€" value={f.spoolPrice} onChange={v => update(f.id, { spoolPrice: v })} />
+            <Field id={`extra-${f.id}-weight`} label={t('filament.weight')} unit="g" value={f.spoolWeight} onChange={v => update(f.id, { spoolWeight: v })} />
+            <Field id={`extra-${f.id}-grams`} label={t('filament.grams')} unit="g" value={f.grams} onChange={v => update(f.id, { grams: toNumber(v) })} />
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -297,7 +298,9 @@ export default function App({ agentOptIn = false }) {
 
     // "Load" in the history: put that quote's numbers back in the form.
     const loadQuote = (quote) => {
-      setD({ ...INITIAL, ...quote.inputs })
+      // normalizeExtras: a quote from before this existed has no list, and one from a
+      // hand-edited file might have a broken one.
+      setD({ ...INITIAL, ...quote.inputs, extraFilaments: normalizeExtras(quote.inputs?.extraFilaments) })
       setQuoteName(quote.name ?? '')
       setQuoteClient(quote.client ?? '')
       setView('calculator')
@@ -474,6 +477,13 @@ export default function App({ agentOptIn = false }) {
     setHasSavedSetup(false)
   }
 
+  // A new extra filament starts with the first one's spool (same brand is the common case): only the grams are left to type.
+  const addFilament = () => setD(current => {
+    if (current.extraFilaments.length >= MAX_EXTRA_FILAMENTS) return current
+    const id = current.extraFilaments.reduce((max, f) => Math.max(max, f.id), 0) + 1
+    return { ...current, extraFilaments: [...current.extraFilaments, { id, label: '', spoolPrice: current.spoolPrice, spoolWeight: current.spoolWeight, grams: 0 }] }
+  })
+
   // The unit is a symbol (€, g, h) except for "pcs", which is a word and is translated.
   const fieldUnit = field => (field.unitKey ? t(field.unitKey) : field.unit)
 
@@ -507,7 +517,27 @@ export default function App({ agentOptIn = false }) {
       // Changing plate or parts can fill a field the first import didn't touch.
       setBeforeImport(prev => prev && { ...previous(Object.keys(values).filter(k => !(k in prev))), ...prev })
     }
-    setD(current => ({ ...current, ...values }))
+    setD(current => ({ ...current, ...values, ...importedExtras(values, current, isNewFile) }))
+  }
+
+  /* A file gives the grams (and type) of each extra filament but not what the
+     spool cost. A new file starts every extra at the first filament's spool;
+     changing the plate or the number of parts of the SAME file keeps the
+     prices the person already typed, matching extras by position. */
+  const importedExtras = (values, current, isNewFile) => {
+    if (!values.extraFilaments) return {}
+    return {
+      extraFilaments: values.extraFilaments.slice(0, MAX_EXTRA_FILAMENTS).map((f, i) => {
+        const old = isNewFile ? null : current.extraFilaments[i]
+        return {
+          id: i + 1,
+          label: f.label,
+          grams: f.grams,
+          spoolPrice: old?.spoolPrice ?? current.spoolPrice,
+          spoolWeight: old?.spoolWeight ?? current.spoolWeight,
+        }
+      }),
+    }
   }
 
   const undoImport = () => {
@@ -660,7 +690,20 @@ export default function App({ agentOptIn = false }) {
             {SECTIONS.filter(section => !section.setup).map(section => (
               <section className="panel" key={section.id} id={section.id}>
                 <h2>{t(section.titleKey)}</h2>
-                <div className="body">{section.fields.map(renderField)}</div>
+                <div className="body">
+                  {section.fields.map(renderField)}
+                  {section.id === 'sec-material' && (
+                    <>
+                      <ExtraFilaments list={d.extraFilaments} onChange={set('extraFilaments')} />
+                      <div className="extra-add">
+                        <button type="button" className="controls" onClick={addFilament} disabled={d.extraFilaments.length >= MAX_EXTRA_FILAMENTS}>
+                          + {t('filament.add')}
+                        </button>
+                        {d.extraFilaments.length === 0 && <span className="muted">{t('filament.hint')}</span>}
+                      </div>
+                    </>
+                  )}
+                </div>
               </section>
             ))}
 

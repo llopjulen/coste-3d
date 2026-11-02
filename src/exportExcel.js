@@ -6,6 +6,7 @@
 ================================================================== */
 import writeExcelFile from 'write-excel-file/browser'
 import { translatorFor } from './i18n/dicts.js'
+import { totalGrams } from './calculate.js'
 
 const HEADER_BG = '#212125'
 const HEADER_TEXT = '#FFFFFF'
@@ -26,7 +27,7 @@ function buildColumns(currency, t) {
     { title: t('history.col.client'), width: 18, type: String, get: q => q.client || null },
     { title: t('history.col.qty'),    width: 8,  type: Number, format: '0', sum: true, get: q => q.units ?? 1 },
     { title: t('excel.col.weight'),   width: 12, type: Number, format: '0.0',
-      get: q => (q.inputs ? q.inputs.partGrams + q.inputs.purgeGrams : null) },
+      get: q => (q.inputs ? totalGrams(q.inputs) : null) },
     { title: t('excel.col.time'),     width: 16, type: Number, format: '0.00', get: q => q.inputs?.hours ?? null },
     { title: money(t('layer.material')),     width: 16, money: true, get: q => q.parts?.material ?? null },
     { title: money(t('layer.power')),        width: 16, money: true, get: q => q.parts?.power ?? null },

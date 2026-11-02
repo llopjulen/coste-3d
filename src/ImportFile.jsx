@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useI18n } from './i18n/context.js'
 import { fmtGrams, fmtNumber } from './i18n/format.js'
-import { readSlicedFile, formValuesFromPlates, ImportError } from './slicerFile.js'
+import { readSlicedFile, formValuesFromPlates, mergeFilaments, ImportError } from './slicerFile.js'
 
 /* 4443 seconds -> "1h 14m" */
 function formatDuration(seconds) {
@@ -12,17 +12,6 @@ function formatDuration(seconds) {
 
 // A colour coming from a file is only used if it really is a hex colour.
 const safeColor = (c) => (/^#[0-9a-f]{3,8}$/i.test(c) ? c : 'var(--tenue)')
-
-/* Same filament on several plates (type + colour) becomes one chip. */
-function mergeFilaments(list) {
-  const merged = []
-  for (const f of list) {
-    const same = merged.find(m => m.type === f.type && m.color === f.color)
-    if (same) same.grams += f.grams
-    else merged.push({ ...f })
-  }
-  return merged
-}
 
 /* ==================================================================
    IMPORT PANEL

@@ -9,7 +9,7 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 ## Orden recomendado de lectura
 
 1. `src/main.jsx` (10 líneas): cómo arranca React.
-2. `src/App.jsx`, secciones 1 y 2: la definición de los campos (`SECTIONS`) y `calculate()`. Es el corazón del producto y no tiene nada de React.
+2. `src/App.jsx`, sección 1 (la definición de los campos, `SECTIONS`) y `src/calculate.js` (`calculate()`). Es el corazón del producto y `calculate.js` no tiene nada de React.
 3. `src/App.jsx`, sección 4: el estado y cómo se elige la pantalla.
 4. `src/History.jsx`: el componente más típico (props entrantes, callbacks salientes, estado local solo para la UI).
 5. `src/slicerFile.js`: parsing con expresiones regulares; independiente de React.
@@ -21,7 +21,7 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 |---|---|
 | `index.html` | El shell: metadatos para buscadores y para compartir (título, descripción, `canonical`, Open Graph, datos estructurados JSON-LD), fuentes de Google, Cloudflare Web Analytics y el `<div id="root">` donde React pinta todo. Dentro de `#root` hay un `<h1>` y un párrafo de respaldo para quien lea el HTML sin ejecutar JavaScript; React lo reemplaza al arrancar. |
 | `src/main.jsx` | Punto de entrada. Importa `index.css`, lee y quita el `?agent` de la dirección (una vez por carga) y monta `<App>` dentro de `<StrictMode>`. En desarrollo, StrictMode ejecuta dos veces renders y efectos para destapar efectos secundarios mal hechos; en producción no hace nada. |
-| `src/App.jsx` | Estado global, cálculo y navegación. Cuatro secciones: 1) campos (`SECTIONS`, `INITIAL`) y colores del gráfico (`LAYERS`, en el orden en que se imprime: de abajo arriba); 2) `calculate(d)`; 3) componentes pequeños (`Field`, `SiteFooter`); 4) `App`. |
+| `src/App.jsx` | Estado global, cálculo y navegación. Tres secciones: 1) campos (`SECTIONS`, `INITIAL`) y colores del gráfico (`LAYERS`, en el orden en que se imprime: de abajo arriba); 3) componentes pequeños (`Field`, `ExtraFilaments`, `SiteFooter`); 4) `App`. El cálculo vive en `calculate.js`. |
 | `src/History.jsx` | Lista de presupuestos: tarjetas resumen, buscador, tabla agrupada por mes, marcar piezas para el presupuesto de cliente, Load y borrar. No es dueño de ningún dato. |
 | `src/Report.jsx` | Informe imprimible (KPIs y 3 gráficas hechas con `div` y porcentajes, sin librería de gráficas). El PDF sale de `window.print()`. Su hoja tiene idioma propio (`DocLangSelect`), por defecto el de la interfaz. |
 | `src/CustomerQuote.jsx` | Presupuesto para el cliente: formulario arriba, hoja abajo. Lee y escribe `business` y `quoteCounter`. Calcula en céntimos enteros. La hoja que lee el cliente tiene idioma propio (`DocLangSelect`); el formulario sigue el de la interfaz. |
@@ -38,6 +38,7 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/backup.test.js` | Tests de la parte "Your setup" de `backup.js`: ida y vuelta, copias antiguas sin `setup`, Merge/Replace, almacenamiento bloqueado. |
 | `src/Logo.jsx` | El logo en SVG; los colores salen del CSS. |
 | `src/NavIcons.jsx` | Iconos de línea (calculadora, historial, impresora, sol y luna) de la navegación. SVG en línea con `currentColor`; sin librería de iconos. |
+| `src/calculate.js` | `calculate(d)` y sus ayudas (`materialCost`, `pricePerGram`, `totalGrams`, `normalizeExtras`, `MAX_EXTRA_FILAMENTS`). Puro, sin React, para que `node --test` lo importe. Tests en `calculate.test.js`. |
 | `src/SubNav.jsx` | El segundo nivel de la barra lateral: lista «On this page» bajo la pestaña Calculator, con salto a cada bloque del formulario y marca del bloque visible (scrollspy con `IntersectionObserver`). Solo en escritorio ancho. La lista `CALC_NAV` y los `id="sec-…"` están en `App.jsx`. |
 | `src/i18n/index.js` | Núcleo de la traducción, sin React: idiomas (`en`, `es`, `fr`), detección (`?lang=`, elección guardada, navegador), `translate`/`fill`/`splitSlots` y el separador decimal. `READY` (ya en `true`) decide si el selector es visible y si manda el idioma del navegador. |
 | `src/i18n/en.js`, `es.js`, `fr.js` | Los textos de la interfaz, `clave -> texto` con `{huecos}`. El inglés es la referencia; los tres deben tener las mismas claves (lo comprueba `i18n.test.js`). |
@@ -174,7 +175,7 @@ Forma de un presupuesto guardado:
   createdAt: '2026-10-03T…Z',   // fecha ISO
   date: '3/10/2026',            // texto antiguo, ya no se usa para pintar
   name: 'Phone stand', client: 'Ana',
-  inputs: { spoolPrice: 20, … },  // copia de d: lo que "Load" vuelve a poner en el formulario
+  inputs: { spoolPrice: 20, …, extraFilaments: [{ id, label, spoolPrice, spoolWeight, grams }] },  // copia de d: lo que "Load" vuelve a poner en el formulario. `extraFilaments` es opcional: los otros filamentos de la pieza (los presupuestos anteriores no lo tienen y valen igual)
   parts: { material: 0.9, … },    // las seis capas del coste
   cost: 5.22, price: 7.94, units: 1, orderTotal: 7.94,
 }
@@ -186,9 +187,9 @@ Los valores del formulario (`d`) no se guardan: al recargar vuelven a `INITIAL`.
 
 ## El cálculo: `calculate(d)`
 
-Función pura en `src/App.jsx`: entran los valores del formulario y salen números, sin tocar React ni la pantalla.
+Función pura en `src/calculate.js`: entran los valores del formulario y salen números, sin tocar React ni la pantalla.
 
-- `material = (partGrams + purgeGrams) × spoolPrice / spoolWeight`
+- `material = (partGrams + purgeGrams) × spoolPrice / spoolWeight` + la suma, por cada filamento extra, de `grams × spoolPrice / spoolWeight` del propio filamento (`extraFilaments`, ver abajo). La purga se paga al precio del primero.
 - `power = watts / 1000 × hours × kwhPrice` (kWh × precio)
 - `depreciation = hours × printerPrice / lifespan` (amortización lineal por hora de uso)
 - `failures = (material + power + depreciation) × failRate / 100`
@@ -216,7 +217,7 @@ Simplificación a tener en cuenta: con una tasa de fallos `p`, el coste esperado
 | Quiero… | Dónde |
 |---|---|
 | Añadir o cambiar un campo del formulario, su ayuda o su valor por defecto | `SECTIONS` en `App.jsx` (y `calculate` si interviene en el coste) |
-| Cambiar una fórmula | `calculate` en `App.jsx` |
+| Cambiar una fórmula | `calculate` en `calculate.js` |
 | Decidir qué campos se recuerdan entre visitas | `setup: true` en la sección de `SECTIONS` (App.jsx); `backup.js` solo valida que sean números |
 | Cambiar el orden o el contenido de lo que se ve en el resultado | el bloque `{/* --- Result --- */}` de `App` (precio grande, gráfica, veredicto, guardar) |
 | Cambiar los colores o el orden de la gráfica de costes | `LAYERS` en `App.jsx` (el orden es de abajo arriba) |
