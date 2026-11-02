@@ -1,7 +1,7 @@
 /* Tests for calculate.js. Run them with:  npm test */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { MAX_EXTRA_FILAMENTS, calculate, materialCost, normalizeExtras, pricePerGram, totalGrams } from './calculate.js'
+import { MAX_EXTRA_FILAMENTS, calculate, capacity, materialCost, normalizeExtras, pricePerGram, totalGrams } from './calculate.js'
 
 // The calculator's defaults (INITIAL in App.jsx).
 const BASE = {
@@ -67,4 +67,34 @@ test('normalizeExtras: clean shape, sequential ids, no negatives, a cap', () => 
   assert.deepEqual(normalizeExtras(undefined), [])
   assert.equal(normalizeExtras(Array.from({ length: 50 }, () => ({}))).length, MAX_EXTRA_FILAMENTS)
   assert.equal(normalizeExtras([{ label: 'x'.repeat(500) }])[0].label.length, 40)
+})
+
+/* ---- capacity: parts per week and days for an order ---- */
+const cap = (over = {}) => capacity({ printHoursPerWeek: 60, hours: 3, failRate: 0, quantity: 1, ...over })
+
+test('capacity: 60 h a week and 3 h per print is 20 parts', () => {
+  assert.equal(cap().goodPerWeek, 20)
+})
+
+test('capacity: failures take parts away (10 % of 20 prints = 18 good ones)', () => {
+  assert.ok(Math.abs(cap({ failRate: 10 }).goodPerWeek - 18) < 1e-9)
+})
+
+test('capacity: 14 parts of 5 h at 70 h a week is exactly one week (7 days)', () => {
+  const c = cap({ printHoursPerWeek: 70, hours: 5, quantity: 14 })
+  assert.ok(Math.abs(c.orderDays - 7) < 1e-9)
+})
+
+test('capacity: failures lengthen the order too', () => {
+  const clean = cap({ quantity: 10 }).orderDays
+  const fails = cap({ quantity: 10, failRate: 50 }).orderDays
+  assert.ok(Math.abs(fails - clean * 2) < 1e-9)
+})
+
+test('capacity: nothing to say without hours, and no Infinity or NaN', () => {
+  assert.equal(cap({ hours: 0 }), null)
+  assert.equal(cap({ printHoursPerWeek: 0 }), null)
+  assert.equal(cap({ printHoursPerWeek: NaN }), null)
+  const c = cap({ failRate: 100 })
+  assert.ok(Number.isFinite(c.goodPerWeek) && Number.isFinite(c.orderDays))
 })

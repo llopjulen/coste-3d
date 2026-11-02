@@ -12,9 +12,10 @@ import NavIcon from './NavIcons.jsx'
 import SubNav from './SubNav.jsx'
 import { applyTheme, readTheme, saveTheme } from './theme.js'
 import { isAgentEnabled, setAgentEnabled } from './agent.js'
-import { MAX_EXTRA_FILAMENTS, calculate, normalizeExtras } from './calculate.js'
+import { MAX_EXTRA_FILAMENTS, calculate, capacity, normalizeExtras } from './calculate.js'
 import { useI18n } from './i18n/context.js'
 import { LANGS, LANG_NAMES, selectorVisible } from './i18n/index.js'
+import { fmtNumber } from './i18n/format.js'
 
 /* ==================================================================
    1) FIELDS
@@ -76,6 +77,7 @@ const SECTIONS = [
       { key: 'watts', unit: 'W', initial: 110 },
       { key: 'kwhPrice', unit: '€', initial: 0.15 },
       { key: 'failRate', unit: '%', initial: 8 },
+      { key: 'printHoursPerWeek', unit: 'h', initial: 60 },
     ],
   },
   {
@@ -224,7 +226,7 @@ function SiteFooter() {
 ================================================================== */
 // agentOptIn: true when this page load came from layercents.com/?agent (see main.jsx).
 export default function App({ agentOptIn = false }) {
-  const { t, tr, lang, setLang, decimal } = useI18n()
+  const { t, tr, lang, setLang, decimal, locale } = useI18n()
   // Built here (not at module level) because the labels depend on the language.
   // t changes only when the language does, so the observer in SubNav is rebuilt
   // only then.
@@ -548,6 +550,7 @@ export default function App({ agentOptIn = false }) {
 
   // The result isn't stored in state, it's recalculated on every render.
   const r = calculate(d)
+  const cap = capacity(d)
   // The big price at the top of the result, split to style its cents.
   const price = moneyParts(r.recommendedPrice)
 
@@ -764,6 +767,12 @@ export default function App({ agentOptIn = false }) {
               <p className="hero-sub">
                 {tr('hero.keep', {}, { amount: <strong>{formatMoney(r.recommendedProfit)}</strong> })}
               </p>
+              {cap && (
+                <p className="hero-sub">
+                  {tr('hero.perWeek', { hours: fmtNumber(locale, d.printHoursPerWeek, 1) }, { amount: <strong>{fmtNumber(locale, cap.goodPerWeek, 1)}</strong> })}
+                  {r.units > 1 && <> {tr('hero.orderDays', { units: r.units }, { days: <strong>{fmtNumber(locale, cap.orderDays, 1)}</strong> })}</>}
+                </p>
+              )}
               {r.units > 1 && (
                 <p className="hero-sub">
                   {tr('hero.orderTotal', { units: r.units }, { amount: <strong>{formatMoney(r.orderPrice)}</strong> })}

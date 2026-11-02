@@ -38,7 +38,7 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/backup.test.js` | Tests de la parte "Your setup" de `backup.js`: ida y vuelta, copias antiguas sin `setup`, Merge/Replace, almacenamiento bloqueado. |
 | `src/Logo.jsx` | El logo en SVG; los colores salen del CSS. |
 | `src/NavIcons.jsx` | Iconos de línea (calculadora, historial, impresora, sol y luna) de la navegación. SVG en línea con `currentColor`; sin librería de iconos. |
-| `src/calculate.js` | `calculate(d)` y sus ayudas (`materialCost`, `pricePerGram`, `totalGrams`, `normalizeExtras`, `MAX_EXTRA_FILAMENTS`). Puro, sin React, para que `node --test` lo importe. Tests en `calculate.test.js`. |
+| `src/calculate.js` | `calculate(d)`, `capacity(d)` y sus ayudas (`materialCost`, `pricePerGram`, `totalGrams`, `normalizeExtras`, `MAX_EXTRA_FILAMENTS`). Puro, sin React, para que `node --test` lo importe. Tests en `calculate.test.js`. |
 | `src/SubNav.jsx` | El segundo nivel de la barra lateral: lista «On this page» bajo la pestaña Calculator, con salto a cada bloque del formulario y marca del bloque visible (scrollspy con `IntersectionObserver`). Solo en escritorio ancho. La lista `CALC_NAV` y los `id="sec-…"` están en `App.jsx`. |
 | `src/i18n/index.js` | Núcleo de la traducción, sin React: idiomas (`en`, `es`, `fr`), detección (`?lang=`, elección guardada, navegador), `translate`/`fill`/`splitSlots` y el separador decimal. `READY` (ya en `true`) decide si el selector es visible y si manda el idioma del navegador. |
 | `src/i18n/en.js`, `es.js`, `fr.js` | Los textos de la interfaz, `clave -> texto` con `{huecos}`. El inglés es la referencia; los tres deben tener las mismas claves (lo comprueba `i18n.test.js`). |
@@ -197,6 +197,8 @@ Función pura en `src/calculate.js`: entran los valores del formulario y salen n
 - `cost` = la suma de las seis capas
 - `recommendedPrice = cost × (1 + margin) / (1 − fee)`: la comisión de la plataforma se cobra sobre el precio final, así que se divide entre `(1 − fee)` en vez de multiplicar por `(1 + fee)`.
 - `profit = currentPrice × (1 − fee) − cost` y `perHour = profit / hours`.
+
+Aparte, `capacity(d)` (también en `calculate.js`, no toca ningún precio) responde «¿cuántas puedo sacar?»: `goodPerWeek = printHoursPerWeek / hours × (1 − failRate)` y `orderDays = quantity × hours / (1 − failRate) / (printHoursPerWeek / 7)`. Devuelve `null` si faltan horas, y la pantalla oculta la línea. `printHoursPerWeek` es un campo de «Your setup» (sección Printer), así que se recuerda en el dispositivo.
 
 Simplificación a tener en cuenta: con una tasa de fallos `p`, el coste esperado por pieza buena es `base / (1 − p)` (hacen falta de media `1 / (1 − p)` intentos), no `base × (1 + p)`. Con el 8 % la diferencia es pequeña (8,7 % frente a 8 %); con el 30 % ya no (42,9 % frente a 30 %). Como los fallos suelen pararse a medias, `base × p` puede servir como estimación, pero conviene decidirlo a propósito.
 

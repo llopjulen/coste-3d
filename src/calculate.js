@@ -105,3 +105,26 @@ export function calculate(d) {
     materialPct: cost > 0 ? (material / cost) * 100 : 0,
   }
 }
+
+/* How much the printer can turn out in a week, from the hours it really runs.
+   Pure and separate from `calculate`: it doesn't change any price, it answers
+   "how many of these can I make?".
+   - A failed print uses printer time and gives no part, so only
+     (1 - failRate) of the prints are good parts. The 0.95 ceiling is the same
+     one `calculate` uses for the fee: a rate of 100 % must not divide by zero.
+   - `orderDays` is how long the whole order (`quantity` parts) takes at that
+     weekly rhythm, counting the extra prints the failures cost. Days of
+     printing, not of delivery: it ignores post-processing and shipping.
+   Returns null while a number needed is missing (0 hours per print, no hours
+   per week), so the screen simply hides the line instead of printing Infinity. */
+export function capacity(d) {
+  const weekHours = finite(d.printHoursPerWeek) ? d.printHoursPerWeek : 0
+  const hours = finite(d.hours) ? d.hours : 0
+  if (weekHours <= 0 || hours <= 0) return null
+  const ok = 1 - Math.min(Math.max(finite(d.failRate) ? d.failRate : 0, 0) / 100, 0.95)
+  const units = Math.max(Math.floor(finite(d.quantity) ? d.quantity : 1), 1)
+  return {
+    goodPerWeek: (weekHours / hours) * ok,
+    orderDays: ((units * hours) / ok) / (weekHours / 7),
+  }
+}
