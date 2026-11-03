@@ -429,6 +429,13 @@ export default {
   'preview.err.bgcode': 'Binary G-code (.bgcode) can’t be previewed yet. Export a plain .gcode to see it.',
   'preview.err.empty': 'There is nothing printed in this file to show.',
   'preview.err.read': 'The preview couldn’t read this file.',
+  'advice.title': 'Worth knowing',
+  'advice.underpriced': 'Your price is {gap} % below the recommended one: your real margin is {realMargin} %, not the {margin} % you set.',
+  'advice.noFailures': 'Failure rate is 0 %. Failed prints are paid for by the good ones, so with 0 % that cost comes out of your profit without showing up here.',
+  'advice.freeTime': 'Your time counts as free: {minutes} min per part with no hourly rate. Even a low rate makes the price honest.',
+  'advice.lowMargin': 'With a {margin} % margin, one broken or returned part wipes out the profit of {parts} good ones.',
+  'advice.fee': 'The {fee} % fee takes {takes} per part. Selling direct, the same profit would cost the buyer {direct}.',
+  'advice.laborHeavy': 'Your time is {share} % of the cost. Printing several on one plate usually cuts the minutes per part, and that is where the price can drop.',
   // --- SEO: el <head> y el texto de #root de cada idioma. Los lee scripts/prerender.js al construir.
   'seo.title': '3D Print Cost Calculator & Quote Maker · layercents',
   'seo.description': 'Free 3D print cost calculator: material, power, printer wear, failed prints and your time. Get the real cost, a price and a customer quote. No account.',

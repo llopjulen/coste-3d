@@ -355,6 +355,10 @@ h1{font-size:clamp(1.6rem,4.2vw,2.15rem);font-weight:600;letter-spacing:-.028em;
 @media(max-width:560px){.hero-whole{font-size:3.6rem}}
 
 /* "Your setup": lo que se escribe una vez y el navegador recuerda */
+.advice{list-style:none;display:grid;gap:10px;padding-top:8px;font-size:.88rem;line-height:1.5}
+/* Un punto fino delante de cada consejo: lista, sin iconos de alerta. */
+.advice li{position:relative;padding-left:16px;text-wrap:pretty}
+.advice li::before{content:'';position:absolute;left:2px;top:.62em;width:5px;height:5px;border-radius:50%;background:var(--borde-fuerte)}
 .real-data{display:grid;gap:10px;padding-top:11px}
 .real-row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:.88rem}
 .real-row .controls{flex:none}

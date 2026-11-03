@@ -2,6 +2,20 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-03, «Conviene saber»: consejos con cifras bajo el resultado
+- Archivo y sitio: src/advice.js (nuevo), src/advice.test.js (nuevo, 10 tests), src/App.jsx (`const tips = adviceFor(d)` junto a `calculate`, y el panel antes de «Guardar este presupuesto»), src/index.css (`.advice`), src/i18n/{en,es,fr}.js (claves `advice.*`), docs/MAPA.md.
+- Qué cambió: debajo del veredicto salen hasta tres consejos con números de la pieza. Por ejemplo: «La comisión del 15 % se lleva 1,29 EUR por pieza. Vendiendo directo, el mismo beneficio le costaría al cliente 7,30 EUR», o «Tu precio está un 7 % por debajo del recomendado: tu margen real es del 30 %, no del 40 % que pusiste».
+- Por qué:
+  - Pediste algo que «ayude y recomiende». Esto es el primer paso sin IA: reglas que miran lo que escribiste y calculan una cifra concreta. Un modelo de lenguaje necesitaría servidor (la clave de la API no puede ir en una web pública), costaría dinero por consulta y podría inventarse números. Las reglas son gratis, inmediatas y se prueban una a una; cuando haya backend, una IA puede partir de ellas.
+  - Cada consejo lleva una cifra calculada, no una frase genérica. «Vendiendo directo costaría X» sale de volver a llamar a `calculate` con la comisión a 0, la misma fórmula del precio, así que no puede contradecirla.
+  - Como mucho tres, ordenados por importancia: con una pared de avisos la gente deja de leerlos. Si no hay nada que decir, el panel no sale.
+  - El de «precio por debajo» no sale cuando ya pierdes dinero: eso ya lo dice la frase en rojo y repetirlo es ruido.
+  - Con los valores por defecto sale uno («tu tiempo es el 48 % del coste»): 10 minutos a 15 €/h son 2,50 de 5,22. Es verdad y es útil, así que el test lo fija en vez de esconderlo.
+  - El dinero se pasa en EUR y se convierte y formatea en pantalla (`formatMoney`), como el resto de la app; los porcentajes ya van redondeados.
+- Concepto nuevo: sistema basado en reglas. En vez de un modelo que «decide», una lista de condiciones `si X entonces consejo Y`, cada una con su prioridad. Ejemplo: `if (d.failRate === 0) tips.push({ id: 'noFailures', priority: 2 })`.
+- De la carrera: Inteligencia Artificial: sistemas expertos (reglas de producción con prioridad para resolver conflictos), el punto de partida clásico antes de un modelo aprendido.
+- Cómo probarlo: `npm test` (240 pasan). `npm run dev`: con los valores por defecto sale el consejo de la mano de obra. Pon la comisión a 15 y el precio actual a 8: salen tres. Pon la tasa de fallos a 0: sale el de los fallos. Cambia la moneda: las cifras se convierten.
+
 ### 2026-11-03, Vista 3D de la pieza: G-code por capas y STL
 - Archivo y sitio: src/toolpath.js (nuevo: `parseToolpath`, `parseStl`), src/toolpath.test.js (nuevo, 16 tests), src/preview.worker.js (nuevo), src/PrintPreview.jsx (nuevo), src/ImportFile.jsx (botón «Ver en 3D», estado `file` y `previewOpen`, `React.lazy`), src/index.css (`.preview*`, `.import-file-row`), src/i18n/{en,es,fr}.js (claves `preview.*`), package.json (dependencia `three`), vite.config.js (`chunkSizeWarningLimit: 600`: el único trozo de más de 500 kB es el visor, que ya va aparte y se carga bajo demanda), docs/MAPA.md, CLAUDE.md.
 - Qué cambió: al soltar un G-code o un `.gcode.3mf` aparece «Ver en 3D», que enseña el recorrido que hará la impresora, capa a capa, con un deslizador como el de un laminador y la capa actual en oro. Un STL se puede ver como sólido aunque no dé tiempo ni gramos.
