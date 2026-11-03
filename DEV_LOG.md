@@ -3,7 +3,7 @@
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
 ### 2026-11-03, Vista 3D de la pieza: G-code por capas y STL
-- Archivo y sitio: src/toolpath.js (nuevo: `parseToolpath`, `parseStl`), src/toolpath.test.js (nuevo, 16 tests), src/preview.worker.js (nuevo), src/PrintPreview.jsx (nuevo), src/ImportFile.jsx (botón «Ver en 3D», estado `file` y `previewOpen`, `React.lazy`), src/index.css (`.preview*`, `.import-file-row`), src/i18n/{en,es,fr}.js (claves `preview.*`), package.json (dependencia `three`), docs/MAPA.md, CLAUDE.md.
+- Archivo y sitio: src/toolpath.js (nuevo: `parseToolpath`, `parseStl`), src/toolpath.test.js (nuevo, 16 tests), src/preview.worker.js (nuevo), src/PrintPreview.jsx (nuevo), src/ImportFile.jsx (botón «Ver en 3D», estado `file` y `previewOpen`, `React.lazy`), src/index.css (`.preview*`, `.import-file-row`), src/i18n/{en,es,fr}.js (claves `preview.*`), package.json (dependencia `three`), vite.config.js (`chunkSizeWarningLimit: 600`: el único trozo de más de 500 kB es el visor, que ya va aparte y se carga bajo demanda), docs/MAPA.md, CLAUDE.md.
 - Qué cambió: al soltar un G-code o un `.gcode.3mf` aparece «Ver en 3D», que enseña el recorrido que hará la impresora, capa a capa, con un deslizador como el de un laminador y la capa actual en oro. Un STL se puede ver como sólido aunque no dé tiempo ni gramos.
 - Por qué:
   - Lo pediste: ver lo que se va a imprimir, y dejar de ser «solo una calculadora». Se dibuja el G-code y no el modelo porque es lo que se imprime de verdad (soportes, borde y línea de purga incluidos) y porque es lo que exportan todos los laminadores.
