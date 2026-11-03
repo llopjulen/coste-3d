@@ -2,6 +2,19 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-03, El desglose del coste pasa a ser una barra apilada con filas
+- Archivo y sitio: src/App.jsx (panel «Coste de fabricarla», justo después del precio; comentario de `LAYERS`), src/index.css (`.cost-breakdown`, `.cost-bar`, `.cost-row`; fuera `.cross-section`, `.cost-symbol*`, `.legend`), borrados src/CostSymbol.jsx, src/symbolChart.js y src/symbolChart.test.js, comentarios de src/Logo.jsx y src/logoGeometry.js, docs/MAPA.md, CLAUDE.md.
+- Qué cambió: el símbolo ¢ pintado con los costes se sustituye por una barra horizontal apilada y, debajo, una fila por capa con su color, nombre, porcentaje e importe.
+- Por qué:
+  - Me dejaste decidir. El símbolo era original, pero era lo más caprichoso de la pantalla y había que leer la leyenda para entenderlo: el largo de cada trozo se repartía entre capas curvas y no se podía comparar a ojo. En una barra recta, la longitud ES la proporción, que es el canal que mejor compara el ojo (Cleveland y McGill).
+  - Se añade el porcentaje en cada fila: «mano de obra 48 %» se entiende al instante, cosa que el símbolo no daba.
+  - Orden fijo (material primero, como en `LAYERS`) en vez de ordenar por tamaño: mientras escribes, las filas no saltan de sitio.
+  - La barra son `<span>` con `flex-grow` igual a la fracción de cada capa. El navegador reparte el ancho y suman el 100 % exacto, sin calcular píxeles. Un hueco de 2 px los separa sin bordes. Un trozo de 0 no se pinta y uno minúsculo tiene 3 px mínimos para que se vea.
+  - Al cambiar un número los trozos se deslizan (transición de `flex-grow`); con «reducir movimiento» no se animan.
+  - Se borran 3 archivos y unos 200 líneas: menos código que mantener. El logo sigue igual (usa `logoGeometry.js`).
+- De la carrera: Interacción Persona-Ordenador / visualización de datos: jerarquía de canales perceptivos (posición y longitud se comparan mejor que ángulo, área o curvatura).
+- Cómo probarlo: `npm run build && npm run preview`. Cambia el posprocesado o el precio de la bobina: los trozos de la barra se deslizan y los porcentajes cambian. Mira el móvil a 390 px y el tema claro.
+
 ### 2026-11-03, Historial y presupuesto con el mismo estilo sobrio
 - Archivo y sitio: src/index.css (`.backup-reminder`, `.controls.primary:disabled`, `.history-table .accent`, `.row-btn`, `.backup-body`, `.quote-editor` sin flechas en los números, `.h2-note`, `.quote-title h1`, `.quote-to .label`, `.quote-totals`), src/CustomerQuote.jsx (título «Tu negocio» con la nota aparte), src/i18n/{en,es,fr}.js (`quote.business` partido en `quote.business` y `quote.businessNote`).
 - Qué cambió: el aviso de copia de seguridad ya no es un recuadro dorado sino un grupo normal con un punto de oro. «Presupuesto para el cliente» desactivado sale en gris y no en un oro apagado. El precio por pieza de la tabla ya no va en oro, y «Cargar» y «×» son texto sin caja. En el presupuesto: sin flechas en los campos numéricos, título «Tu negocio» con su nota en gris, «Presupuesto» en letra normal en vez de mayúsculas espaciadas, «Presupuesto para» sin mayúsculas y la raya del total continua.
