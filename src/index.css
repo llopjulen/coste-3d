@@ -318,25 +318,21 @@ h1{font-size:clamp(1.9rem,4.6vw,2.6rem);font-weight:700;letter-spacing:-.032em;l
    llegar a el: ahi mejor que se desplace con la pagina. */
 @media(max-height:880px){.result{position:static}}
 
-.cross-section{display:flex;gap:22px;padding:18px}
-
-/* Grafica de costes: el simbolo de layercents (src/CostSymbol.jsx), con
-   cada coste en su color. Va de abajo arriba, como se imprime. */
-.cost-symbol{width:176px;height:176px;flex:none;display:block}
-/* In a phone the legend needs the room: the amounts must not wrap */
-@media (max-width:560px){.cost-symbol{width:118px;height:118px}}
-/* Barra vacia bajo los colores: la forma se lee aunque un coste sea 0 */
-.cost-symbol-empty{fill:var(--panel-alto)}
-/* Al cambiar un numero, las fronteras entre colores se deslizan en vez
-   de saltar. Si el sistema pide menos movimiento, no se anima. */
-.cost-symbol-piece{transition:x .35s ease,width .35s ease}
-@media (prefers-reduced-motion:reduce){.cost-symbol-piece{transition:none}}
-
-.legend{flex:1;display:flex;flex-direction:column-reverse;justify-content:center}
-.row-legend{display:flex;align-items:baseline;gap:9px;font-size:.86rem;padding:3px 0}
-.swatch{width:10px;height:10px;flex:none;border-radius:2px}
-.row-legend .name{flex:1;color:var(--tenue)}
-.row-legend .value{font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+/* Desglose del coste: una barra apilada y las capas como filas de lista.
+   La barra usa flex-grow con la fraccion de cada capa, asi los anchos suman
+   exactamente el 100 % sin calcular pixeles; el hueco de 2 px entre trozos
+   los separa sin bordes. */
+.cost-breakdown{padding:18px 18px 8px}
+.cost-bar{display:flex;gap:2px;height:12px;border-radius:6px;overflow:hidden;background:var(--panel-alto)}
+.cost-bar-part{flex-basis:0;min-width:3px;transition:flex-grow .3s ease}
+@media (prefers-reduced-motion:reduce){.cost-bar-part{transition:none}}
+.cost-rows{list-style:none;margin-top:12px}
+.cost-row{display:flex;align-items:center;gap:10px;min-height:40px;font-size:.92rem}
+.cost-row + .cost-row{border-top:1px solid var(--borde)}
+.cost-row .name{flex:1;color:var(--texto)}
+.cost-row .share{color:var(--tenue);font-variant-numeric:tabular-nums;min-width:3.2em;text-align:right}
+.cost-row .value{font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:6.5em;text-align:right}
+.swatch{width:10px;height:10px;flex:none;border-radius:3px}
 
 /* La respuesta: el precio recomendado, grande y en oro, arriba del todo
    de la columna de resultados. Los centimos y la moneda van mas pequenos

@@ -11,8 +11,7 @@
    so the printed report can draw it darker on white paper.
 ================================================================== */
 
-// The layer coordinates live in logoGeometry.js, shared with the cost
-// chart (src/CostSymbol.jsx) so the two can never drift apart.
+// The layer coordinates live in logoGeometry.js (plain data, testable).
 import { FULL, SMALL, FULL_HEIGHT, SMALL_HEIGHT } from './logoGeometry.js'
 
 export default function Logo({ size = 24, small = false }) {
