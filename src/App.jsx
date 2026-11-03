@@ -8,6 +8,8 @@ import BackupPanel, { BackupReminder } from './BackupPanel.jsx'
 import { applyRestore, backupStatus, clearSetup, downloadBackup, readLastBackup, readSetup, saveSetupField } from './backup.js'
 import Printers from './Printers.jsx'
 import RealData from './RealData.jsx'
+import Account from './Account.jsx'
+import { cloudMode } from './cloud/session.js'
 import { adviceFor } from './advice.js'
 import NavIcon from './NavIcons.jsx'
 import SubNav from './SubNav.jsx'
@@ -371,6 +373,9 @@ export default function App({ agentOptIn = false }) {
   }
 
   const [view, setView] = useState(agentOptIn ? 'printers' : 'calculator')
+  // The account tab exists only with a backend (or the ?cloud=mock test mode):
+  // with neither, nobody sees a "Sign in" that leads nowhere. Read once.
+  const [cloudOn] = useState(() => cloudMode() !== 'off')
 
   // Whether this browser shows the Printers tab (opt-in, see agent.js).
   // State, not just storage, so hiding the tab takes effect at once.
@@ -600,6 +605,17 @@ export default function App({ agentOptIn = false }) {
               <span className="tab-label">{t('nav.printers')}</span>
             </button>
           )}
+          {cloudOn && (
+            <button
+              type="button"
+              className={`tab ${view === 'account' ? 'active' : ''}`}
+              aria-current={view === 'account' ? 'page' : undefined}
+              onClick={() => setView('account')}
+            >
+              <NavIcon name="user" />
+              <span className="tab-label">{t('nav.account')}</span>
+            </button>
+          )}
         </nav>
         <div className="topbar-end">
           <button
@@ -639,7 +655,9 @@ export default function App({ agentOptIn = false }) {
       </header>
 
       {/* agentOn is checked again here: if the tab was hidden, the screen goes too. */}
-      {view === 'printers' && agentOn ? (
+      {view === 'account' && cloudOn ? (
+        <Account />
+      ) : view === 'printers' && agentOn ? (
         <Printers onTurnOff={turnOffAgent} />
       ) : view === 'quote' ? (
         <CustomerQuote

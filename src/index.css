@@ -358,6 +358,20 @@ h1{font-size:clamp(1.9rem,4.6vw,2.6rem);font-weight:700;letter-spacing:-.032em;l
 @media(max-width:560px){.hero-whole{font-size:3.6rem}}
 
 /* "Your setup": lo que se escribe una vez y el navegador recuerda */
+/* Misma columna que el resto de pantallas (alineada a la izquierda), pero el contenido no pasa de 640 px: es un formulario. */
+.account-page > *{max-width:640px}
+.account-mock{margin-top:14px;padding:9px 12px;border:1px dashed var(--borde-fuerte);border-radius:var(--radio-campo);font-size:.84rem;color:var(--tenue)}
+.account-panel{margin-top:22px}
+.panel .account-body{display:grid;gap:10px;padding:16px 18px 18px}
+.account-body label{font-size:.86rem;color:var(--tenue)}
+.account-h{font-size:1rem;font-weight:600;letter-spacing:-.01em}
+.account-row{display:flex;gap:8px;flex-wrap:wrap}
+.account-row .text-input{flex:1 1 220px}
+.account-who strong{font-weight:600}
+.account-body > .link{justify-self:start}
+.account-actions{display:flex;align-items:center;gap:18px;margin-top:4px}
+.danger-link{color:var(--rojo)}
+.account-foot{margin-top:14px;font-size:.84rem}
 .advice{list-style:none;display:grid;gap:10px;padding-top:8px;font-size:.88rem;line-height:1.5}
 /* Un punto fino delante de cada consejo: lista, sin iconos de alerta. */
 .advice li{position:relative;padding-left:16px;text-wrap:pretty}
