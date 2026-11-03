@@ -503,7 +503,7 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .history-table tbody tr:hover{background:var(--velo)}
 .history-table .num{text-align:right;font-variant-numeric:tabular-nums}
 .history-table .strong{font-weight:600}
-.history-table .accent{color:var(--oro-texto)}
+.history-table .accent{color:var(--texto)}
 .history-table .actions{text-align:right;width:1%}
 /* Linea de cliente y fecha bajo el nombre: solo existe en el movil */
 .history-table .row-sub{display:none}
@@ -521,11 +521,12 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .row-btn{
   font-family:inherit;font-size:.78rem;
   padding:3px 9px;margin-left:4px;
-  border:1px solid var(--borde);border-radius:6px;
-  background:none;color:var(--texto);cursor:pointer;
+  border:0;border-radius:7px;
+  background:none;color:var(--tenue);cursor:pointer;
 }
-.row-btn:hover:not(:disabled){border-color:var(--borde-fuerte);background:var(--velo)}
-.row-btn.danger:hover:not(:disabled){border-color:var(--rojo);color:var(--rojo)}
+/* Acciones de fila como texto: aparecen al leer la fila, no compiten con los importes. */
+.row-btn:hover:not(:disabled){background:var(--velo);color:var(--texto)}
+.row-btn.danger:hover:not(:disabled){color:var(--rojo)}
 .row-btn:disabled{opacity:.4;cursor:not-allowed}
 .row-btn:focus-visible{outline:2px solid var(--oro);outline-offset:2px}
 
@@ -550,6 +551,9 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .doc-lang select{width:auto}
 .controls.primary{background:var(--oro);border-color:var(--oro);color:var(--sobre-oro)}
 .controls.primary:hover:not(:disabled){background:var(--oro-vivo);border-color:var(--oro-vivo);color:var(--sobre-oro)}
+/* Un boton principal desactivado no se queda en oro apagado (se leia como
+   "marron"): pasa a gris, y vuelve al oro cuando se puede usar. */
+.controls.primary:disabled{background:var(--panel-alto);border-color:transparent;color:var(--tenue);opacity:1;cursor:not-allowed}
 
 .report{
   background:var(--papel);color:var(--tinta);
@@ -709,6 +713,10 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .quote-editor{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;margin-bottom:16px}
 @media(max-width:860px){.quote-editor{grid-template-columns:1fr}}
 .quote-editor .panel{margin-bottom:0}
+.quote-editor input[type="number"]::-webkit-outer-spin-button,
+.quote-editor input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.quote-editor input[type="number"]{-moz-appearance:textfield;appearance:textfield}
+.panel > h2 .h2-note{margin-left:8px;font-weight:400;color:var(--tenue)}
 .form-grid{display:flex;flex-direction:column;gap:11px;padding:12px 15px 15px}
 .form-row{display:flex;flex-direction:column;gap:5px;min-width:0}
 .form-row label,.form-label{font-size:.8rem;color:var(--tenue)}
@@ -731,15 +739,18 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 .quote-business{font-size:1.05rem;font-weight:600}
 .quote-contact{white-space:pre-line;color:var(--tinta-suave);font-size:.8rem;line-height:1.5}
 .quote-title{text-align:right}
-.quote-title h1{font-size:1.9rem;letter-spacing:.05em;text-transform:uppercase;margin-top:0}
+/* Titulo del documento en letra normal y grande: las mayusculas espaciadas
+   eran el sello de plantilla de factura. */
+.quote-title h1{font-size:2.1rem;font-weight:600;letter-spacing:-.025em;margin-top:0;color:var(--tinta)}
 .quote-title dl{display:grid;grid-template-columns:auto auto;justify-content:end;gap:2px 12px;margin-top:6px;font-size:.8rem}
 .quote-title dt{color:var(--tinta-suave);text-align:right}
 .quote-title dd{text-align:right;font-variant-numeric:tabular-nums}
 .quote-to{margin-top:20px}
-.quote-to .label{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--tinta-suave)}
+.quote-to .label{font-size:.8rem;color:var(--tinta-suave)}
 .quote-to .name{margin-top:2px;font-size:1rem;font-weight:600}
 .quote-lines{margin-top:20px}
-.quote-totals{display:grid;grid-template-columns:1fr auto;gap:5px 18px;width:min(320px,100%);margin:14px 0 0 auto;font-variant-numeric:tabular-nums}
+.quote-totals{display:grid;grid-template-columns:1fr auto;row-gap:5px;width:min(320px,100%);margin:14px 0 0 auto;font-variant-numeric:tabular-nums}
+.quote-totals dd{padding-left:18px}
 .quote-totals dt{color:var(--tinta-suave)}
 .quote-totals dd{text-align:right}
 .quote-totals .grand{padding-top:8px;border-top:2px solid var(--tinta);font-size:1.15rem;font-weight:700;color:var(--tinta)}
@@ -766,16 +777,18 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 /* Aviso: fondo y borde de oro muy suaves, para que se vea sin parecer un error */
 .backup-reminder{
   display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;
-  margin-top:18px;padding:11px 15px;
-  background:rgba(var(--oro-rgb),.07);
-  border:1px solid rgba(var(--oro-rgb),.42);border-radius:var(--radio);
-  font-size:.88rem;
+  margin-top:22px;padding:14px 16px 14px 34px;position:relative;
+  background:var(--panel);border-radius:var(--radio);
+  font-size:.9rem;
 }
+/* Aviso sin marco dorado: un grupo normal con un punto de oro delante,
+   como el punto de "sin leer" de Mail. Avisa sin gritar. */
+.backup-reminder::before{content:'';position:absolute;left:16px;top:21px;width:8px;height:8px;border-radius:50%;background:var(--oro)}
 .backup-reminder p{flex:1 1 320px;max-width:46em}
 
 /* Panel de abajo: el texto limitado a 46em para que no se lea en lineas eternas */
 .backup{margin-top:22px}
-.backup-body{display:flex;flex-direction:column;gap:10px;padding:13px 15px 15px;font-size:.88rem}
+.backup-body{display:flex;flex-direction:column;gap:12px;padding:4px 18px 18px;font-size:.9rem}
 .backup-body > p{max-width:46em}
 .backup-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 /* El label hace de boton: el cursor tiene que decirlo */

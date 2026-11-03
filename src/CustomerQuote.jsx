@@ -239,7 +239,7 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
         </section>
 
         <section className="panel">
-          <h2>{t('quote.business')}</h2>
+          <h2>{t('quote.business')}<span className="h2-note">{t('quote.businessNote')}</span></h2>
           <div className="form-grid">
             <div className="form-row">
               <span className="form-label">{t('quote.logo')}</span>

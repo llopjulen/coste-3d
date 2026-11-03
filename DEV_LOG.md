@@ -2,6 +2,17 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-03, Historial y presupuesto con el mismo estilo sobrio
+- Archivo y sitio: src/index.css (`.backup-reminder`, `.controls.primary:disabled`, `.history-table .accent`, `.row-btn`, `.backup-body`, `.quote-editor` sin flechas en los números, `.h2-note`, `.quote-title h1`, `.quote-to .label`, `.quote-totals`), src/CustomerQuote.jsx (título «Tu negocio» con la nota aparte), src/i18n/{en,es,fr}.js (`quote.business` partido en `quote.business` y `quote.businessNote`).
+- Qué cambió: el aviso de copia de seguridad ya no es un recuadro dorado sino un grupo normal con un punto de oro. «Presupuesto para el cliente» desactivado sale en gris y no en un oro apagado. El precio por pieza de la tabla ya no va en oro, y «Cargar» y «×» son texto sin caja. En el presupuesto: sin flechas en los campos numéricos, título «Tu negocio» con su nota en gris, «Presupuesto» en letra normal en vez de mayúsculas espaciadas, «Presupuesto para» sin mayúsculas y la raya del total continua.
+- Por qué:
+  - Las mismas reglas que el formulario: el oro solo donde se decide algo, sin cajas alrededor de cosas que no lo necesitan. En el historial había oro en cuatro sitios a la vez (aviso, botón, columna de precio y punto); ahora el ojo va al botón que hay que pulsar.
+  - Un botón dorado desactivado se leía como marrón, es decir, roto. En gris se entiende que aún no se puede usar, y se vuelve dorado al marcar piezas.
+  - Las mayúsculas espaciadas en «PRESUPUESTO» y «PRESUPUESTO PARA» eran el sello de plantilla de factura. Con letra normal, más grande y algo apretada, el documento se parece al de un estudio de diseño. Es lo que ve el cliente final, así que es la cara de quien usa layercents.
+  - La raya del total estaba cortada en dos (una bajo «Total» y otra bajo el importe) por el hueco entre columnas de la rejilla. Ahora el hueco es relleno de la celda y la raya es continua.
+  - El separador « · » dentro de un título era otro rasgo de plantilla. La nota va aparte, en gris.
+- Cómo probarlo: `npm run build && npm run preview`. Guarda tres presupuestos y ve al historial: aviso con punto, botón gris hasta marcar una pieza, acciones de fila como texto. Marca dos piezas, abre el presupuesto para el cliente y saca el PDF: título «Presupuesto», sin mayúsculas, raya del total continua.
+
 ### 2026-11-03, Formulario como lista agrupada (estilo Ajustes de Apple)
 - Archivo y sitio: src/index.css (tokens de los dos temas, `.form-col .panel`, `.field`, `.field input`, `.info`, `.help`, `.controls`, `.text-input`, `.dropzone`, `.extra-add`, `.result`, `.hero-price` en claro, barra móvil con material translúcido, barra lateral sin la marquita dorada), src/App.jsx (clase `form-col` en la columna del formulario; fuera la lista de tres pasos bajo el título), src/i18n/{en,es,fr}.js (borradas `calc.step1-3`), CLAUDE.md (regla de estilo).
 - Qué cambió: el formulario se ve como una lista de Ajustes de iPhone o Mac. El título de cada bloque va fuera, pequeño y gris. Las filas son de 48 px con separadores finos y el valor a la derecha como texto, sin recuadro (la caja aparece al pasar el ratón y al editar). Los bloques no tienen borde: se distinguen por el relleno sobre un fondo más oscuro. Títulos más grandes y más aire entre bloques. En el tema claro el precio va en tinta en vez de oro.
