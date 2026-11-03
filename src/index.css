@@ -3,39 +3,38 @@
    Cambiar el tema entero es cambiar estas lineas.
 ------------------------------------------------------------------ */
 :root{
-  --fondo:#161619;
-  --panel:#212125;
-  --panel-alto:#2A2A30;
-  --borde:#36363D;
-  --texto:#E9E9EC;
-  /* Gris del texto secundario. Era #8E8E98 y daba 4,4:1 sobre --panel-alto
-     (cabeceras de panel, ayudas): por debajo del 4,5:1 de WCAG AA. Con este
-     da 5,1:1 ahi y 4,8:1 en el peor fondo, el aviso de oro sobre --fondo. */
-  --tenue:#9A9AA4;
-  --oro:#F2B33D;        /* color de la marca: botones, detalles, el logo */
-  --oro-vivo:#F7C96A;   /* el oro al pasar el raton y en textos destacados */
-  --sobre-oro:#161619;  /* texto encima de un boton de oro (oscuro: el blanco no se leeria) */
-  /* Perdidas y errores. Era #E5484D: 4,1:1 sobre --panel y 3,6:1 sobre
-     --panel-alto, justo en la frase de "pierdes dinero". Este, mas claro,
-     da 4,9:1 sobre --panel-alto y 4,5:1 en la insignia "Failed". */
-  --rojo:#FF6369;
-  --radio:12px;         /* era 8px: esquinas mas redondas, objeto mas "fisico" */
-  /* Superficies con relieve: un brillo muy tenue arriba y un filo de luz de
-     1px. Es lo que separa un panel con volumen de un rectangulo gris plano. */
-  --brillo:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0) 140px);
-  --filo:inset 0 1px 0 rgba(255,255,255,.05);
-  /* Ancho de la barra lateral en escritorio (se estrecha a solo iconos). */
+  /* Grafito, no negro: un gris carbon con un punto calido, como el de una
+     herramienta de taller. El negro casi puro (#0B0B0B, #111) es lo que
+     hace que una interfaz oscura parezca un panel de neon. */
+  --fondo:#1A1A1C;
+  --panel:#202022;      /* superficie de los bloques: un escalon sobre el fondo */
+  --panel-alto:#29292C; /* fila al pasar el raton, botones secundarios */
+  --hundido:#161618;    /* campos de texto: un escalon POR DEBAJO, se leen como huecos para escribir */
+  --borde:#2F2F33;      /* lineas finas: separan sin dibujar cajas */
+  --borde-fuerte:#4A4A50; /* borde de un campo al pasar el raton (antes se referia a si mismo y no valia nada) */
+  --texto:#EDECE8;      /* blanco roto calido: menos deslumbrante que el blanco puro */
+  /* Gris del texto secundario: 6,1:1 sobre --panel y 5,5:1 sobre --panel-alto (WCAG AA pide 4,5). */
+  --tenue:#A09F9A;
+  /* El oro de la marca, algo mas sobrio que el anterior (#F2B33D): se usa solo
+     donde se decide dinero (el precio y el boton principal) y para marcar
+     donde estas. Si sale en todas partes deja de significar algo. */
+  --oro:#E3AE4F;
+  --oro-vivo:#EDC074;
+  --sobre-oro:#1A1A1C;
+  --rojo:#F07A72;       /* perdidas y errores: 5,6:1 sobre --panel */
+  --radio:10px;         /* bloques */
+  --radio-campo:7px;    /* campos y botones: radio menor que su contenedor, para que encajen */
+  /* Sin brillos ni filos de luz: superficies planas separadas por lineas.
+     Se mantienen las variables para no tocar las reglas que las usan. */
+  --brillo:linear-gradient(transparent,transparent);
+  --filo:0 0 0 0 transparent;
   --rail-w:216px;
-
-  /* Color de TEXTO dorado: el oro claro lee bien sobre oscuro; en el tema claro
-     pasa a un ocre oscuro (el #F7C96A sobre blanco daria 1,5:1). */
-  --oro-texto:#F7C96A;
-  --oro-rgb:242,179,61;   /* para los tintes: rgba(var(--oro-rgb),.15) */
-  --rojo-rgb:255,99,105;
-  --velo:rgba(255,255,255,.04);        /* capa suave al pasar el raton o en cabeceras */
+  --oro-texto:#EDC074;
+  --oro-rgb:227,174,79;
+  --rojo-rgb:240,122,114;
+  --velo:rgba(237,236,232,.045);
   --sombra:0 0 0 0 transparent;
-  --cabecera:rgba(255,255,255,.03);    /* fondo de la cabecera de cada panel */
-  --borde-fuerte:var(--borde-fuerte);              /* borde de un campo al pasar el raton */
+  --cabecera:transparent;
   color-scheme:dark;
 }
 
@@ -47,23 +46,24 @@
    --oro-texto 5,9 y 5,1; --rojo 5,7 y 4,9.
 ------------------------------------------------------------------ */
 :root[data-theme="light"]{
-  --fondo:#F4F4F6;
+  /* Gris claro neutro, no crema: el papel crema con acento terracota es la
+     imagen por defecto de demasiadas webs. Contrastes: --tenue 6,0:1 sobre
+     --panel; --oro-texto 5,9:1; --rojo 5,4:1. */
+  --fondo:#F3F3F2;
   --panel:#FFFFFF;
-  --panel-alto:#EDEDF2;
-  --borde:#D4D4DC;
-  --texto:#1B1B20;
-  --tenue:#5E5E68;
-  --oro:#F2B33D;          /* los botones siguen en oro con texto oscuro (9,7:1) */
-  --oro-vivo:#F7C96A;     /* fondo de los botones al pasar el raton */
+  --panel-alto:#F0F0EE;
+  --hundido:#F7F7F6;
+  --borde:#E2E2DF;
+  --borde-fuerte:#B9B9B4;
+  --texto:#1D1D1F;
+  --tenue:#616160;
+  --oro:#E3AE4F;
+  --oro-vivo:#EDC074;
   --oro-texto:#8A5A00;
-  --rojo:#C4262E;
-  --rojo-rgb:196,38,46;
-  --brillo:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,0));
-  --filo:0 0 0 0 transparent;
-  --cabecera:rgba(27,27,32,.035);
-  --sombra:0 1px 2px rgba(27,27,32,.06),0 4px 14px rgba(27,27,32,.04);
-  --velo:rgba(27,27,32,.04);
-  --borde-fuerte:#A9A9B4;
+  --rojo:#BF2F2A;
+  --rojo-rgb:191,47,42;
+  --sombra:0 1px 2px rgba(29,29,31,.04);
+  --velo:rgba(29,29,31,.04);
   color-scheme:light;
 }
 
@@ -74,8 +74,10 @@ body{
   font-family:'Inter Variable','Inter',system-ui,-apple-system,sans-serif;
   background:var(--fondo);
   color:var(--texto);
-  line-height:1.45;
+  line-height:1.5;
   font-size:15px;
+  /* Cifras de ancho fijo y ceros sin barra: los importes se alinean en columna. */
+  font-feature-settings:'cv11','tnum' 0;
   -webkit-font-smoothing:antialiased;
 }
 
@@ -105,7 +107,7 @@ body{
   display:inline-flex;align-items:center;gap:8px;
   white-space:nowrap;
   font-family:inherit;font-size:.84rem;
-  padding:5px 11px;border:0;border-radius:5px;
+  padding:5px 11px;border:0;border-radius:6px;
   background:none;color:var(--tenue);cursor:pointer;
 }
 .tab:hover{color:var(--texto)}
@@ -120,15 +122,15 @@ body{
 .topbar-end{display:flex;align-items:center;gap:8px;margin-left:auto}
 .theme-btn{
   display:grid;place-items:center;width:32px;height:30px;
-  border:1px solid var(--borde);border-radius:5px;background:var(--fondo);
+  border:1px solid var(--borde);border-radius:var(--radio-campo);background:var(--hundido);
   color:var(--tenue);cursor:pointer;
 }
 .theme-btn:hover{color:var(--texto);border-color:var(--borde-fuerte)}
 .theme-btn:focus-visible{outline:2px solid var(--oro);outline-offset:1px}
 .currency{
   font-family:inherit;font-size:.8rem;
-  padding:4px 6px;border:1px solid var(--borde);border-radius:5px;
-  background:var(--fondo);color:var(--texto);
+  padding:4px 6px;border:1px solid var(--borde);border-radius:var(--radio-campo);
+  background:var(--hundido);color:var(--texto);
 }
 /* En el movil la barra no cabe en una linea: arriba la marca y la
    moneda, y debajo las pestanas. Sin esto la pagina se movia de lado. */
@@ -153,29 +155,28 @@ body{
     flex-direction:column;align-items:stretch;gap:6px;
     padding:20px 12px 16px;
     border-bottom:0;border-right:1px solid var(--borde);
-    background:linear-gradient(180deg,var(--panel),var(--fondo) 70%);
+    background:var(--fondo);
   }
   .brand{padding:2px 12px 20px}
   .tabs{flex-direction:column;gap:4px;margin-left:0}
   .tab{
-    position:relative;gap:11px;padding:10px 12px;font-size:.9rem;
-    border:1px solid transparent;border-radius:12px;
+    position:relative;gap:11px;padding:8px 12px;font-size:.9rem;
+    border:0;border-radius:var(--radio-campo);
   }
   .tab .count{margin-left:auto}
   .tab:hover{background:var(--velo)}
   /* El oro solo marca donde estas: borde, un velo y la marquita a la izquierda */
-  .tab.active{
-    border-color:rgba(var(--oro-rgb),.4);
-    background:linear-gradient(90deg,rgba(var(--oro-rgb),.14),rgba(var(--oro-rgb),.03));
-  }
+  /* Donde estas: un fondo un escalon mas claro y la marquita de oro a la
+     izquierda. Sin borde ni degradado dorado: el oro es una pista, no un relleno. */
+  .tab.active{background:var(--panel-alto);color:var(--texto)}
   .tab.active .nav-icon{color:var(--oro-texto)}
   .tab.active::before{
     content:'';position:absolute;left:-13px;top:10px;bottom:10px;width:3px;
     border-radius:0 3px 3px 0;background:var(--oro);
   }
   .topbar-end{margin:auto 0 0}
-  .theme-btn{width:38px;height:36px;border-radius:10px;flex:none}
-  .currency{flex:1;min-width:0;padding:8px 10px;border-radius:10px}
+  .theme-btn{width:38px;height:36px;border-radius:var(--radio-campo);flex:none}
+  .currency{flex:1;min-width:0;padding:8px 10px;border-radius:var(--radio-campo)}
 }
 /* Segundo nivel: "En esta pagina", bajo la pestana activa. */
 .subnav{display:none}
@@ -186,11 +187,11 @@ body{
   }
   .subnav-item{
     width:100%;text-align:left;font-family:inherit;font-size:.82rem;
-    padding:5px 10px;border:0;border-radius:8px;background:none;
+    padding:5px 10px;border:0;border-radius:6px;background:none;
     color:var(--tenue);cursor:pointer;
   }
   .subnav-item:hover{color:var(--texto);background:var(--velo)}
-  .subnav-item.active{color:var(--oro-texto);font-weight:600}
+  .subnav-item.active{color:var(--texto);font-weight:600}
   .subnav-item:focus-visible{outline:2px solid var(--oro);outline-offset:1px}
   /* El salto no deja el bloque pegado al borde de la ventana */
   [id^="sec-"]{scroll-margin-top:18px}
@@ -217,18 +218,20 @@ body{
 
 .wrap{max-width:1060px;margin:0 auto;padding:26px 18px 64px}
 
-h1{font-family:'Bricolage Grotesque Variable','Inter Variable','Inter',system-ui,sans-serif;font-size:clamp(1.55rem,4.4vw,2.2rem);font-weight:700;letter-spacing:-.03em;line-height:1.12}
-.subtitle{margin-top:7px;color:var(--tenue);font-size:.94rem;max-width:40em}
+/* Titulos en Inter, la misma letra que el resto: una sola familia da calma.
+   La Bricolage (mas caprichosa) queda solo para el nombre de la marca. */
+h1{font-size:clamp(1.6rem,4.2vw,2.15rem);font-weight:600;letter-spacing:-.028em;line-height:1.15;text-wrap:balance}
+.subtitle{margin-top:8px;color:var(--tenue);font-size:.98rem;max-width:36em;text-wrap:pretty}
 /* Los tres pasos debajo del titulo: lo que hace la app de un vistazo */
-.steps{list-style:none;display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:14px;font-size:.88rem}
+.steps{list-style:none;display:flex;flex-wrap:wrap;gap:8px 26px;margin-top:18px;font-size:.86rem;color:var(--tenue)}
 .steps li{display:flex;align-items:center;gap:8px}
 .step-n{
   display:grid;place-items:center;width:22px;height:22px;flex:none;
-  border-radius:50%;background:rgba(var(--oro-rgb),.15);
-  color:var(--oro-texto);font-size:.74rem;font-weight:700;
+  border-radius:50%;border:1px solid var(--borde-fuerte);
+  color:var(--texto);font-size:.72rem;font-weight:600;
 }
 
-.columns{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;margin-top:24px}
+.columns{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:24px;align-items:start;margin-top:30px}
 @media(max-width:860px){.columns{grid-template-columns:1fr}}
 
 /* ----------------------------- Paneles ---------------------------- */
@@ -237,20 +240,21 @@ h1{font-family:'Bricolage Grotesque Variable','Inter Variable','Inter',system-ui
   box-shadow:var(--filo),var(--sombra);
   border:1px solid var(--borde);
   border-radius:var(--radio);
-  margin-bottom:12px;
+  margin-bottom:14px;
   overflow:hidden;
 }
+/* Titulo del bloque: texto normal un poco mas fuerte, sin franja gris de
+   fondo. La franja hacia que cada bloque pareciera una ventana aparte. */
 .panel > h2{
-  font-size:.76rem;
+  font-size:.86rem;
   font-weight:600;
-  color:var(--tenue);
-  padding:10px 15px;
-  background:var(--cabecera);
-  border-bottom:1px solid var(--borde);
+  letter-spacing:-.005em;
+  color:var(--texto);
+  padding:14px 18px 4px;
 }
-.panel .body{padding:5px 15px 11px}
+.panel .body{padding:4px 18px 14px}
 
-.field{padding:7px 0}
+.field{padding:8px 0}
 .field + .field{border-top:1px solid var(--borde)}
 .row{display:flex;align-items:center;gap:10px}
 .label-group{flex:1;display:flex;align-items:center;gap:6px;min-width:0}
@@ -275,8 +279,7 @@ h1{font-family:'Bricolage Grotesque Variable','Inter Variable','Inter',system-ui
   margin-top:8px;
   padding:9px 11px;
   background:var(--panel-alto);
-  border-left:2px solid var(--oro);
-  border-radius:0 5px 5px 0;
+  border-radius:var(--radio-campo);
   font-size:.82rem;line-height:1.45;color:var(--tenue);
 }
 .field input{
@@ -287,9 +290,10 @@ h1{font-family:'Bricolage Grotesque Variable','Inter Variable','Inter',system-ui
   text-align:right;
   padding:6px 11px;
   border:1px solid var(--borde);
-  border-radius:5px;
-  background:var(--fondo);
+  border-radius:var(--radio-campo);
+  background:var(--hundido);
   color:var(--texto);
+  transition:border-color .12s ease;
 }
 /* Sin flechitas de subir/bajar: se pegaban al numero y le quitaban aire,
    y casi todos los datos llevan decimales (0.15, 3.5) donde un paso de 1
@@ -309,7 +313,7 @@ h1{font-family:'Bricolage Grotesque Variable','Inter Variable','Inter',system-ui
    llegar a el: ahi mejor que se desplace con la pagina. */
 @media(max-height:880px){.result{position:static}}
 
-.cross-section{display:flex;gap:15px;padding:16px 15px}
+.cross-section{display:flex;gap:22px;padding:18px}
 
 /* Grafica de costes: el simbolo de layercents (src/CostSymbol.jsx), con
    cada coste en su color. Va de abajo arriba, como se imprime. */
@@ -332,18 +336,21 @@ h1{font-family:'Bricolage Grotesque Variable','Inter Variable','Inter',system-ui
 /* La respuesta: el precio recomendado, grande y en oro, arriba del todo
    de la columna de resultados. Los centimos y la moneda van mas pequenos
    para que se lea primero el numero entero. */
-.hero{padding:20px 20px 18px;border-color:rgba(var(--oro-rgb),.35)}
-.hero-label{display:block;font-size:.78rem;font-weight:600;color:var(--tenue)}
+/* El unico momento llamativo de la pagina: el precio. Cifras grandes y de
+   trazo fino, como la escala de un instrumento de medida; todo lo demas
+   alrededor se queda en voz baja. */
+.hero{padding:22px 22px 20px}
+.hero-label{display:block;font-size:.86rem;font-weight:500;color:var(--tenue)}
 .hero-price{
-  display:flex;align-items:baseline;gap:3px;margin-top:2px;
-  font-family:'Bricolage Grotesque Variable','Inter Variable','Inter',system-ui,sans-serif;
-  font-weight:700;letter-spacing:-.04em;color:var(--oro-texto);
+  display:flex;align-items:baseline;gap:2px;margin-top:6px;
+  font-weight:300;letter-spacing:-.045em;color:var(--oro-texto);
   font-variant-numeric:tabular-nums;
 }
-.hero-whole{font-size:4.6rem;line-height:1}
-.hero-cents{font-size:2rem}
+.hero-whole{font-size:5rem;line-height:.95}
+.hero-cents{font-size:2.1rem;font-weight:400}
 .hero-currency{margin-left:6px;font-size:1rem;letter-spacing:0;color:var(--tenue)}
-.hero-sub{margin-top:8px;font-size:.88rem;color:var(--tenue)}
+.hero-sub{margin-top:10px;font-size:.88rem;color:var(--tenue);text-wrap:pretty}
+.hero-sub + .hero-sub{margin-top:4px}
 .hero-sub strong{color:var(--texto);font-weight:600;font-variant-numeric:tabular-nums}
 @media(max-width:560px){.hero-whole{font-size:3.6rem}}
 
@@ -351,21 +358,21 @@ h1{font-family:'Bricolage Grotesque Variable','Inter Variable','Inter',system-ui
 .real-data{display:grid;gap:10px;padding-top:11px}
 .real-row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:.88rem}
 .real-row .controls{flex:none}
-.setup-note{padding:10px 15px 0;font-size:.82rem;color:var(--tenue)}
+.setup-note{padding:2px 18px 0;font-size:.82rem;color:var(--tenue)}
 .setup-group h3{margin:10px 0 0;font-size:.74rem;font-weight:600;letter-spacing:.02em;color:var(--tenue)}
-.setup-actions{padding:0 15px 12px}
+.setup-actions{padding:0 18px 14px}
 /* Plegado: una linea por dato, solo lectura */
-.setup-summary{padding:8px 15px 12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px}
+.setup-summary{padding:8px 18px 14px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px}
 .setup-summary div{display:flex;justify-content:space-between;gap:8px;font-size:.84rem;min-width:0}
 .setup-summary dt{color:var(--tenue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .setup-summary dd{font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
 @media(max-width:560px){.setup-summary{grid-template-columns:1fr}}
 
 /* Titulo de panel con una cifra a la derecha (Cost to make it) */
-.panel > h2.with-value{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.panel > h2.with-value{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding-bottom:10px;border-bottom:1px solid var(--borde)}
 .panel > h2.with-value strong{font-size:.95rem;font-weight:600;color:var(--texto);font-variant-numeric:tabular-nums}
 
-.figure{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:9px 15px}
+.figure{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:11px 18px;border-top:1px solid var(--borde)}
 .figure + .figure{border-top:1px solid var(--borde)}
 .figure .label{color:var(--tenue);font-size:.86rem}
 .figure .value{font-weight:600;font-variant-numeric:tabular-nums;font-size:1rem}
@@ -373,12 +380,13 @@ h1{font-family:'Bricolage Grotesque Variable','Inter Variable','Inter',system-ui
 .figure.main .value{font-size:2rem;letter-spacing:-.03em;line-height:1.05}
 .figure.highlight .value{color:var(--oro-texto)}
 
-.verdict{padding:14px 15px}
+.verdict{padding:16px 18px}
 .verdict .context{font-size:.84rem;color:var(--tenue)}
-.verdict .sentence{font-size:1.12rem;font-weight:600;letter-spacing:-.015em;margin-top:4px}
+.verdict .sentence{font-size:1.15rem;font-weight:600;letter-spacing:-.018em;margin-top:4px}
 .verdict .note{display:block;margin-top:6px;font-size:.82rem;color:var(--tenue)}
 .loss{color:var(--rojo)}
-.gain{color:var(--oro-texto)}
+/* Ganar no es dorado: el oro es del precio. Ganar es el texto normal, perder es rojo. */
+.gain{color:var(--texto)}
 
 footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 /* Pie de pagina de la calculadora y del historial */
@@ -405,7 +413,7 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
   }
   .mobile-total strong{display:block;font-size:1.05rem;color:var(--texto);font-variant-numeric:tabular-nums}
   /* El precio es la respuesta: mas grande y en oro; el coste, segundo */
-  .mobile-total .price strong{color:var(--oro-texto);font-size:1.3rem;font-weight:700;letter-spacing:-.02em}
+  .mobile-total .price strong{color:var(--oro-texto);font-size:1.35rem;font-weight:500;letter-spacing:-.025em}
   .mobile-total .controls{margin-left:auto}
   .mobile-total.away{transform:translateY(110%);visibility:hidden}
 }
@@ -414,12 +422,14 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
    mismo estilo oscuro que el resto en vez del boton blanco del navegador. */
 .controls{
   font-family:inherit;font-size:.86rem;font-weight:500;
-  padding:6px 13px;
-  border:1px solid var(--borde);border-radius:5px;
+  padding:7px 14px;
+  border:1px solid var(--borde);border-radius:var(--radio-campo);
   background:var(--panel-alto);color:var(--texto);
   cursor:pointer;
+  transition:background-color .12s ease,border-color .12s ease;
 }
-.controls:hover:not(:disabled){border-color:var(--oro);color:var(--oro-texto)}
+/* Al pasar el raton el boton se aclara un poco; no se vuelve dorado. */
+.controls:hover:not(:disabled){border-color:var(--borde-fuerte);background:var(--velo)}
 .controls:focus-visible{outline:2px solid var(--oro);outline-offset:2px}
 .controls:disabled{opacity:.5;cursor:wait}
 .save-bar button[type="submit"]{background:var(--oro);border-color:var(--oro);color:var(--sobre-oro)}
@@ -431,9 +441,9 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .text-input{
   flex:1 1 180px;min-width:0;
   font-family:inherit;font-size:.89rem;
-  padding:6px 9px;
-  border:1px solid var(--borde);border-radius:5px;
-  background:var(--fondo);color:var(--texto);
+  padding:7px 10px;
+  border:1px solid var(--borde);border-radius:var(--radio-campo);
+  background:var(--hundido);color:var(--texto);
 }
 .text-input::placeholder{color:var(--tenue)}
 .text-input:hover{border-color:var(--borde-fuerte)}
@@ -455,11 +465,11 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 @media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
 .stat{
   display:flex;flex-direction:column;gap:3px;
-  padding:12px 14px;
+  padding:14px 16px;
   background:var(--panel);border:1px solid var(--borde);border-radius:var(--radio);
 }
 .stat .label{font-size:.76rem;color:var(--tenue)}
-.stat .value{font-size:1.25rem;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stat .value{font-size:1.35rem;font-weight:500;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
 
 .history-tools{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 12px}
 .no-results{margin:10px 0 18px;font-size:.88rem}
@@ -472,11 +482,11 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .table-scroll{overflow-x:auto;position:relative}
 .history-table{width:100%;border-collapse:collapse;font-size:.86rem;white-space:nowrap}
 .history-table th{
-  font-size:.72rem;font-weight:500;text-transform:uppercase;letter-spacing:.04em;
-  color:var(--tenue);text-align:left;padding:8px 12px 6px;
+  font-size:.78rem;font-weight:500;
+  color:var(--tenue);text-align:left;padding:10px 12px 8px;
 }
 .history-table td{padding:8px 12px;border-top:1px solid var(--borde)}
-.history-table tbody tr:hover{background:var(--panel-alto)}
+.history-table tbody tr:hover{background:var(--velo)}
 .history-table .num{text-align:right;font-variant-numeric:tabular-nums}
 .history-table .strong{font-weight:600}
 .history-table .accent{color:var(--oro-texto)}
@@ -497,10 +507,10 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .row-btn{
   font-family:inherit;font-size:.78rem;
   padding:3px 9px;margin-left:4px;
-  border:1px solid var(--borde);border-radius:5px;
+  border:1px solid var(--borde);border-radius:6px;
   background:none;color:var(--texto);cursor:pointer;
 }
-.row-btn:hover:not(:disabled){border-color:var(--oro);color:var(--oro-texto)}
+.row-btn:hover:not(:disabled){border-color:var(--borde-fuerte);background:var(--velo)}
 .row-btn.danger:hover:not(:disabled){border-color:var(--rojo);color:var(--rojo)}
 .row-btn:disabled{opacity:.4;cursor:not-allowed}
 .row-btn:focus-visible{outline:2px solid var(--oro);outline-offset:2px}
@@ -646,8 +656,8 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .import-select{
   max-width:60%;
   font-family:inherit;font-size:.86rem;
-  padding:5px 8px;border:1px solid var(--borde);border-radius:5px;
-  background:var(--fondo);color:var(--texto);
+  padding:5px 8px;border:1px solid var(--borde);border-radius:var(--radio-campo);
+  background:var(--hundido);color:var(--texto);
 }
 .import-select:focus-visible{outline:none;border-color:var(--oro);box-shadow:0 0 0 2px rgba(var(--oro-rgb),.22)}
 .import-filled{font-size:.82rem;color:var(--oro-texto)}
@@ -740,12 +750,12 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 .backup .file-label{cursor:pointer}
 .backup .file-label[aria-busy="true"]{opacity:.6;cursor:wait}
 
-/* Caja de "Restore this backup?": borde de oro a la izquierda, como las ayudas (i) */
+/* Caja de "Restore this backup?": un bloque un escalon mas claro, como las ayudas (i) */
 .backup-confirm{
   display:flex;flex-direction:column;gap:9px;max-width:46em;
   padding:12px 14px;
   background:var(--panel-alto);
-  border:1px solid var(--borde);border-left:2px solid var(--oro);border-radius:5px;
+  border:1px solid var(--borde);border-radius:var(--radio-campo);
 }
 /* Recibe el foco desde el codigo: anillo solo si se llega con teclado */
 .backup-confirm:focus{outline:none}

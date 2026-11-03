@@ -17,7 +17,7 @@
 const KEY = 'theme'
 
 // Colores de la barra del navegador en el movil (<meta name="theme-color">)
-const BAR = { dark: '#161619', light: '#F4F4F6' }
+const BAR = { dark: '#1A1A1C', light: '#F3F3F2' }
 
 function stored() {
   try {
