@@ -42,6 +42,13 @@ const PATHS = {
       <rect x="4" y="17" width="16" height="3" rx="1.2" />
     </>
   ),
+  // Cuenta: cabeza y hombros
+  user: (
+    <>
+      <circle cx="12" cy="8.5" r="3.5" />
+      <path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5" />
+    </>
+  ),
 }
 
 export default function NavIcon({ name }) {

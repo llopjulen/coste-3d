@@ -2,6 +2,23 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-03, Pantalla de cuenta con un contrato para el backend (sin backend todavía)
+- Archivo y sitio: src/cloud/session.js (nuevo), src/cloud/session.test.js (nuevo, 6 tests), src/Account.jsx (nuevo), src/App.jsx (estado `cloudOn`, pestaña «Cuenta» tras Printers y la vista `account`), src/NavIcons.jsx (icono `user`), src/index.css (`.account-*`, `.danger-link`), src/i18n/{en,es,fr}.js (`nav.account`, `account.*`), docs/MAPA.md.
+- Qué cambió: existe la pantalla de cuenta (paso 3 de docs/NUBE.md): entrar con un enlace por correo, «mira tu correo», quién eres, salir y borrar la cuenta. Hoy solo se ve con `?cloud=mock`, un modo de prueba que simula el backend en esa pestaña. En layercents.com no cambia nada: sin backend no hay pestaña.
+- Por qué:
+  - Querías dejar el backend listo esta semana, y el login lo escribes tú. Para que no tengas que tocar pantallas, todo pasa por un **contrato** en `src/cloud/session.js`: un objeto con cinco funciones (`getSession`, `onChange`, `sendLink`, `signOut`, `deleteAccount`). Tu adaptador con supabase-js las implementa y se registra con `registerCloudAdapter(adaptador)` en main.jsx. La pantalla no sabe si habla con Supabase o con el simulador. Es el patrón *adapter*: la interfaz es fija y la implementación se cambia sin tocar a quien la usa.
+  - El simulador permite construir y probar la pantalla hoy y te sirve de ejemplo de lo que tiene que hacer cada función (también los errores: `CloudError` con un `code` que la pantalla traduce, `email`, `network` o `rate`).
+  - El modo de prueba vive en `sessionStorage` y no en `localStorage`: al cerrar la pestaña se acaba, así nadie se queda con una «cuenta» falsa sin querer. `?cloud=off` lo apaga.
+  - Sin backend (`cloudMode()` = `off`) la pestaña no existe. Un «Entrar» que no lleva a ningún sitio es peor que no tenerlo.
+  - Enlace por correo y no contraseña, como decidió docs/NUBE.md: no hay contraseña que guardar, filtrar ni recuperar.
+  - La pantalla dice la verdad sobre lo que hace: «sincronizar llega en el siguiente paso» y «la calculadora sigue funcionando sin cuenta». Borrar la cuenta pide confirmación y avisa de que los presupuestos del dispositivo se quedan.
+  - El correo se comprueba en el navegador solo para cazar erratas obvias; quien valida de verdad es el servidor.
+  - No hay dependencia nueva: `@supabase/supabase-js` la añadirá tu PR, con tu adaptador.
+- Concepto nuevo: patrón adaptador (*adapter*) e inyección de dependencias. La pantalla pide `adapter()` en vez de importar Supabase, y alguien registra la implementación al arrancar. Ejemplo: `registerCloudAdapter({ getSession: async () => (await supabase.auth.getSession()).data.session, … })`.
+- De la carrera: Ingeniería del Software: patrón Adaptador y diseño por contrato (interfaz documentada, implementaciones intercambiables, una de ellas un *mock* para probar). Seguridad: autenticación sin contraseña por enlace de un solo uso (*magic link*).
+- Cómo probarlo: `npm test` (246 pasan). `npm run dev` y abre `localhost:5173/es/?cloud=mock`: sale la pestaña «Cuenta». Prueba un correo mal escrito (aviso), uno bueno (pantalla «Mira tu correo» y, al momento, «Has entrado como…»), «Salir» y «Borrar la cuenta». Sin `?cloud=mock`, o con `?cloud=off`, la pestaña no aparece.
+- Para tu adaptador: `src/cloud/supabase.js` con `createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY)`; `sendLink` → `supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } })`; `onChange` → `supabase.auth.onAuthStateChange`; `deleteAccount` necesita una Edge Function con la `service_role` (el cliente no puede borrar usuarios). Yo te escribo los tests cuando lo tengas.
+
 ### 2026-11-03, «Conviene saber»: consejos con cifras bajo el resultado
 - Archivo y sitio: src/advice.js (nuevo), src/advice.test.js (nuevo, 10 tests), src/App.jsx (`const tips = adviceFor(d)` junto a `calculate`, y el panel antes de «Guardar este presupuesto»), src/index.css (`.advice`), src/i18n/{en,es,fr}.js (claves `advice.*`), docs/MAPA.md.
 - Qué cambió: debajo del veredicto salen hasta tres consejos con números de la pieza. Por ejemplo: «La comisión del 15 % se lleva 1,29 EUR por pieza. Vendiendo directo, el mismo beneficio le costaría al cliente 7,30 EUR», o «Tu precio está un 7 % por debajo del recomendado: tu margen real es del 30 %, no del 40 % que pusiste».
