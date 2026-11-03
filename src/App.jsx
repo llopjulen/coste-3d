@@ -4,7 +4,6 @@ import Report from './Report.jsx'
 import ImportFile from './ImportFile.jsx'
 import CustomerQuote from './CustomerQuote.jsx'
 import Logo from './Logo.jsx'
-import CostSymbol from './CostSymbol.jsx'
 import BackupPanel, { BackupReminder } from './BackupPanel.jsx'
 import { applyRestore, backupStatus, clearSetup, downloadBackup, readLastBackup, readSetup, saveSetupField } from './backup.js'
 import Printers from './Printers.jsx'
@@ -114,14 +113,13 @@ const INITIAL = {
 const pickSetup = saved =>
   Object.fromEntries(Object.entries(saved ?? {}).filter(([key]) => SETUP_FIELDS.includes(key)))
 
-/* Chart colors, in the order the symbol is printed (bottom to top):
-   material is gold, the brand colour, because it's the filament; the
-   rest are the costs nobody sees. They are muted on purpose (2026-11-03
-   redesign): the old saturated teal, blue and violet made the chart the
-   loudest thing on the page and gave it a "neon dashboard" look. Same
-   lightness band, different hues, so each layer is still told apart; the
-   legend carries the exact amounts anyway. Packaging, the top layer, stays
-   light enough that the mark keeps its shape on the dark panel. */
+/* Cost layers and their colours, in the order of the bar and the rows.
+   Material is gold, the brand colour, because it's the filament; the
+   rest are the costs nobody sees. Muted on purpose (2026-11-03 redesign):
+   saturated teal, blue and violet made the chart the loudest thing on the
+   page. Same lightness band, different hues, so the parts are still told
+   apart; each row also carries its amount and share, so nothing depends on
+   colour alone. */
 const LAYERS = [
   { key: 'material',      nameKey: 'layer.material',      color: '#E3AE4F' },
   { key: 'power',         nameKey: 'layer.power',         color: '#7EA89F' },
@@ -817,24 +815,32 @@ export default function App({ agentOptIn = false }) {
                 <span>{t('cost.title')}</span>
                 <strong>{formatMoney(r.cost)}</strong>
               </h2>
-              <div className="cross-section">
-                {/* The chart is the layercents mark itself, "printed" with the
-                    costs. The text label is what a screen reader reads; the
-                    legend next to it carries the exact amounts. */}
-                <CostSymbol
-                  parts={r.parts}
-                  layers={LAYERS}
-                  label={t('cost.chartLabel', { list: LAYERS.map(l => `${t(l.nameKey)} ${formatMoney(r.parts[l.key])}`).join(', ') })}
-                />
-                <div className="legend">
+              {/* One stacked bar for the whole cost, then the parts as list rows.
+                  The order is fixed (material first, as in LAYERS) so nothing
+                  jumps around while typing; the percentages say what is big. */}
+              <div className="cost-breakdown">
+                <div
+                  className="cost-bar"
+                  role="img"
+                  aria-label={t('cost.chartLabel', { list: LAYERS.map(l => `${t(l.nameKey)} ${formatMoney(r.parts[l.key])}`).join(', ') })}
+                >
+                  {LAYERS.map(layer => {
+                    const share = r.cost > 0 ? r.parts[layer.key] / r.cost : 0
+                    return share > 0 && (
+                      <span key={layer.key} className="cost-bar-part" style={{ flexGrow: share, backgroundColor: layer.color }} />
+                    )
+                  })}
+                </div>
+                <ul className="cost-rows">
                   {LAYERS.map(layer => (
-                    <div className="row-legend" key={layer.key}>
+                    <li className="cost-row" key={layer.key}>
                       <i className="swatch" style={{ backgroundColor: layer.color }} />
                       <span className="name">{t(layer.nameKey)}</span>
+                      <span className="share">{r.cost > 0 ? `${Math.round((r.parts[layer.key] / r.cost) * 100)} %` : '—'}</span>
                       <span className="value">{formatMoney(r.parts[layer.key])}</span>
-                    </div>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
             </div>
 

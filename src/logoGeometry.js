@@ -1,11 +1,9 @@
 /* ==================================================================
    LOGO GEOMETRY — the layers of the layercents mark, as plain data.
 
-   It lives in its own file (and not inside Logo.jsx) because two things
-   need the SAME numbers: the logo, which draws them in gold, and the
-   cost chart (src/symbolChart.js), which paints them by cost. If each
-   kept its own copy, changing the logo would silently break the chart.
-   Plain data with no React import also lets `node --test` load it.
+   It lives in its own file (and not inside Logo.jsx) so it is plain data
+   with no React import, which `node --test` can load. (Until 2026-11-03
+   the cost chart drew the same layers; it is a stacked bar now.)
 ================================================================== */
 
 // [x, y, width] of each layer, in a 100 × 100 box. The layers that cross

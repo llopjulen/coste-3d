@@ -55,9 +55,6 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/i18n/format.js` | Fechas y números según el idioma (`fmtDay`, `fmtDateTime`, `fmtMonthYear`, `fmtNumber`, `fmtGrams`, `fmtLongDay`, `fmtMonthShort`, `fmtMoney`). Reciben el `locale` como parámetro. |
 | `src/theme.js` | Tema claro u oscuro: lee la elección guardada o la del sistema, la pone en `<html data-theme>` y en el color de la barra del navegador. |
 | `src/logoGeometry.js` | Las coordenadas de las capas del logo, como datos. Las leen el logo y la gráfica de costes, para que no se descuadren. |
-| `src/symbolChart.js` | Función pura `symbolPieces`: reparte los costes sobre las 11 capas del símbolo (cada coste ocupa un trozo del largo total proporcional a su parte del coste). Sin React. |
-| `src/symbolChart.test.js` | Tests de `symbolChart.js`: proporciones, orden, huecos entre colores, entradas raras (NaN, negativos, todo a 0). |
-| `src/CostSymbol.jsx` | La gráfica "Breakdown": dibuja el símbolo con un `clipPath` por capa y un rectángulo por coste. Solo pinta; las cuentas están en `symbolChart.js`. |
 | `src/index.css` | Todos los estilos. Arriba los tokens (`--fondo`, `--oro`…) en `:root`; luego una sección por pantalla, con comentarios en español. `@media print` decide qué sale en los PDF. |
 | `public/` | Se copia tal cual a la web: `CNAME` (el dominio para GitHub Pages: no se borra), iconos e imagen para compartir, y para los buscadores `robots.txt`. El `sitemap.xml` ya no está aquí: lo genera `scripts/prerender.js` en cada build. |
 | `scripts/prerender.js` | Tras `vite build`, escribe una página HTML por idioma (`dist/es/`, `dist/fr/`) con `hreflang` y el sitemap. Sin dependencias; falla si un patrón de `index.html` deja de coincidir. Tests en `scripts/prerender.test.js`. |
