@@ -416,6 +416,13 @@ export default {
   'preview.err.bgcode': 'El G-code binario (.bgcode) aún no se puede ver. Exporta un .gcode normal para verlo.',
   'preview.err.empty': 'Este archivo no tiene nada impreso que enseñar.',
   'preview.err.read': 'La vista 3D no ha podido leer este archivo.',
+  'advice.title': 'Conviene saber',
+  'advice.underpriced': 'Tu precio está un {gap} % por debajo del recomendado: tu margen real es del {realMargin} %, no del {margin} % que pusiste.',
+  'advice.noFailures': 'La tasa de fallos está en 0 %. Las impresiones fallidas las pagan las buenas, así que con 0 % ese coste sale de tu beneficio sin que se vea aquí.',
+  'advice.freeTime': 'Tu tiempo cuenta como gratis: {minutes} min por pieza sin tarifa por hora. Hasta una tarifa baja hace el precio honesto.',
+  'advice.lowMargin': 'Con un margen del {margin} %, una pieza rota o devuelta se come el beneficio de {parts} piezas buenas.',
+  'advice.fee': 'La comisión del {fee} % se lleva {takes} por pieza. Vendiendo directo, el mismo beneficio le costaría al cliente {direct}.',
+  'advice.laborHeavy': 'Tu tiempo es el {share} % del coste. Imprimir varias en una bandeja suele bajar los minutos por pieza, y ahí es donde puede bajar el precio.',
   // --- SEO: el <head> y el texto de #root de cada idioma. Los lee scripts/prerender.js al construir.
   'seo.title': 'Calculadora de costes de impresión 3D y presupuestos · layercents',
   'seo.description': 'Calculadora gratis del coste de impresión 3D: material, electricidad, desgaste de la impresora, fallos y tu tiempo. Obtén el coste real, un precio y un presupuesto para el cliente. Sin cuenta.',

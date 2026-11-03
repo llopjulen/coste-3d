@@ -417,6 +417,13 @@ export default {
   'preview.err.bgcode': 'Le G-code binaire (.bgcode) ne peut pas encore être affiché. Exportez un .gcode classique pour le voir.',
   'preview.err.empty': 'Ce fichier ne contient rien d’imprimé à afficher.',
   'preview.err.read': 'La vue 3D n’a pas pu lire ce fichier.',
+  'advice.title': 'Bon à savoir',
+  'advice.underpriced': 'Votre prix est {gap} % sous le prix recommandé : votre marge réelle est de {realMargin} %, pas des {margin} % prévus.',
+  'advice.noFailures': 'Le taux d’échec est à 0 %. Les impressions ratées sont payées par les bonnes : avec 0 %, ce coût sort de votre bénéfice sans apparaître ici.',
+  'advice.freeTime': 'Votre temps compte comme gratuit : {minutes} min par pièce sans tarif horaire. Même un tarif bas rend le prix honnête.',
+  'advice.lowMargin': 'Avec une marge de {margin} %, une pièce cassée ou retournée efface le bénéfice de {parts} bonnes pièces.',
+  'advice.fee': 'La commission de {fee} % prend {takes} par pièce. En vente directe, le même bénéfice coûterait {direct} à l’acheteur.',
+  'advice.laborHeavy': 'Votre temps représente {share} % du coût. Imprimer plusieurs pièces sur un plateau réduit souvent les minutes par pièce, et c’est là que le prix peut baisser.',
   // --- SEO: el <head> y el texto de #root de cada idioma. Los lee scripts/prerender.js al construir.
   'seo.title': 'Calculateur de coût d’impression 3D et devis · layercents',
   'seo.description': 'Calculateur gratuit du coût d’impression 3D : matière, électricité, usure de l’imprimante, impressions ratées et votre temps. Obtenez le coût réel, un prix et un devis client. Sans compte.',

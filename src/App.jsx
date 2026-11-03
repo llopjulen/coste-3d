@@ -9,6 +9,7 @@ import BackupPanel, { BackupReminder } from './BackupPanel.jsx'
 import { applyRestore, backupStatus, clearSetup, downloadBackup, readLastBackup, readSetup, saveSetupField } from './backup.js'
 import Printers from './Printers.jsx'
 import RealData from './RealData.jsx'
+import { adviceFor } from './advice.js'
 import NavIcon from './NavIcons.jsx'
 import SubNav from './SubNav.jsx'
 import { applyTheme, readTheme, saveTheme } from './theme.js'
@@ -555,6 +556,7 @@ export default function App({ agentOptIn = false }) {
   // The result isn't stored in state, it's recalculated on every render.
   const r = calculate(d)
   const cap = capacity(d)
+  const tips = adviceFor(d)
   // The big price at the top of the result, split to style its cents.
   const price = moneyParts(r.recommendedPrice)
 
@@ -842,6 +844,23 @@ export default function App({ agentOptIn = false }) {
                 <span className="value">{formatMoney(r.perHour)}</span>
               </div>
             </div>
+
+            {/* Tips from the numbers above (advice.js): plain rules, at most three.
+                Hidden when there is nothing worth saying. */}
+            {tips.length > 0 && (
+              <section className="panel" aria-labelledby="advice-title">
+                <h2 id="advice-title">{t('advice.title')}</h2>
+                <ul className="body advice">
+                  {tips.map(tip => (
+                    <li key={tip.id}>{t(`advice.${tip.id}`, {
+                      ...tip.vars,
+                      takes: tip.vars.takes != null ? formatMoney(tip.vars.takes) : undefined,
+                      direct: tip.vars.direct != null ? formatMoney(tip.vars.direct) : undefined,
+                    })}</li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
             {/* Saving comes after the result: you save what you've just seen. */}
             <form className="panel" onSubmit={saveQuote}>
