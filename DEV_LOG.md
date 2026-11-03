@@ -2,6 +2,24 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-03, Rediseño sobrio: grafito, superficies planas y el oro solo en el precio
+- Archivo y sitio: src/index.css (tokens de `:root` y `:root[data-theme="light"]`, barra lateral, `h1`, `.steps`, `.panel`, campos, `.hero`, `.controls`, `.text-input`, tabla del historial, `.gain`), src/App.jsx (colores de `LAYERS`), index.html y src/theme.js (colores antes de pintar y de la barra del navegador), CLAUDE.md (regla de estilo).
+- Qué cambió: la interfaz pasa de «panel con brillo y oro por todas partes» a un estilo de herramienta de trabajo. Fondo grafito, bloques planos sin franja gris en el título, campos un escalón más hundidos que el bloque, botones que se aclaran en vez de volverse dorados, cifras del precio grandes y de trazo fino, y la gráfica en tonos apagados.
+- Por qué:
+  - Lo pediste: software elegante, no «modo neón». Lo que lo hacía parecer neón eran tres cosas: el oro repetido en bordes, pestañas, ganancias y botones; los colores saturados de la gráfica (turquesa, azul, violeta); y los degradados y filos de luz de los paneles. Ahora el oro solo aparece donde se decide dinero (el precio y «Guardar presupuesto») y en la marquita de dónde estás. Un color que sale en todas partes deja de significar algo.
+  - Gráfica: mismos tonos, menos saturación y luminosidad parecida, así se siguen distinguiendo las seis capas sin que la gráfica sea lo más ruidoso de la pantalla. La leyenda da las cifras exactas, así que no depende solo del color.
+  - Una sola familia (Inter) para títulos y texto. La Bricolage, más caprichosa, se queda en el nombre de la marca. Alternativa descartada: añadir una tercera fuente. Sería una dependencia más y un peso más para una mejora que da la jerarquía de tamaños y pesos.
+  - El precio usa Inter con peso 300 y 5 rem: cifras finas y grandes, como la escala de un instrumento de medida. Es el único momento llamativo de la página; todo lo demás va en voz baja.
+  - Las ganancias ya no salen en oro sino en el color del texto (perder sigue en rojo): el oro es del precio.
+  - Fondo `#1A1A1C` y no casi negro: un gris carbón con un punto cálido. Tema claro gris neutro, no crema. Radios con jerarquía: 10 px los bloques y 7 px los campos y botones.
+  - Fallo que arreglé de paso: `--borde-fuerte:var(--borde-fuerte)` en el tema oscuro se refería a sí mismo, una referencia circular que CSS invalida, así que los campos no cambiaban de borde al pasar el ratón.
+  - Las cabeceras de la tabla del historial dejan de ir en mayúsculas con espaciado: era decoración, no información.
+  - Contrastes medidos (WCAG AA, 4,5:1 para texto): `--tenue` 6,1:1 sobre los bloques en oscuro y 6,0:1 en claro.
+  - El informe y el presupuesto para el cliente (la hoja blanca) no cambian.
+- Concepto nuevo: tokens de diseño. Todos los colores, radios y sombras son variables CSS (`--panel`, `--radio-campo`…) definidas una vez en `:root`. El tema claro solo redefine sus valores, y ningún componente sabe en qué tema está. Ejemplo: `.panel{background:var(--panel)}` + `:root[data-theme="light"]{--panel:#FFF}`.
+- De la carrera: Interacción Persona-Ordenador: jerarquía visual, contraste mínimo de WCAG y el principio de que la señal (el color de acento) pierde valor si se usa como decoración.
+- Cómo probarlo: `npm run build && npm run preview`. Mira la calculadora en oscuro y en claro (botón del sol), el historial y el móvil (390 px). Pasa el ratón por un campo: el borde se aclara (antes no hacía nada). El PDF del presupuesto y el informe deben verse igual que antes.
+
 ### 2026-11-02, «Use real data»: tasa de fallos y tiempo reales en la calculadora (paso 9)
 - Archivo y sitio: src/RealData.jsx (nuevo), src/jobStats.js (función `realDataSuggestions`, al final), src/App.jsx (`<RealData>` justo encima del panel «Your setup»), src/index.css (`.real-data`, `.real-row`), src/i18n/{en,es,fr}.js (claves `real.*`), src/jobStats.test.js, docs/MAPA.md, CLAUDE.md.
 - Qué cambió: si la persona tiene el agente activado y su registro de trabajos tiene suficientes impresiones, la calculadora enseña «El 20 % de tus impresiones falló en los últimos 30 días» con un botón para usar ese porcentaje como tasa de fallos, y «Tus impresiones tardan un 10 % más de lo que dice el laminador» con un botón que ajusta el tiempo de esta pieza.

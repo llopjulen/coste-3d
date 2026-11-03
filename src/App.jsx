@@ -113,16 +113,19 @@ const pickSetup = saved =>
 
 /* Chart colors, in the order the symbol is printed (bottom to top):
    material is gold, the brand colour, because it's the filament; the
-   rest are the costs nobody sees. The two greys are lighter than the
-   old ones: on the dark panel the darkest grey nearly vanished, and
-   since packaging is the top layer, the mark lost its shape. */
+   rest are the costs nobody sees. They are muted on purpose (2026-11-03
+   redesign): the old saturated teal, blue and violet made the chart the
+   loudest thing on the page and gave it a "neon dashboard" look. Same
+   lightness band, different hues, so each layer is still told apart; the
+   legend carries the exact amounts anyway. Packaging, the top layer, stays
+   light enough that the mark keeps its shape on the dark panel. */
 const LAYERS = [
-  { key: 'material',      nameKey: 'layer.material',      color: '#F2B33D' },
-  { key: 'power',         nameKey: 'layer.power',         color: '#12A594' },
-  { key: 'depreciation',  nameKey: 'layer.depreciation',  color: '#3E8FD0' },
-  { key: 'failures',      nameKey: 'layer.failures',      color: '#6E74C4' },
-  { key: 'labor',         nameKey: 'layer.labor',         color: '#A3A3B1' },
-  { key: 'packaging',     nameKey: 'layer.packaging',     color: '#6C6C7A' },
+  { key: 'material',      nameKey: 'layer.material',      color: '#E3AE4F' },
+  { key: 'power',         nameKey: 'layer.power',         color: '#7EA89F' },
+  { key: 'depreciation',  nameKey: 'layer.depreciation',  color: '#8A9CB8' },
+  { key: 'failures',      nameKey: 'layer.failures',      color: '#B48A9C' },
+  { key: 'labor',         nameKey: 'layer.labor',         color: '#AAA59A' },
+  { key: 'packaging',     nameKey: 'layer.packaging',     color: '#77756F' },
 ]
 
 
