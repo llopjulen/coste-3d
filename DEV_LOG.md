@@ -2,6 +2,22 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-03, Formulario como lista agrupada (estilo Ajustes de Apple)
+- Archivo y sitio: src/index.css (tokens de los dos temas, `.form-col .panel`, `.field`, `.field input`, `.info`, `.help`, `.controls`, `.text-input`, `.dropzone`, `.extra-add`, `.result`, `.hero-price` en claro, barra móvil con material translúcido, barra lateral sin la marquita dorada), src/App.jsx (clase `form-col` en la columna del formulario; fuera la lista de tres pasos bajo el título), src/i18n/{en,es,fr}.js (borradas `calc.step1-3`), CLAUDE.md (regla de estilo).
+- Qué cambió: el formulario se ve como una lista de Ajustes de iPhone o Mac. El título de cada bloque va fuera, pequeño y gris. Las filas son de 48 px con separadores finos y el valor a la derecha como texto, sin recuadro (la caja aparece al pasar el ratón y al editar). Los bloques no tienen borde: se distinguen por el relleno sobre un fondo más oscuro. Títulos más grandes y más aire entre bloques. En el tema claro el precio va en tinta en vez de oro.
+- Por qué:
+  - Lo que hacía que pareciera «hecho con IA» era el «kit de tarjetas»: cada bloque una caja con borde y su título dentro, un recuadro en cada número, la barrita dorada de la barra lateral, la lista numerada de pasos y los círculos de ayuda marcados. Son los rasgos por defecto que salen en cualquier web generada, sin relación con el contenido.
+  - La lista agrupada es el patrón que Apple usa para formularios largos de números (Ajustes, Salud). Funciona porque deja leer la columna de etiquetas a la izquierda y la de valores a la derecha sin que el ojo choque con 17 recuadros. Es justo la forma de esta calculadora: muchos campos numéricos, uno por fila.
+  - Valores sin caja: la caja sale al pasar el ratón y al editar, con un anillo dorado. Se sigue viendo qué es editable sin llenar la pantalla de bordes.
+  - Botones rellenos sin borde y «Añadir otro filamento» como texto en el color de acento, como la fila de añadir de una lista de iOS.
+  - La barra fija del móvil usa material translúcido (`backdrop-filter: blur`), como las barras de iOS: el contenido se intuye por debajo.
+  - Fuera los tres pasos numerados bajo el título. Repetían lo que ya dice la zona de soltar el archivo, y cada línea de más antes del primer campo retrasa el primer valor.
+  - En claro, el oro fino del precio sobre blanco se veía apagado (es un ocre oscuro para cumplir contraste). El precio en tinta lee mejor; el oro sigue en el botón principal y en la marca. En oscuro el precio sigue en oro.
+  - Contrastes (WCAG AA, 4,5:1): `--tenue` 6,6:1 sobre los grupos en oscuro y 5,1:1 en claro.
+  - Sin dependencias: Inter sigue siendo la letra (la de Apple, SF Pro, no se puede usar en webs que no sean de Apple).
+- Concepto nuevo: `backdrop-filter`. Aplica un filtro a lo que hay DETRÁS de un elemento, no al elemento: `background: rgba(28,28,31,.78); backdrop-filter: blur(20px)` da la barra de cristal esmerilado de iOS.
+- De la carrera: Interacción Persona-Ordenador: ley de proximidad de la Gestalt (agrupar por relleno y espacio en vez de bordes), alineación a dos columnas para leer de un vistazo, y evitar la carga visual de elementos que no aportan información.
+- Cómo probarlo: `npm run build && npm run preview`. Mira la calculadora en claro y en oscuro: títulos fuera de los grupos, filas con el valor a la derecha. Pasa el ratón por un valor (aparece la caja) y haz clic (anillo dorado). En el móvil, la barra de abajo deja ver el contenido desenfocado al desplazarte.
 ### 2026-11-03, Pantalla de cuenta con un contrato para el backend (sin backend todavía)
 - Archivo y sitio: src/cloud/session.js (nuevo), src/cloud/session.test.js (nuevo, 6 tests), src/Account.jsx (nuevo), src/App.jsx (estado `cloudOn`, pestaña «Cuenta» tras Printers y la vista `account`), src/NavIcons.jsx (icono `user`), src/index.css (`.account-*`, `.danger-link`), src/i18n/{en,es,fr}.js (`nav.account`, `account.*`), docs/MAPA.md.
 - Qué cambió: existe la pantalla de cuenta (paso 3 de docs/NUBE.md): entrar con un enlace por correo, «mira tu correo», quién eres, salir y borrar la cuenta. Hoy solo se ve con `?cloud=mock`, un modo de prueba que simula el backend en esa pestaña. En layercents.com no cambia nada: sin backend no hay pestaña.

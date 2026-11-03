@@ -20,9 +20,6 @@ export default {
 
   'calc.title': 'Ce que vous coûte vraiment une pièce imprimée',
   'calc.subtitle': 'Matériau, électricité, usure de l’imprimante, impressions ratées et votre propre temps.',
-  'calc.step1': 'Déposez votre fichier tranché',
-  'calc.step2': 'Découvrez le coût réel et le prix',
-  'calc.step3': 'Enregistrez-le et envoyez un devis',
 
   'section.material': 'Matériau',
   'section.thisPrint': 'Cette impression',

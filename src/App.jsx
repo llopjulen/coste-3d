@@ -703,15 +703,11 @@ export default function App({ agentOptIn = false }) {
       <div className="wrap calc-page">
         <h1>{t('calc.title')}</h1>
         <p className="subtitle">{t('calc.subtitle')}</p>
-        <ol className="steps">
-          <li><span className="step-n" aria-hidden="true">1</span>{t('calc.step1')}</li>
-          <li><span className="step-n" aria-hidden="true">2</span>{t('calc.step2')}</li>
-          <li><span className="step-n" aria-hidden="true">3</span>{t('calc.step3')}</li>
-        </ol>
 
         <div className="columns">
-          {/* --- Form: drawn by looping over SECTIONS --- */}
-          <div>
+          {/* --- Form: drawn by looping over SECTIONS. "form-col" gives it the
+               grouped-list look (titles outside, rows inside; index.css). --- */}
+          <div className="form-col">
             <div id="sec-import"><ImportFile onApply={applyImport} onUndo={undoImport} /></div>
             {/* The numbers that change with every part */}
             {SECTIONS.filter(section => !section.setup).map(section => (

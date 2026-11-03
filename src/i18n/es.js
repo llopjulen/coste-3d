@@ -19,9 +19,6 @@ export default {
 
   'calc.title': 'Lo que realmente te cuesta una pieza impresa',
   'calc.subtitle': 'Material, electricidad, desgaste de la impresora, impresiones fallidas y tu propio tiempo.',
-  'calc.step1': 'Suelta tu archivo del laminador',
-  'calc.step2': 'Mira el coste real y el precio',
-  'calc.step3': 'Guárdalo y envía un presupuesto',
 
   'section.material': 'Material',
   'section.thisPrint': 'Esta impresión',

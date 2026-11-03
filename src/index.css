@@ -3,38 +3,36 @@
    Cambiar el tema entero es cambiar estas lineas.
 ------------------------------------------------------------------ */
 :root{
-  /* Grafito, no negro: un gris carbon con un punto calido, como el de una
-     herramienta de taller. El negro casi puro (#0B0B0B, #111) es lo que
-     hace que una interfaz oscura parezca un panel de neon. */
-  --fondo:#1A1A1C;
-  --panel:#202022;      /* superficie de los bloques: un escalon sobre el fondo */
-  --panel-alto:#29292C; /* fila al pasar el raton, botones secundarios */
-  --hundido:#161618;    /* campos de texto: un escalon POR DEBAJO, se leen como huecos para escribir */
-  --borde:#2F2F33;      /* lineas finas: separan sin dibujar cajas */
-  --borde-fuerte:#4A4A50; /* borde de un campo al pasar el raton (antes se referia a si mismo y no valia nada) */
-  --texto:#EDECE8;      /* blanco roto calido: menos deslumbrante que el blanco puro */
-  /* Gris del texto secundario: 6,1:1 sobre --panel y 5,5:1 sobre --panel-alto (WCAG AA pide 4,5). */
-  --tenue:#A09F9A;
-  /* El oro de la marca, algo mas sobrio que el anterior (#F2B33D): se usa solo
-     donde se decide dinero (el precio y el boton principal) y para marcar
-     donde estas. Si sale en todas partes deja de significar algo. */
+  /* Paleta inspirada en las listas agrupadas de Apple (Ajustes, Salud):
+     un fondo, grupos un escalon mas claros y separadores finos, sin bordes
+     alrededor de cada bloque. El fondo no es negro puro: un gris carbon,
+     para que los grupos se lean sin necesidad de borde. */
+  --fondo:#111113;
+  --panel:#1C1C1F;      /* grupos y bloques */
+  --panel-alto:#2A2A2E; /* botones secundarios, fila pulsada, ayudas */
+  --hundido:#26262A;    /* campo al editarlo */
+  --borde:#2C2C30;      /* separadores entre filas */
+  --borde-fuerte:#48484E;
+  --texto:#F2F2F0;
+  --tenue:#9C9CA2;      /* 6,6:1 sobre --panel (WCAG AA pide 4,5) */
   --oro:#E3AE4F;
   --oro-vivo:#EDC074;
   --sobre-oro:#1A1A1C;
-  --rojo:#F07A72;       /* perdidas y errores: 5,6:1 sobre --panel */
-  --radio:10px;         /* bloques */
-  --radio-campo:7px;    /* campos y botones: radio menor que su contenedor, para que encajen */
-  /* Sin brillos ni filos de luz: superficies planas separadas por lineas.
-     Se mantienen las variables para no tocar las reglas que las usan. */
+  --rojo:#FF7B72;
+  --radio:14px;         /* grupos */
+  --radio-campo:9px;    /* botones, campos, ayudas */
   --brillo:linear-gradient(transparent,transparent);
   --filo:0 0 0 0 transparent;
-  --rail-w:216px;
+  --rail-w:232px;
   --oro-texto:#EDC074;
   --oro-rgb:227,174,79;
-  --rojo-rgb:240,122,114;
-  --velo:rgba(237,236,232,.045);
+  --rojo-rgb:255,123,114;
+  --velo:rgba(242,242,240,.05);
   --sombra:0 0 0 0 transparent;
   --cabecera:transparent;
+  /* Material translucido de las barras (como las de iOS): el contenido se
+     intuye debajo, desenfocado. */
+  --material:rgba(28,28,31,.78);
   color-scheme:dark;
 }
 
@@ -46,24 +44,24 @@
    --oro-texto 5,9 y 5,1; --rojo 5,7 y 4,9.
 ------------------------------------------------------------------ */
 :root[data-theme="light"]{
-  /* Gris claro neutro, no crema: el papel crema con acento terracota es la
-     imagen por defecto de demasiadas webs. Contrastes: --tenue 6,0:1 sobre
-     --panel; --oro-texto 5,9:1; --rojo 5,4:1. */
-  --fondo:#F3F3F2;
+  /* Gris claro de fondo y grupos blancos: el contraste lo dan los grupos,
+     no los bordes. --tenue 5,1:1 sobre blanco; --oro-texto 5,9:1; --rojo 5,4:1. */
+  --fondo:#F2F2F4;
   --panel:#FFFFFF;
-  --panel-alto:#F0F0EE;
-  --hundido:#F7F7F6;
-  --borde:#E2E2DF;
-  --borde-fuerte:#B9B9B4;
+  --panel-alto:#EBEBEE;
+  --hundido:#F2F2F4;
+  --borde:#E3E3E7;
+  --borde-fuerte:#C4C4CA;
   --texto:#1D1D1F;
-  --tenue:#616160;
+  --tenue:#6E6E73;
   --oro:#E3AE4F;
   --oro-vivo:#EDC074;
   --oro-texto:#8A5A00;
-  --rojo:#BF2F2A;
-  --rojo-rgb:191,47,42;
-  --sombra:0 1px 2px rgba(29,29,31,.04);
-  --velo:rgba(29,29,31,.04);
+  --rojo:#C62F2A;
+  --rojo-rgb:198,47,42;
+  --sombra:0 0 0 0 transparent;
+  --velo:rgba(29,29,31,.045);
+  --material:rgba(255,255,255,.78);
   color-scheme:light;
 }
 
@@ -74,8 +72,9 @@ body{
   font-family:'Inter Variable','Inter',system-ui,-apple-system,sans-serif;
   background:var(--fondo);
   color:var(--texto);
-  line-height:1.5;
+  line-height:1.47;
   font-size:15px;
+  letter-spacing:-.006em;
   /* Cifras de ancho fijo y ceros sin barra: los importes se alinean en columna. */
   font-feature-settings:'cv11','tnum' 0;
   -webkit-font-smoothing:antialiased;
@@ -90,7 +89,7 @@ body{
   display:flex;align-items:center;gap:9px;
   padding:11px 18px;
   border-bottom:1px solid var(--borde);
-  background:var(--panel);
+  background:var(--fondo);
 }
 /* Marca: el simbolo (src/Logo.jsx) y el nombre en su tipo de letra */
 .brand{
@@ -156,8 +155,9 @@ body{
     padding:20px 12px 16px;
     border-bottom:0;border-right:1px solid var(--borde);
     background:var(--fondo);
+    border-right-color:var(--borde);
   }
-  .brand{padding:2px 12px 20px}
+  .brand{padding:4px 12px 24px}
   .tabs{flex-direction:column;gap:4px;margin-left:0}
   .tab{
     position:relative;gap:11px;padding:8px 12px;font-size:.9rem;
@@ -168,12 +168,9 @@ body{
   /* El oro solo marca donde estas: borde, un velo y la marquita a la izquierda */
   /* Donde estas: un fondo un escalon mas claro y la marquita de oro a la
      izquierda. Sin borde ni degradado dorado: el oro es una pista, no un relleno. */
-  .tab.active{background:var(--panel-alto);color:var(--texto)}
+  .tab.active{background:var(--panel);color:var(--texto);font-weight:500}
   .tab.active .nav-icon{color:var(--oro-texto)}
-  .tab.active::before{
-    content:'';position:absolute;left:-13px;top:10px;bottom:10px;width:3px;
-    border-radius:0 3px 3px 0;background:var(--oro);
-  }
+  /* Sin barrita lateral: el fondo del grupo y el icono en oro bastan. */
   .topbar-end{margin:auto 0 0}
   .theme-btn{width:38px;height:36px;border-radius:var(--radio-campo);flex:none}
   .currency{flex:1;min-width:0;padding:8px 10px;border-radius:var(--radio-campo)}
@@ -211,38 +208,41 @@ body{
   .topbar-end{flex-direction:column}
   .theme-btn{width:100%}
   .currency{width:100%;flex:none;padding:8px 2px;text-align:center}
-  .tab.active::before{left:-9px}
 }
 /* En el movil los iconos sobran: las tres pestanas ya apenas caben en 360 px */
 @media(max-width:860px){.tab .nav-icon{display:none}}
 
-.wrap{max-width:1060px;margin:0 auto;padding:26px 18px 64px}
+.wrap{max-width:1080px;margin:0 auto;padding:44px 24px 72px}
+@media(max-width:560px){.wrap{padding:24px 16px 64px}}
 
 /* Titulos en Inter, la misma letra que el resto: una sola familia da calma.
    La Bricolage (mas caprichosa) queda solo para el nombre de la marca. */
-h1{font-size:clamp(1.6rem,4.2vw,2.15rem);font-weight:600;letter-spacing:-.028em;line-height:1.15;text-wrap:balance}
-.subtitle{margin-top:8px;color:var(--tenue);font-size:.98rem;max-width:36em;text-wrap:pretty}
-/* Los tres pasos debajo del titulo: lo que hace la app de un vistazo */
-.steps{list-style:none;display:flex;flex-wrap:wrap;gap:8px 26px;margin-top:18px;font-size:.86rem;color:var(--tenue)}
-.steps li{display:flex;align-items:center;gap:8px}
-.step-n{
-  display:grid;place-items:center;width:22px;height:22px;flex:none;
-  border-radius:50%;border:1px solid var(--borde-fuerte);
-  color:var(--texto);font-size:.72rem;font-weight:600;
-}
+/* Titulo grande y compacto, como los "large titles" de Apple. */
+h1{font-size:clamp(1.9rem,4.6vw,2.6rem);font-weight:700;letter-spacing:-.032em;line-height:1.08;text-wrap:balance}
+.subtitle{margin-top:10px;color:var(--tenue);font-size:1.06rem;line-height:1.45;max-width:34em;text-wrap:pretty}
 
-.columns{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:24px;align-items:start;margin-top:30px}
+.columns{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:32px;align-items:start;margin-top:36px}
 @media(max-width:860px){.columns{grid-template-columns:1fr}}
 
 /* ----------------------------- Paneles ---------------------------- */
 .panel{
-  background:var(--brillo),var(--panel);
-  box-shadow:var(--filo),var(--sombra);
-  border:1px solid var(--borde);
+  background:var(--panel);
   border-radius:var(--radio);
-  margin-bottom:14px;
+  margin-bottom:28px;
   overflow:hidden;
 }
+/* Columna del formulario: como una lista agrupada de Ajustes. El titulo va
+   FUERA del grupo, pequeño y gris; el grupo es solo las filas. Los bloques
+   de la columna del resultado siguen siendo tarjetas con su titulo dentro. */
+.form-col .panel{background:none;overflow:visible}
+.form-col .panel > h2{padding:0 16px 7px;font-size:.84rem;font-weight:500;color:var(--tenue)}
+.form-col .panel > h2.with-value{border-bottom:0;padding-bottom:7px}
+.form-col .panel > h2.with-value .link{color:var(--oro-texto);text-decoration:none;font-weight:500}
+.form-col .panel > .body{background:var(--panel);border-radius:var(--radio);padding:2px 16px}
+/* "Tu configuracion": dos grupos (impresora; tu y tu plataforma), cada uno
+   con su subtitulo dentro, y la version plegada como un grupo de solo lectura. */
+.form-col .setup-panel > .body + .body{margin-top:12px}
+.form-col .setup-summary{background:var(--panel);border-radius:var(--radio);padding:14px 16px}
 /* Titulo del bloque: texto normal un poco mas fuerte, sin franja gris de
    fondo. La franja hacia que cada bloque pareciera una ventana aparte. */
 .panel > h2{
@@ -254,46 +254,50 @@ h1{font-size:clamp(1.6rem,4.2vw,2.15rem);font-weight:600;letter-spacing:-.028em;
 }
 .panel .body{padding:4px 18px 14px}
 
-.field{padding:8px 0}
+.field{padding:0}
+.field .row{min-height:48px}
 .field + .field{border-top:1px solid var(--borde)}
 .row{display:flex;align-items:center;gap:10px}
 .label-group{flex:1;display:flex;align-items:center;gap:6px;min-width:0}
-.field label{font-size:.89rem;color:var(--texto)}
+.field label{font-size:.95rem;color:var(--texto)}
 
 /* Boton de ayuda: es un <button> de verdad, no un icono decorativo,
    para que funcione con teclado y con lector de pantalla. */
 .info{
-  width:17px;height:17px;flex:none;
+  width:16px;height:16px;flex:none;
   display:grid;place-items:center;
   padding:0;line-height:1;
-  border:1px solid var(--borde);border-radius:50%;
-  background:none;color:var(--tenue);
-  font-family:inherit;font-size:.66rem;font-weight:600;
+  border:1.2px solid currentColor;border-radius:50%;
+  background:none;color:var(--tenue);opacity:.65;
+  font-family:inherit;font-size:.62rem;font-weight:600;
   cursor:pointer;
 }
-.info:hover{border-color:var(--oro);color:var(--oro-texto)}
+.info:hover{opacity:1}
 .info:focus-visible{outline:2px solid var(--oro);outline-offset:2px}
-.info[aria-expanded="true"]{border-color:var(--oro);color:var(--oro-texto)}
+.info[aria-expanded="true"]{opacity:1;color:var(--oro-texto)}
 
 .help{
-  margin-top:8px;
-  padding:9px 11px;
-  background:var(--panel-alto);
+  margin:0 0 12px;
+  padding:10px 12px;
+  background:var(--velo);
   border-radius:var(--radio-campo);
-  font-size:.82rem;line-height:1.45;color:var(--tenue);
+  font-size:.84rem;line-height:1.5;color:var(--tenue);
 }
 .field input{
-  width:92px;
+  /* Como en Ajustes: el valor es texto alineado a la derecha, sin caja.
+     La caja aparece al pasar el raton y al editar, para que se vea que se
+     puede escribir sin llenar la pantalla de recuadros. */
+  width:104px;
   font-family:inherit;
-  font-size:.89rem;
+  font-size:.95rem;
   font-variant-numeric:tabular-nums;
   text-align:right;
-  padding:6px 11px;
-  border:1px solid var(--borde);
-  border-radius:var(--radio-campo);
-  background:var(--hundido);
+  padding:6px 10px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
   color:var(--texto);
-  transition:border-color .12s ease;
+  transition:background-color .12s ease,box-shadow .12s ease;
 }
 /* Sin flechitas de subir/bajar: se pegaban al numero y le quitaban aire,
    y casi todos los datos llevan decimales (0.15, 3.5) donde un paso de 1
@@ -302,12 +306,13 @@ h1{font-size:clamp(1.6rem,4.2vw,2.15rem);font-weight:600;letter-spacing:-.028em;
 .field input::-webkit-outer-spin-button,
 .field input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .field input[type="number"]{-moz-appearance:textfield;appearance:textfield}
-.field input:hover{border-color:var(--borde-fuerte)}
-.field input:focus-visible{outline:none;border-color:var(--oro);box-shadow:0 0 0 2px rgba(var(--oro-rgb),.22)}
-.field .unit{width:28px;font-size:.78rem;color:var(--tenue)}
+.field input:hover{background:var(--velo)}
+.field input:focus-visible{outline:none;background:var(--hundido);box-shadow:0 0 0 2px rgba(var(--oro-rgb),.45)}
+.field .unit{width:30px;font-size:.84rem;color:var(--tenue)}
 
 /* ---------------------------- Resultado --------------------------- */
-.result{position:sticky;top:18px;display:flex;flex-direction:column;gap:12px}
+.result{position:sticky;top:24px;display:flex;flex-direction:column;gap:16px}
+.result .panel{margin-bottom:0}
 /* La columna ya mide ~820 px (precio, grafica, veredicto y guardar). En una
    pantalla mas baja, pegada arriba taparia el boton de guardar sin forma de
    llegar a el: ahi mejor que se desplace con la pagina. */
@@ -339,14 +344,16 @@ h1{font-size:clamp(1.6rem,4.2vw,2.15rem);font-weight:600;letter-spacing:-.028em;
 /* El unico momento llamativo de la pagina: el precio. Cifras grandes y de
    trazo fino, como la escala de un instrumento de medida; todo lo demas
    alrededor se queda en voz baja. */
-.hero{padding:22px 22px 20px}
+.hero{padding:24px 24px 22px}
 .hero-label{display:block;font-size:.86rem;font-weight:500;color:var(--tenue)}
 .hero-price{
   display:flex;align-items:baseline;gap:2px;margin-top:6px;
   font-weight:300;letter-spacing:-.045em;color:var(--oro-texto);
   font-variant-numeric:tabular-nums;
 }
-.hero-whole{font-size:5rem;line-height:.95}
+.hero-whole{font-size:5.4rem;line-height:.92}
+/* En claro, el oro fino sobre blanco se ve apagado: el precio va en tinta y el oro queda en el boton y la marca. */
+:root[data-theme="light"] .hero-price{color:var(--texto)}
 .hero-cents{font-size:2.1rem;font-weight:400}
 .hero-currency{margin-left:6px;font-size:1rem;letter-spacing:0;color:var(--tenue)}
 .hero-sub{margin-top:10px;font-size:.88rem;color:var(--tenue);text-wrap:pretty}
@@ -376,9 +383,9 @@ h1{font-size:clamp(1.6rem,4.2vw,2.15rem);font-weight:600;letter-spacing:-.028em;
 .real-data{display:grid;gap:10px;padding-top:11px}
 .real-row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:.88rem}
 .real-row .controls{flex:none}
-.setup-note{padding:2px 18px 0;font-size:.82rem;color:var(--tenue)}
-.setup-group h3{margin:10px 0 0;font-size:.74rem;font-weight:600;letter-spacing:.02em;color:var(--tenue)}
-.setup-actions{padding:0 18px 14px}
+.setup-note{padding:0 16px 10px;font-size:.82rem;color:var(--tenue)}
+.setup-group h3{margin:12px 0 2px;font-size:.8rem;font-weight:500;color:var(--tenue)}
+.setup-actions{padding:12px 16px 0}
 /* Plegado: una linea por dato, solo lectura */
 .setup-summary{padding:8px 18px 14px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px}
 .setup-summary div{display:flex;justify-content:space-between;gap:8px;font-size:.84rem;min-width:0}
@@ -425,7 +432,8 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
     position:fixed;left:0;right:0;bottom:0;z-index:5;
     display:flex;align-items:center;gap:18px;
     padding:10px 18px calc(10px + env(safe-area-inset-bottom));
-    background:var(--panel);border-top:1px solid var(--borde);
+    background:var(--material);border-top:1px solid var(--borde);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);
     font-size:.78rem;color:var(--tenue);
     transition:transform .2s ease,visibility .2s;
   }
@@ -440,14 +448,16 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
    mismo estilo oscuro que el resto en vez del boton blanco del navegador. */
 .controls{
   font-family:inherit;font-size:.86rem;font-weight:500;
-  padding:7px 14px;
-  border:1px solid var(--borde);border-radius:var(--radio-campo);
+  padding:8px 15px;
+  border:1px solid transparent;border-radius:var(--radio-campo);
   background:var(--panel-alto);color:var(--texto);
   cursor:pointer;
-  transition:background-color .12s ease,border-color .12s ease;
+  transition:background-color .12s ease,transform .08s ease;
 }
-/* Al pasar el raton el boton se aclara un poco; no se vuelve dorado. */
-.controls:hover:not(:disabled){border-color:var(--borde-fuerte);background:var(--velo)}
+/* Botones rellenos sin borde, como los de iOS: al pasar el raton se
+   oscurecen un punto; al pulsar se hunden apenas. */
+.controls:hover:not(:disabled){background:var(--borde)}
+.controls:active:not(:disabled){transform:scale(.98)}
 .controls:focus-visible{outline:2px solid var(--oro);outline-offset:2px}
 .controls:disabled{opacity:.5;cursor:wait}
 .save-bar button[type="submit"]{background:var(--oro);border-color:var(--oro);color:var(--sobre-oro)}
@@ -459,12 +469,12 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .text-input{
   flex:1 1 180px;min-width:0;
   font-family:inherit;font-size:.89rem;
-  padding:7px 10px;
-  border:1px solid var(--borde);border-radius:var(--radio-campo);
+  padding:9px 12px;
+  border:1px solid transparent;border-radius:var(--radio-campo);
   background:var(--hundido);color:var(--texto);
 }
 .text-input::placeholder{color:var(--tenue)}
-.text-input:hover{border-color:var(--borde-fuerte)}
+.text-input:hover{border-color:var(--borde)}
 .text-input:focus-visible{outline:none;border-color:var(--oro);box-shadow:0 0 0 2px rgba(var(--oro-rgb),.22)}
 
 /* Aviso "Saved · View history" debajo del formulario de guardar */
@@ -483,8 +493,8 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 @media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
 .stat{
   display:flex;flex-direction:column;gap:3px;
-  padding:14px 16px;
-  background:var(--panel);border:1px solid var(--borde);border-radius:var(--radio);
+  padding:16px 18px;
+  background:var(--panel);border-radius:var(--radio);
 }
 .stat .label{font-size:.76rem;color:var(--tenue)}
 .stat .value{font-size:1.35rem;font-weight:500;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
@@ -640,22 +650,21 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
    Zona para soltar el archivo, resumen de lo leido y notas. */
 .dropzone{
   display:flex;flex-direction:column;align-items:flex-start;gap:7px;
-  margin:8px 0 6px;padding:13px 14px;
-  border:1px dashed var(--borde);border-radius:var(--radio);
-  background:var(--fondo);
+  margin:14px 0 14px;padding:20px;
+  border:1.5px dashed var(--borde-fuerte);border-radius:12px;
+  background:transparent;
   transition:border-color .15s,background-color .15s;
 }
 .dropzone.over{border-color:var(--oro);background:rgba(var(--oro-rgb),.08)}
-.drop-title{font-size:.89rem;font-weight:600}
-.drop-hint{font-size:.8rem;line-height:1.45;color:var(--tenue);max-width:34em}
+.drop-title{font-size:1rem;font-weight:600;letter-spacing:-.01em}
+.drop-hint{font-size:.86rem;line-height:1.5;color:var(--tenue);max-width:34em}
 
 .import-status{font-size:.82rem;color:var(--tenue)}
 .import-status:empty{display:none}
 .import-error{
   margin:6px 0 4px;padding:9px 11px;
-  background:var(--panel-alto);
-  border-left:2px solid var(--rojo);
-  border-radius:0 5px 5px 0;
+  background:rgba(var(--rojo-rgb),.1);
+  border-radius:var(--radio-campo);
   font-size:.82rem;line-height:1.45;color:var(--texto);
 }
 
@@ -866,5 +875,9 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 .extra-head{display:flex;align-items:center;gap:8px;padding:10px 0 2px}
 .extra-head .text-input{flex:1;min-width:0}
 .extra-filament .field + .field{border-top:none}
-.extra-add{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 0 4px;border-top:1px solid var(--borde);margin-top:6px;font-size:.8rem}
+.extra-add{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:6px 0 10px;border-top:1px solid var(--borde);font-size:.8rem;color:var(--tenue)}
+/* "Añadir otro filamento" como la fila de añadir de una lista de iOS: texto en
+   el color de acento, sin caja. */
+.extra-add .controls{padding:8px 0;background:none;color:var(--oro-texto);font-size:.95rem}
+.extra-add .controls:hover:not(:disabled){background:none;text-decoration:underline}
 .extra-filaments:empty + .extra-add{margin-top:0}

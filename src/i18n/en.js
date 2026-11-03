@@ -23,9 +23,6 @@ export default {
   // --- Calculadora: cabecera
   'calc.title': 'What a printed part actually costs you',
   'calc.subtitle': 'Material, power, printer depreciation, failed prints and your own time.',
-  'calc.step1': 'Drop your sliced file',
-  'calc.step2': 'See the real cost and price',
-  'calc.step3': 'Save it and send a quote',
 
   // --- Calculadora: bloques del formulario
   'section.material': 'Material',
