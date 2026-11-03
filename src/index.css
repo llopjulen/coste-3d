@@ -660,6 +660,25 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
   background:var(--hundido);color:var(--texto);
 }
 .import-select:focus-visible{outline:none;border-color:var(--oro);box-shadow:0 0 0 2px rgba(var(--oro-rgb),.22)}
+.import-file-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.import-file-row .import-file{margin:0;min-width:0;overflow-wrap:anywhere}
+.preview-toggle{flex:none}
+/* Vista 3D: un hueco hundido, como los campos, donde se ve la pieza. */
+.preview{margin:12px 0 4px}
+.preview-canvas{
+  position:relative;height:340px;border:1px solid var(--borde);border-radius:var(--radio-campo);
+  background:var(--hundido);overflow:hidden;cursor:grab;touch-action:none;
+}
+.preview-canvas:active{cursor:grabbing}
+.preview-canvas canvas{display:block}
+@media(max-width:560px){.preview-canvas{height:260px}}
+.preview-msg{position:absolute;inset:0;display:grid;place-items:center;padding:16px;text-align:center;font-size:.86rem;color:var(--tenue)}
+.preview-layers{display:flex;align-items:center;gap:12px;margin-top:10px;font-size:.84rem}
+.preview-layers label{color:var(--tenue)}
+.preview-layers input[type="range"]{flex:1;min-width:0;accent-color:var(--oro)}
+.preview-layer-text{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--tenue)}
+@media(max-width:560px){.preview-layers{flex-wrap:wrap}.preview-layers input[type="range"]{flex-basis:100%;order:3}}
+.preview-hint{margin-top:6px;font-size:.78rem;color:var(--tenue)}
 .import-filled{font-size:.82rem;color:var(--oro-texto)}
 .import-filled .link{color:var(--texto)}
 .import-note{font-size:.8rem;line-height:1.45;color:var(--tenue)}

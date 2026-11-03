@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { useI18n } from './i18n/context.js'
 import { fmtGrams, fmtNumber } from './i18n/format.js'
 import { readSlicedFile, formValuesFromPlates, mergeFilaments, ImportError } from './slicerFile.js'
@@ -9,6 +9,14 @@ function formatDuration(seconds) {
   const h = Math.floor(minutes / 60)
   return h > 0 ? `${h}h ${minutes % 60}m` : `${minutes}m`
 }
+
+// The 3D viewer and three.js are downloaded only when someone opens it.
+const PrintPreview = lazy(() => import('./PrintPreview.jsx'))
+
+// Files the viewer can draw. A .bgcode is compressed in blocks (heatshrink,
+// MeatPack) that the browser can't unpack without another library, so it
+// gets the numbers but no preview.
+const canPreview = file => !!file && /\.(gcode|gco|g|3mf|stl)$/i.test(file.name)
 
 // A colour coming from a file is only used if it really is a hex colour.
 const safeColor = (c) => (/^#[0-9a-f]{3,8}$/i.test(c) ? c : 'var(--tenue)')
@@ -28,6 +36,9 @@ export default function ImportFile({ onApply, onUndo }) {
   const [plate, setPlate] = useState('all') // a plate number, or 'all'
   const [partsText, setPartsText] = useState('1')
   const [dragging, setDragging] = useState(false)
+  // The last file dropped, kept for the 3D preview, and whether it is open.
+  const [file, setFile] = useState(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   const partsCount = (text) => Math.max(1, Math.floor(Number(text)) || 1)
 
@@ -35,6 +46,7 @@ export default function ImportFile({ onApply, onUndo }) {
     if (!file) return
     setStatus('reading')
     setError('')
+    setFile(file)
     try {
       const res = await readSlicedFile(file)
       const firstPlate = res.plates.length > 1 ? res.plates[0].index : 'all'
@@ -104,7 +116,23 @@ export default function ImportFile({ onApply, onUndo }) {
     onUndo()
     setResult(null)
     setStatus('idle')
+    setFile(null)
+    setPreviewOpen(false)
   }
+
+  // An STL is refused for the numbers (it isn't sliced) but can still be looked at.
+  const previewable = canPreview(file) && (status === 'done' || (status === 'error' && /\.stl$/i.test(file.name)))
+  const previewButton = previewable && (
+    <button type="button" className="controls preview-toggle" aria-expanded={previewOpen} onClick={() => setPreviewOpen(open => !open)}>
+      {previewOpen ? t('preview.hide') : t('preview.show')}
+    </button>
+  )
+  const previewBlock = previewable && previewOpen && (
+    <Suspense fallback={<p className="preview-msg">{t('preview.loading')}</p>}>
+      {/* The key makes a new file or plate start a fresh viewer (state back to "loading"). */}
+      <PrintPreview key={`${file.name}:${file.size}:${file.lastModified}:${plate}`} file={file} plate={plate === 'all' ? null : plate} />
+    </Suspense>
+  )
 
   /* What the summary shows, for the plate (or plates) chosen. */
   const chosen = !result ? [] : plate === 'all' ? result.plates : result.plates.filter(p => p.index === plate)
@@ -156,13 +184,19 @@ export default function ImportFile({ onApply, onUndo }) {
 
         <p className="import-status" role="status">{status === 'reading' ? t('import.reading') : ''}</p>
         {status === 'error' && <p className="import-error" role="alert">{error}</p>}
+        {status === 'error' && previewButton}
+        {status === 'error' && previewBlock}
 
         {status === 'done' && result && (
           <div className="import-result">
-            <p className="import-file">
-              <strong>{result.fileName}</strong>
-              {result.slicer && <span className="muted"> · {result.slicer}</span>}
-            </p>
+            <div className="import-file-row">
+              <p className="import-file">
+                <strong>{result.fileName}</strong>
+                {result.slicer && <span className="muted"> · {result.slicer}</span>}
+              </p>
+              {previewButton}
+            </div>
+            {previewBlock}
 
             {result.plates.length > 1 && (
               <div className="field">
