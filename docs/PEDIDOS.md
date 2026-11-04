@@ -72,11 +72,13 @@ Si una escritura falla, lanza `StoreError`. La pantalla dice entonces «no se ha
 El adaptador de Supabase traduce entre el objeto anidado del front y las tablas de abajo:
 - Las líneas, los pagos y el historial van en sus propias tablas.
 - Los nombres pasan de camelCase a snake_case.
-- `saveOrder` tiene que ser **atómico**: o se guarda el pedido con todas sus líneas y pagos, o nada. Hay dos formas:
-  - Una función `security definer` con `begin … end` que reciba el pedido en `jsonb`.
-  - Una Edge Function.
-
-  Con varias llamadas `upsert` sueltas desde el navegador, un corte de red a medias dejaría un pedido sin líneas. Esta decisión es tuya.
+- `saveOrder` tiene que ser **atómico**: o se guarda el pedido con todas sus líneas y pagos, o nada. Decidido el 2026-11-04: una función de Postgres **`save_order(p_order jsonb)`** con el pedido tal cual lo tiene el front (camelCase, anidado). Una función es una sola transacción, y el adaptador queda en `supabase.rpc('save_order', { p_order: order })`. Con varias llamadas `upsert` sueltas desde el navegador, un corte de red a medias dejaría un pedido sin líneas.
+- **`save_order` va con `security invoker`** (lo que viene por defecto), **no `definer`**. Con invoker la función corre con los permisos del usuario y RLS se aplica dentro. Con definer las políticas no se aplican: en los tests, una versión `definer` dejó que el usuario B sobrescribiera un pedido de A.
+- Qué hace `save_order` con lo que ya hay:
+  - El pedido se inserta o se actualiza por `id`.
+  - Las líneas y los pagos se reemplazan por los del JSON, porque el front manda siempre la lista entera.
+  - El historial **solo crece**: se insertan los eventos que aún no estaban, sin duplicar los que ya había.
+  - `user_id` lo pone el servidor (`auth.uid()`) y nunca sale del JSON.
 
 ## Esquema propuesto (lo escribe Julen en `supabase/migrations/`)
 
@@ -118,10 +120,25 @@ Al fusionar (Merge):
 - Un pedido nuevo cuyo número ya existe recibe uno libre por encima de todos (`mergeOrders`).
 - El contador se queda con el mayor.
 
-## Tests que escribe Claude cuando esté el adaptador de Supabase
+## Tests (hechos el 2026-11-04, antes que el SQL)
 
-- Los mismos de `ordersStore` (`src/orders.test.js`) contra el store de Supabase, con un Postgres local (`supabase start`).
-- RLS: el usuario A no ve, no edita y no borra pedidos, líneas, pagos ni clientes de B. Tampoco puede colgar una línea de un pedido de B.
-- `next_order_number()` llamada en paralelo no repite números.
-- Guardar un pedido con una línea inválida no deja nada a medias.
-- Borrar un cliente deja sus pedidos con `customer_id` nulo.
+Están escritos antes que la implementación, para que definan el contrato (TDD). Se ejecutan con `npm run test:db` (`supabase start` en marcha):
+
+- **`supabase/tests/orders.test.sql`** (pgTAP, 52 tests):
+  - RLS activado en las 6 tablas; existen `next_order_number()` y `save_order(jsonb)`.
+  - Contador por usuario.
+  - `save_order` guarda el JSON del front: líneas en orden, decimales, fechas y `user_id` del servidor. Guardar otra vez reemplaza líneas y pagos sin duplicar el historial.
+  - Todo o nada: una línea inválida no deja ni el pedido ni las otras líneas.
+  - Restricciones: número repetido, estado inventado, pago o envío negativos, cliente sin nombre.
+  - B no ve, no edita y no borra nada de A, no cuelga líneas de un pedido de A y no lo sobrescribe con `save_order`. `anon` no ve nada.
+  - Borrar un cliente deja el nombre en el pedido (set null); borrar un pedido se lleva sus hijos (cascade).
+- **`scripts/db/order-numbers-race.sh`**: 40 conexiones piden número a la vez. Tienen que salir 1..40 sin repetidos.
+
+Los tests se comprobaron contra una implementación de referencia privada (no está en el repositorio: la de verdad la escribe Julen). También se comprobó que **fallan** ante los fallos típicos:
+- línea sin comprobar el pedido padre;
+- `security definer`;
+- eventos duplicados;
+- RLS olvidado en una tabla;
+- `qty` sin `check`;
+- `cascade` en vez de `set null`;
+- contador en dos pasos (40 peticiones dieron solo 3 números distintos).

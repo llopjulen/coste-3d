@@ -75,7 +75,7 @@ Pedido como entidad propia (varias líneas, cliente, entrega, pagos e historial)
 1. Modelo, adaptador local, copia de seguridad y docs (PR `feature/orders-model`).
 2. Pestaña Pedidos y Clientes (hecho el 2026-11-04: src/Orders.jsx, src/OrderDetail.jsx, src/NewOrderDialog.jsx, src/OrderParts.jsx, src/useOrders.js).
 3. Conectar con Historial y Calendario y migrar los pedidos antiguos (hecho el 2026-11-04: `useOrders.importLegacy` al arrancar; el Historial crea pedidos y enlaza al suyo; el Calendario y la cola leen pedidos; fuera OrderDialog.jsx y SaleDialog.jsx; sales.js queda solo para validar y migrar datos antiguos).
-Siguiente: el adaptador de Supabase de Julen (contrato en docs/PEDIDOS.md); Claude lo revisa y escribe los tests de RLS y concurrencia.
+Siguiente: la migración y el adaptador de Supabase de Julen (contrato en docs/PEDIDOS.md: `save_order(p_order jsonb)` con `security invoker`, `next_order_number()`). Los tests ya están (hechos el 2026-11-04): supabase/tests/orders.test.sql y scripts/db/order-numbers-race.sh, `npm run test:db`; su SQL tiene que pasarlos. Claude revisa la migración.
 
 ## Conexión con impresoras: en curso, un PR por paso
 Investigación por marca, protocolos, puertos y orden en docs/IMPRESORAS.md: léelo antes de tocar el agente, y corrígelo si un firmware cambia algo. Empieza por Bambu, con la P1S de Julen. Él prueba cada PR con su impresora; Claude no puede verla.

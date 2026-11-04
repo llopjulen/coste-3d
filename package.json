@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "agent": "node agent/server.js",
     "test": "node --test --test-timeout=20000",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "test:db": "supabase test db && bash scripts/db/order-numbers-race.sh"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",
