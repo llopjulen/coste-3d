@@ -3,6 +3,7 @@ import DocLangSelect from './DocLangSelect.jsx'
 import { useI18n } from './i18n/context.js'
 import { translatorFor } from './i18n/dicts.js'
 import { fmtLongDay, fmtMoney, fmtNumber } from './i18n/format.js'
+import { ACCENTS, FONTS, STYLES, inkOf, quoteStyleOf, textOn } from './quoteStyle.js'
 
 /* ==================================================================
    CUSTOMER QUOTE — the document you send to a client.
@@ -13,6 +14,8 @@ import { fmtLongDay, fmtMoney, fmtNumber } from './i18n/format.js'
 
 const BUSINESS_KEY = 'business'
 const COUNTER_KEY = 'quoteCounter'
+// accent / docStyle / docFont: how the sheet looks (quoteStyle.js). Absent in
+// older saves; quoteStyleOf() fills them in.
 const EMPTY_BUSINESS = { name: '', contact: '', logo: '', notes: '', tax: 0, validDays: 30 }
 const DAY = 24 * 60 * 60 * 1000
 
@@ -71,6 +74,8 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
   const doc = useMemo(() => translatorFor(docLang), [docLang])
   const [business, setBusiness] = useState(loadBusiness)
   const [businessError, setBusinessError] = useState('')
+  // The sheet's look, always complete and valid even for a business saved before it existed.
+  const look = quoteStyleOf(business)
   const [counter] = useState(loadCounter)
   const defaultNumber = `${new Date().getFullYear()}-${String(counter).padStart(3, '0')}`
   const [number, setNumber] = useState(defaultNumber)
@@ -280,10 +285,67 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
             {businessError && <p className="form-error" role="alert">{businessError}</p>}
           </div>
         </section>
+
+        {/* How the sheet looks. Saved with the business details, so every
+            quote comes out the same until it's changed here. */}
+        <section className="panel">
+          <h2>{t('quote.look')}</h2>
+          <div className="form-grid">
+            <div className="form-row">
+              <span className="form-label" id="look-color">{t('quote.look.color')}</span>
+              <div className="swatches" role="radiogroup" aria-labelledby="look-color">
+                {ACCENTS.map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    role="radio"
+                    aria-checked={look.accent === c}
+                    aria-label={c}
+                    className="swatch-btn"
+                    style={{ backgroundColor: c }}
+                    onClick={() => saveBusiness({ accent: c })}
+                  />
+                ))}
+                {/* Any other colour, with the system's colour picker. */}
+                <label className="swatch-btn swatch-custom" title={t('quote.look.custom')}>
+                  <span className="sr-only">{t('quote.look.custom')}</span>
+                  <input type="color" value={look.accent} onChange={e => saveBusiness({ accent: e.target.value.toUpperCase() })} />
+                </label>
+              </div>
+            </div>
+            <div className="form-row">
+              <span className="form-label" id="look-style">{t('quote.look.style')}</span>
+              <div className="segmented segmented-inline" role="group" aria-labelledby="look-style">
+                {STYLES.map(st => (
+                  <button key={st} type="button" aria-pressed={look.style === st} className={look.style === st ? 'on' : undefined} onClick={() => saveBusiness({ docStyle: st })}>
+                    {t(`quote.look.style.${st}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="form-row">
+              <span className="form-label" id="look-font">{t('quote.look.font')}</span>
+              <div className="segmented segmented-inline" role="group" aria-labelledby="look-font">
+                {FONTS.map(f => (
+                  <button key={f} type="button" aria-pressed={look.font === f} className={look.font === f ? 'on' : undefined} onClick={() => saveBusiness({ docFont: f })}>
+                    {t(`quote.look.font.${f}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
 
       {/* ---------------- The sheet that becomes the PDF ---------------- */}
-      <article className="report quote-doc" lang={doc.lang}>
+      {/* The look is applied with three CSS variables: the accent for fills,
+          an ink version of it that is always readable on white, and the text
+          colour that goes on top of the accent (the "band" header). */}
+      <article
+        className={`report quote-doc look-${look.style} font-${look.font}`}
+        lang={doc.lang}
+        style={{ '--acento': look.accent, '--acento-tinta': inkOf(look.accent), '--sobre-acento': textOn(look.accent) }}
+      >
         <header className="quote-top">
           <div className="quote-from">
             {business.logo && <img className="quote-logo" src={business.logo} alt={business.name || 'Logo'} />}

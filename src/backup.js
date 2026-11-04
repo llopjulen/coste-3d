@@ -15,6 +15,7 @@
 ================================================================== */
 import { normalizeExtras } from './calculate.js'
 import { STATUSES, normalizeSale } from './sales.js'
+import { FONTS, STYLES, isHexColor } from './quoteStyle.js'
 
 
 // Bump ONLY for breaking changes (a key renamed or removed, a value that
@@ -187,6 +188,11 @@ export function sanitizeBusiness(raw) {
   for (const key of ['tax', 'validDays']) {
     if (b[key] !== undefined && !(isFiniteNumber(b[key]) && b[key] >= 0)) delete b[key]
   }
+  // The sheet's look (quoteStyle.js). The colour goes into a CSS variable,
+  // so only a plain #RRGGBB passes: anything else could inject CSS.
+  if (b.accent !== undefined && !isHexColor(b.accent)) delete b.accent
+  if (b.docStyle !== undefined && !STYLES.includes(b.docStyle)) delete b.docStyle
+  if (b.docFont !== undefined && !FONTS.includes(b.docFont)) delete b.docFont
   return b
 }
 
