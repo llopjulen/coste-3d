@@ -1,7 +1,7 @@
 /* Tests for calculate.js. Run them with:  npm test */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { MAX_EXTRA_FILAMENTS, calculate, capacity, materialCost, normalizeExtras, pricePerGram, totalGrams } from './calculate.js'
+import { MAX_EXTRA_COSTS, MAX_EXTRA_FILAMENTS, calculate, capacity, extraCostsPerPart, materialCost, normalizeExtraCosts, normalizeExtras, pricePerGram, totalGrams } from './calculate.js'
 
 // The calculator's defaults (INITIAL in App.jsx).
 const BASE = {
@@ -97,4 +97,38 @@ test('capacity: nothing to say without hours, and no Infinity or NaN', () => {
   assert.equal(cap({ printHoursPerWeek: NaN }), null)
   const c = cap({ failRate: 100 })
   assert.ok(Number.isFinite(c.goodPerWeek) && Number.isFinite(c.orderDays))
+})
+
+/* ---- other costs: magnets, inserts, a design fee… ---- */
+test('other costs: per part adds to every part, per order is spread over the parts', () => {
+  const base = calculate({ ...BASE })
+  const d = { ...BASE, quantity: 4, extraCosts: [
+    { id: 1, label: 'Imanes', amount: 0.5, per: 'part' },
+    { id: 2, label: 'Diseño', amount: 20, per: 'order' },
+  ] }
+  near(extraCostsPerPart(d), 0.5 + 20 / 4)
+  const r = calculate(d)
+  near(r.parts.extras, 5.5)
+  near(r.cost, calculate({ ...BASE, quantity: 4 }).cost + 5.5)
+  // They aren't part of failures: a failed print doesn't waste the magnet.
+  near(r.parts.failures, base.parts.failures)
+})
+
+test('other costs: an old quote with none keeps its price to the cent', () => {
+  const r = calculate({ ...BASE })
+  assert.equal(r.parts.extras, 0)
+  near(r.cost, r.parts.material + r.parts.power + r.parts.depreciation + r.parts.failures + r.parts.labor + 0.8)
+})
+
+test('normalizeExtraCosts cleans names, amounts, "per" and the list size', () => {
+  const list = normalizeExtraCosts([
+    { label: 'x'.repeat(60), amount: -3, per: 'week' },
+    null, 'nope',
+    { label: 'Diseño', amount: 20, per: 'order' },
+    ...Array.from({ length: 20 }, () => ({ label: 'a', amount: 1 })),
+  ])
+  assert.equal(list.length, MAX_EXTRA_COSTS)
+  assert.deepEqual(list[0], { id: 1, label: 'x'.repeat(40), amount: 0, per: 'part' })
+  assert.deepEqual(list[1], { id: 2, label: 'Diseño', amount: 20, per: 'order' })
+  assert.deepEqual(normalizeExtraCosts('nope'), [])
 })

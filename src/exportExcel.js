@@ -36,6 +36,8 @@ function buildColumns(currency, t) {
     { title: money(t('layer.failures')),     width: 16, money: true, get: q => q.parts?.failures ?? null },
     { title: money(t('layer.labor')),        width: 16, money: true, get: q => q.parts?.labor ?? null },
     { title: money(t('layer.packaging')),    width: 16, money: true, get: q => q.parts?.packaging ?? null },
+    // Quotes saved before "other costs" existed have no `extras`: an empty cell, not a 0 they never typed.
+    { title: money(t('layer.extras')),       width: 16, money: true, get: q => q.parts?.extras ?? null },
     { title: money(t('history.col.cost')),   width: 18, money: true, bold: true, get: q => q.cost },
     { title: t('excel.col.margin'),   width: 10, type: Number, format: '0%', get: q => (q.inputs ? q.inputs.margin / 100 : null) },
     { title: t('excel.col.fee'),      width: 12, type: Number, format: '0%', get: q => (q.inputs ? q.inputs.fee / 100 : null) },

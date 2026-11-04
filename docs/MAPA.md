@@ -190,8 +190,8 @@ Forma de un presupuesto guardado:
   createdAt: '2026-10-03T…Z',   // fecha ISO
   date: '3/10/2026',            // texto antiguo, ya no se usa para pintar
   name: 'Phone stand', client: 'Ana',
-  inputs: { spoolPrice: 20, …, extraFilaments: [{ id, label, spoolPrice, spoolWeight, grams }] },  // copia de d: lo que "Load" vuelve a poner en el formulario. `extraFilaments` es opcional: los otros filamentos de la pieza (los presupuestos anteriores no lo tienen y valen igual)
-  parts: { material: 0.9, … },    // las seis capas del coste
+  inputs: { spoolPrice: 20, …, extraFilaments: [{ id, label, spoolPrice, spoolWeight, grams }], extraCosts: [{ id, label, amount, per: 'part' | 'order' }] },  // copia de d: lo que "Load" vuelve a poner en el formulario. `extraFilaments` (otros filamentos) y `extraCosts` (otros costes) son opcionales: los presupuestos anteriores no los tienen y valen igual
+  parts: { material: 0.9, …, extras: 0 },    // las capas del coste; `extras` (otros costes) solo en los guardados desde el 2026-11-04
   cost: 5.22, price: 7.94, units: 1, orderTotal: 7.94,
 }
 ```
@@ -209,7 +209,8 @@ Función pura en `src/calculate.js`: entran los valores del formulario y salen n
 - `depreciation = hours × printerPrice / lifespan` (amortización lineal por hora de uso)
 - `failures = (material + power + depreciation) × failRate / 100`
 - `labor = postMinutes / 60 × hourlyRate`, más `packaging`
-- `cost` = la suma de las seis capas
+- `extras = Σ amount` de los otros costes «por pieza» `+ Σ amount / quantity` de los «por pedido» (`extraCostsPerPart`). No entran en `failures`: un imán no se pierde si falla la impresión.
+- `cost` = la suma de las siete capas
 - `recommendedPrice = cost × (1 + margin) / (1 − fee)`: la comisión de la plataforma se cobra sobre el precio final, así que se divide entre `(1 − fee)` en vez de multiplicar por `(1 + fee)`.
 - `profit = currentPrice × (1 − fee) − cost` y `perHour = profit / hours`.
 

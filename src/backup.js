@@ -13,7 +13,7 @@
      localStorage. They take `storage` as a parameter so tests can pass
      a fake one.
 ================================================================== */
-import { normalizeExtras } from './calculate.js'
+import { normalizeExtraCosts, normalizeExtras } from './calculate.js'
 import { STATUSES, normalizeSale } from './sales.js'
 import { FONTS, STYLES, isHexColor } from './quoteStyle.js'
 import { EVENTS_KEY, mergeEvents, readEvents, sanitizeEvents } from './calendarEvents.js'
@@ -149,10 +149,12 @@ export function sanitizeQuote(raw) {
     if (q[key] === undefined) continue
     if (isPlainObject(q[key])) {
       // numericRecord keeps only numbers, so it would silently delete the
-      // list of extra filaments: that one is cleaned by its own function.
+      // lists of extra filaments and other costs: each is cleaned by its own function.
       const extras = key === 'inputs' ? q[key].extraFilaments : undefined
+      const costs = key === 'inputs' ? q[key].extraCosts : undefined
       q[key] = numericRecord(q[key])
       if (Array.isArray(extras)) q[key].extraFilaments = normalizeExtras(extras)
+      if (Array.isArray(costs)) q[key].extraCosts = normalizeExtraCosts(costs)
     } else delete q[key]
   }
   // units is a part count: a whole number, at least 1 (calculate() floors it the same way).

@@ -57,6 +57,44 @@ export function normalizeExtras(list) {
     }))
 }
 
+/* Other costs
+   -----------
+   Anything that isn't filament, electricity, the printer or your time:
+   magnets, heat-set inserts, paint, a keyring, a design fee, shipping
+   labels. `extraCosts`: [{ id, label, amount, per: 'part' | 'order' }].
+   - 'part': it goes into every part (a magnet per part).
+   - 'order': it is paid once per order (a design fee, a box for the whole
+     order) and is spread over the parts, so the per-part price still adds
+     up to the order total.
+   Same trick as extraFilaments: optional, so an old quote is "no other
+   costs" and keeps its price to the cent, with no migration. */
+export const MAX_EXTRA_COSTS = 10
+export const COST_PER = ['part', 'order']
+
+export function normalizeExtraCosts(list) {
+  if (!Array.isArray(list)) return []
+  return list
+    .filter(c => c && typeof c === 'object' && !Array.isArray(c))
+    .slice(0, MAX_EXTRA_COSTS)
+    .map((c, i) => ({
+      id: i + 1,
+      label: typeof c.label === 'string' ? c.label.slice(0, 40) : '',
+      amount: cleanNumber(c.amount),
+      per: COST_PER.includes(c.per) ? c.per : 'part',
+    }))
+}
+
+/* What the other costs add to ONE part. Per-order ones are divided by the
+   number of parts (at least 1, the same floor `calculate` uses). */
+export function extraCostsPerPart(d) {
+  const list = Array.isArray(d?.extraCosts) ? d.extraCosts : []
+  const units = Math.max(Math.floor(finite(d?.quantity) ? d.quantity : 1), 1)
+  return list.reduce((sum, c) => {
+    const amount = c && finite(c.amount) && c.amount > 0 ? c.amount : 0
+    return sum + (c?.per === 'order' ? amount / units : amount)
+  }, 0)
+}
+
 /* Grams of every filament of one part: part + purge + the extras. */
 export function totalGrams(inputs) {
   const own = (finite(inputs?.partGrams) ? inputs.partGrams : 0) + (finite(inputs?.purgeGrams) ? inputs.purgeGrams : 0)
@@ -81,8 +119,11 @@ export function calculate(d) {
 
   const labor = (d.postMinutes / 60) * d.hourlyRate
   const packaging = d.packaging
+  // Not part of `failures`: a magnet or a design fee isn't lost when a print
+  // fails (the magnet goes in after printing), unlike filament and machine time.
+  const extras = extraCostsPerPart(d)
 
-  const parts = { material, power, depreciation, failures, labor, packaging }
+  const parts = { material, power, depreciation, failures, labor, packaging, extras }
   const cost = Object.values(parts).reduce((a, b) => a + b, 0)
 
   // The platform fee is taken from the FINAL price, not from your

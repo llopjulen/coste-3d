@@ -2,6 +2,19 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-04, Otros costes en la calculadora
+- Archivo y sitio: src/calculate.js (`MAX_EXTRA_COSTS`, `normalizeExtraCosts`, `extraCostsPerPart` y la capa `extras` dentro de `calculate`), src/App.jsx (componente `ExtraCosts` junto a `ExtraFilaments`, `addCost`, campo `extraCosts` en `INITIAL`, `loadQuote`, capa nueva en `LAYERS` con la fila oculta si vale 0), src/backup.js (`sanitizeQuote` limpia `inputs.extraCosts`), src/exportExcel.js (columna «Otros costes»), src/Report.jsx (capa en la gráfica de coste medio, con `?? 0` para los presupuestos viejos), src/index.css (`.cost-per`), src/i18n/{en,es,fr}.js (`layer.extras`, `cost.extra.*`), tests en calculate.test.js y backup.test.js, docs/MAPA.md, CLAUDE.md.
+- Qué cambió: en «Esta impresión», bajo Embalaje, hay un «+ Añadir un coste». Cada línea tiene concepto, importe y si se paga por pieza o por pedido. Suman al coste (capa «Otros costes» en la barra) y, con el margen y la comisión, al precio recomendado.
+- Por qué:
+  - Lo pediste: cosas que no son filamento ni máquina (imanes, insertos, pintura, llaveros, el diseño).
+  - **Por pieza / por pedido:** un imán va en cada pieza, pero el diseño o una caja para todo el pedido se pagan una vez. Lo de por pedido se reparte entre las piezas (`importe / cantidad`), porque toda la calculadora trabaja por pieza y el total del pedido es precio × piezas: así el total sale exacto. Ejemplo: 4 piezas, imanes de 0,50 € por pieza y diseño de 20 € por pedido → 5,50 € por pieza.
+  - **Fuera de `failures`:** los fallos encarecen el filamento, la luz y la máquina porque una impresión fallida los gasta. Un imán o el diseño no se tiran cuando falla una impresión, así que no se multiplican por la tasa de fallos.
+  - **Mismo patrón que `extraFilaments`:** lista opcional, normalizada en un sitio (`normalizeExtraCosts`), usada al cargar un presupuesto y al restaurar una copia. Un presupuesto viejo no tiene la lista y vale lo mismo al céntimo (hay test), sin migración ni subir `BACKUP_SCHEMA_VERSION`. Máximo 10 líneas y nombres de 40 caracteres, para que un archivo manipulado no meta miles.
+  - La fila «Otros costes» del desglose solo sale si hay algo: la mayoría de piezas no tienen y sería ruido. En el Excel, los presupuestos viejos dejan la celda vacía en vez de un 0 que nadie escribió.
+  - En el informe PDF, la media usa `?? 0` porque un solo `undefined` en la suma convierte la media en `NaN`.
+  - Control segmentado con `aria-pressed` (como en el aspecto del presupuesto) en vez de un `<select>`: son dos opciones y así se ven las dos a la vez.
+- Cómo probarlo: `npm test` (276 pasan). En la calculadora pulsa «+ Añadir un coste»: «Imanes», 0,5 €, Por pieza. Otro: «Diseño», 20 €, Por pedido. Pon Cantidad 4: en la barra sale «Otros costes 5,50 EUR» y el precio sube. Guarda, ve al Historial, «Cargar»: vuelven las dos líneas. Exporta el Excel: columna «Otros costes».
+
 ### 2026-11-04, Apuntes a mano en el calendario
 - Archivo y sitio: src/calendarEvents.js (nuevo) y src/calendarEvents.test.js (nuevo, 13 tests), src/EventDialog.jsx (nuevo), src/Calendar.jsx (botón «+ Añadir» en la lista del día, filas propias que se abren al tocarlas, cuadrado en la rejilla y en la leyenda), src/backup.js (clave `events` en `KEYS`, `buildBackup`, `parseBackup`, `planRestore`, `readSettings`, `hasStoredSettings`, `applyRestore`), src/index.css (`.dot-own`, `.cal-own`, campos de texto en las hojas), src/i18n/{en,es,fr}.js (`cal.add*`, `cal.kind.own`, `cal.storageError`, `event.*`), docs/MAPA.md, CLAUDE.md.
 - Qué cambió: en el Calendario puedes apuntar cosas tuyas en cualquier día: qué, hora opcional y nota («Comprar PETG», «Recogida 17:30», «Feria»). Salen con un cuadrado en el mes y en la lista del día. Si tocas uno, se edita o se borra.

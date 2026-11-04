@@ -15,7 +15,7 @@ import { fmtDay, fmtMoney, fmtMonthShort } from './i18n/format.js'
 
 // The cost layers, in the order of the calculator. Their names are the
 // 'layer.<key>' texts, in the language of the document.
-const LAYER_KEYS = ['material', 'power', 'depreciation', 'failures', 'labor', 'packaging']
+const LAYER_KEYS = ['material', 'power', 'depreciation', 'failures', 'labor', 'packaging', 'extras']
 
 const quoteDate = q => new Date(q.createdAt ?? q.id)
 const orderTotal = q => q.orderTotal ?? q.price
@@ -85,7 +85,11 @@ export default function Report({ quotes, filter, currency, rate, onBack }) {
   // --- Chart 2: where the cost of an average part goes ---
   const withParts = quotes.filter(q => q.parts)
   const breakdown = LAYER_KEYS
-    .map(key => ({ label: doc.t(`layer.${key}`), value: average(withParts.map(q => q.parts[key])) }))
+    // ?? 0: older quotes have no `extras` (saved before it existed), and one
+    // undefined would turn the whole average into NaN.
+    .map(key => ({ key, label: doc.t(`layer.${key}`), value: average(withParts.map(q => q.parts[key] ?? 0)) }))
+    // A cost nobody had (no other costs in any quote) isn't a bar worth drawing.
+    .filter(row => row.key !== 'extras' || row.value > 0)
     .sort((a, b) => b.value - a.value)
 
   // --- Chart 3: top clients by quoted value ---
