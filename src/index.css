@@ -1069,3 +1069,15 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 .sheet-group + .sheet-group{margin-top:12px}
 .sheet-spacer{flex:1}
 .controls.danger-text{color:var(--rojo)}
+
+/* Otros costes: la fila «Se paga» con su control segmentado a la derecha,
+   a la altura de las demás filas (48 px). */
+.cost-per{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;font-size:.95rem}
+.extra-filament .cost-per{border-top:none}
+.cost-per > span{white-space:nowrap}
+/* En el móvil el control segmentado ocupa todo el ancho (regla de History);
+   aquí comparte fila con su etiqueta, así que se queda a su tamaño. */
+@media (max-width:600px){
+  .cost-per .segmented{width:auto;flex:none}
+  .cost-per .segmented button{flex:none;padding:6px 12px}
+}

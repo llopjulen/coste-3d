@@ -15,7 +15,7 @@ import NavIcon from './NavIcons.jsx'
 import SubNav from './SubNav.jsx'
 import { applyTheme, readTheme, saveTheme } from './theme.js'
 import { isAgentEnabled, setAgentEnabled } from './agent.js'
-import { MAX_EXTRA_FILAMENTS, calculate, capacity, normalizeExtras } from './calculate.js'
+import { MAX_EXTRA_COSTS, MAX_EXTRA_FILAMENTS, calculate, capacity, normalizeExtraCosts, normalizeExtras } from './calculate.js'
 import { useI18n } from './i18n/context.js'
 import { LANGS, LANG_NAMES, selectorVisible } from './i18n/index.js'
 import { fmtNumber } from './i18n/format.js'
@@ -105,6 +105,8 @@ const INITIAL = {
   ...Object.fromEntries(SECTIONS.flatMap(s => s.fields.map(f => [f.key, f.initial]))),
   // The part's other filaments (see calculate.js). Not a form field: it has its own panel.
   extraFilaments: [],
+  // Magnets, inserts, a design fee… (see calculate.js). Its own panel too.
+  extraCosts: [],
 }
 
 /* Keeps only the saved numbers that are really "Your setup" fields.
@@ -127,6 +129,8 @@ const LAYERS = [
   { key: 'failures',      nameKey: 'layer.failures',      color: '#B48A9C' },
   { key: 'labor',         nameKey: 'layer.labor',         color: '#AAA59A' },
   { key: 'packaging',     nameKey: 'layer.packaging',     color: '#77756F' },
+  // Last, and its row only shows when there is something in it: most parts have no other costs.
+  { key: 'extras',        nameKey: 'layer.extras',        color: '#9AA27A' },
 ]
 
 
@@ -206,6 +210,62 @@ function ExtraFilaments({ list, onChange }) {
             <Field id={`extra-${f.id}-price`} label={t('filament.price')} unit="€" value={f.spoolPrice} onChange={v => update(f.id, { spoolPrice: v })} />
             <Field id={`extra-${f.id}-weight`} label={t('filament.weight')} unit="g" value={f.spoolWeight} onChange={v => update(f.id, { spoolWeight: v })} />
             <Field id={`extra-${f.id}-grams`} label={t('filament.grams')} unit="g" value={f.grams} onChange={v => update(f.id, { grams: toNumber(v) })} />
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/* The part's other costs: one row per cost, with a name, the amount and
+   whether it is paid per part or once per order. Same row layout as the
+   extra filaments above, so the form reads as one list. */
+function ExtraCosts({ list, onChange }) {
+  const { t } = useI18n()
+  const update = (id, patch) => onChange(list.map(c => (c.id === id ? { ...c, ...patch } : c)))
+  const remove = id => onChange(list.filter(c => c.id !== id))
+  return (
+    <div className="extra-filaments">
+      {list.map((c, i) => {
+        const title = t('cost.extra.title', { n: i + 1 })
+        return (
+          <div className="extra-filament" key={c.id} role="group" aria-label={c.label || title}>
+            <div className="extra-head">
+              <input
+                className="text-input"
+                type="text"
+                maxLength={40}
+                aria-label={t('cost.extra.name', { n: i + 1 })}
+                placeholder={t('cost.extra.placeholder')}
+                value={c.label ?? ''}
+                onChange={e => update(c.id, { label: e.target.value })}
+              />
+              <button type="button" className="row-btn danger" aria-label={t('cost.extra.remove', { name: c.label || title })} onClick={() => remove(c.id)}>✕</button>
+            </div>
+            <Field
+              id={`cost-${c.id}-amount`}
+              label={t('cost.extra.amount')}
+              unit="€"
+              value={c.amount}
+              onChange={v => update(c.id, { amount: v === '' ? 0 : Number(v) })}
+            />
+            {/* Two options, so a segmented control instead of a <select>: both are visible at once. */}
+            <div className="field cost-per">
+              <span id={`cost-${c.id}-per`}>{t('cost.extra.per')}</span>
+              <div className="segmented segmented-inline" role="group" aria-labelledby={`cost-${c.id}-per`}>
+                {['part', 'order'].map(per => (
+                  <button
+                    key={per}
+                    type="button"
+                    aria-pressed={c.per === per}
+                    className={c.per === per ? 'on' : undefined}
+                    onClick={() => update(c.id, { per })}
+                  >
+                    {t(`cost.extra.per.${per}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )
       })}
@@ -307,7 +367,12 @@ export default function App({ agentOptIn = false }) {
     const loadQuote = (quote) => {
       // normalizeExtras: a quote from before this existed has no list, and one from a
       // hand-edited file might have a broken one.
-      setD({ ...INITIAL, ...quote.inputs, extraFilaments: normalizeExtras(quote.inputs?.extraFilaments) })
+      setD({
+        ...INITIAL,
+        ...quote.inputs,
+        extraFilaments: normalizeExtras(quote.inputs?.extraFilaments),
+        extraCosts: normalizeExtraCosts(quote.inputs?.extraCosts),
+      })
       setQuoteName(quote.name ?? '')
       setQuoteClient(quote.client ?? '')
       setView('calculator')
@@ -494,6 +559,13 @@ export default function App({ agentOptIn = false }) {
     if (current.extraFilaments.length >= MAX_EXTRA_FILAMENTS) return current
     const id = current.extraFilaments.reduce((max, f) => Math.max(max, f.id), 0) + 1
     return { ...current, extraFilaments: [...current.extraFilaments, { id, label: '', spoolPrice: current.spoolPrice, spoolWeight: current.spoolWeight, grams: 0 }] }
+  })
+
+  // A new other cost starts empty and "per part", the common case (a magnet, an insert).
+  const addCost = () => setD(current => {
+    if (current.extraCosts.length >= MAX_EXTRA_COSTS) return current
+    const id = current.extraCosts.reduce((max, c) => Math.max(max, c.id), 0) + 1
+    return { ...current, extraCosts: [...current.extraCosts, { id, label: '', amount: 0, per: 'part' }] }
   })
 
   // The unit is a symbol (€, g, h) except for "pcs", which is a word and is translated.
@@ -746,6 +818,18 @@ export default function App({ agentOptIn = false }) {
                       </div>
                     </>
                   )}
+                  {/* Right under "Packaging": the other things that go into a part or an order. */}
+                  {section.id === 'sec-this-print' && (
+                    <>
+                      <ExtraCosts list={d.extraCosts} onChange={set('extraCosts')} />
+                      <div className="extra-add">
+                        <button type="button" className="controls" onClick={addCost} disabled={d.extraCosts.length >= MAX_EXTRA_COSTS}>
+                          + {t('cost.extra.add')}
+                        </button>
+                        {d.extraCosts.length === 0 && <span className="muted">{t('cost.extra.hint')}</span>}
+                      </div>
+                    </>
+                  )}
                 </div>
               </section>
             ))}
@@ -844,7 +928,7 @@ export default function App({ agentOptIn = false }) {
                 <div
                   className="cost-bar"
                   role="img"
-                  aria-label={t('cost.chartLabel', { list: LAYERS.map(l => `${t(l.nameKey)} ${formatMoney(r.parts[l.key])}`).join(', ') })}
+                  aria-label={t('cost.chartLabel', { list: LAYERS.filter(l => r.parts[l.key] > 0).map(l => `${t(l.nameKey)} ${formatMoney(r.parts[l.key])}`).join(', ') })}
                 >
                   {LAYERS.map(layer => {
                     const share = r.cost > 0 ? r.parts[layer.key] / r.cost : 0
@@ -854,7 +938,7 @@ export default function App({ agentOptIn = false }) {
                   })}
                 </div>
                 <ul className="cost-rows">
-                  {LAYERS.map(layer => (
+                  {LAYERS.filter(layer => layer.key !== 'extras' || r.parts.extras > 0).map(layer => (
                     <li className="cost-row" key={layer.key}>
                       <i className="swatch" style={{ backgroundColor: layer.color }} />
                       <span className="name">{t(layer.nameKey)}</span>

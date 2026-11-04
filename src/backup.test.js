@@ -181,3 +181,18 @@ test('sanitizeQuote keeps valid order dates and drops broken ones', () => {
   const bad = sanitizeQuote({ ...base, dueAt: '20/11/2026', orderedAt: 'yesterday' })
   assert.equal('dueAt' in bad, false); assert.equal('orderedAt' in bad, false)
 })
+
+test('other costs survive a restore, cleaned; quotes without them stay as they were', () => {
+  const q = {
+    id: 9, name: 'Llavero', cost: 3, price: 6,
+    inputs: { spoolPrice: 20, extraCosts: [{ label: 'Imanes', amount: 0.5, per: 'part' }, { label: 'Diseño', amount: 'free', per: 'year' }] },
+    parts: { material: 1, extras: 0.5 },
+  }
+  const clean = sanitizeQuote(q)
+  assert.deepEqual(clean.inputs.extraCosts, [
+    { id: 1, label: 'Imanes', amount: 0.5, per: 'part' },
+    { id: 2, label: 'Diseño', amount: 0, per: 'part' },
+  ])
+  assert.equal(clean.parts.extras, 0.5)
+  assert.equal(sanitizeQuote({ ...q, inputs: { spoolPrice: 20 } }).inputs.extraCosts, undefined)
+})
