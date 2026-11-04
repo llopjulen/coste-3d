@@ -17,6 +17,8 @@ import { normalizeExtraCosts, normalizeExtras } from './calculate.js'
 import { STATUSES, normalizeSale } from './sales.js'
 import { FONTS, STYLES, isHexColor } from './quoteStyle.js'
 import { EVENTS_KEY, mergeEvents, readEvents, sanitizeEvents } from './calendarEvents.js'
+import { mergeOrders, sanitizeOrders } from './orders.js'
+import { mergeCustomers, sanitizeCustomers } from './customers.js'
 
 
 // Bump ONLY for breaking changes (a key renamed or removed, a value that
@@ -45,6 +47,11 @@ export const KEYS = {
   // Things written into the calendar by hand (calendarEvents.js). Optional
   // in the file like setup: older backups don't have it, no version bump.
   events: EVENTS_KEY,
+  // Orders and customers (orders.js, customers.js) and the last order
+  // number handed out. Optional in the file too: no version bump.
+  orders: 'orders',
+  customers: 'customers',
+  orderCounter: 'orderCounter',
   // Per-device bookkeeping, deliberately NOT inside the backup: it says
   // when THIS browser was last backed up, which is meaningless elsewhere.
   lastBackup: 'lastBackupAt',
@@ -226,7 +233,7 @@ export function sanitizeSetup(raw) {
 
 /* The backup object. `exportedAt` lets the restore screen (and the
    person, opening the file) tell two backups apart. */
-export function buildBackup({ quotes, business, counter, setup, events, now = new Date() }) {
+export function buildBackup({ quotes, business, counter, setup, events, orders, customers, orderCounter, now = new Date() }) {
   return {
     app: APP_ID,
     kind: KIND,
@@ -240,6 +247,9 @@ export function buildBackup({ quotes, business, counter, setup, events, now = ne
       quoteCounter: counter ?? null,
       setup: setup ?? null,
       calendarEvents: events?.length ? events : null,
+      orders: orders?.length ? orders : null,
+      customers: customers?.length ? customers : null,
+      orderCounter: orderCounter ?? null,
     },
   }
 }
@@ -311,6 +321,10 @@ export function parseBackup(text) {
     // null = the file says nothing about the calendar (made before it
     // existed, or with no events): restoring must not wipe this browser's.
     events: data.calendarEvents == null ? null : sanitizeEvents(data.calendarEvents),
+    // Same rule: null = this file predates orders, so a restore keeps them.
+    orders: data.orders == null ? null : sanitizeOrders(data.orders),
+    customers: data.customers == null ? null : sanitizeCustomers(data.customers),
+    orderCounter: data.orderCounter == null ? null : sanitizeCounter(data.orderCounter),
   }
 }
 
@@ -423,6 +437,9 @@ export function planRestore(current, backup, mode) {
       setup: backup.setup ?? current.setup ?? null,
       // Same reasoning as setup: a file without events keeps the ones here.
       events: backup.events ?? current.events ?? [],
+      orders: backup.orders ?? current.orders ?? [],
+      customers: backup.customers ?? current.customers ?? [],
+      orderCounter: Math.max(current.orderCounter ?? 0, backup.orderCounter ?? 0) || null,
       counter,
       // After a replace, this browser holds exactly what's in the file.
       coveredByFile: true,
@@ -436,6 +453,10 @@ export function planRestore(current, backup, mode) {
     business: mergeBusiness(current.business, backup.business),
     setup: mergeSetup(current.setup ?? null, backup.setup),
     events: mergeEvents(current.events ?? [], backup.events ?? []),
+    orders: mergeOrders(current.orders ?? [], backup.orders ?? []).orders,
+    customers: mergeCustomers(current.customers ?? [], backup.customers ?? []),
+    // Like the quote counter: the highest wins, order numbers never go back.
+    orderCounter: Math.max(current.orderCounter ?? 0, backup.orderCounter ?? 0) || null,
     counter,
     // Only if nothing here is missing from the file does that file count
     // as a backup of this browser (e.g. restoring the same file twice).
@@ -502,6 +523,9 @@ export function readSettings(storage = browserStorage()) {
     counter,
     setup: sanitizeSetup(readJson(storage, KEYS.setup)),
     events: readEvents(storage),
+    orders: sanitizeOrders(readJson(storage, KEYS.orders)),
+    customers: sanitizeCustomers(readJson(storage, KEYS.customers)),
+    orderCounter: sanitizeCounter(Number(readJson(storage, KEYS.orderCounter))),
   }
 }
 
@@ -509,7 +533,7 @@ export function readSettings(storage = browserStorage()) {
    enough to call while rendering). */
 export function hasStoredSettings(storage = browserStorage()) {
   try {
-    return [KEYS.business, KEYS.counter, KEYS.setup, KEYS.events].some(key => storage.getItem(key) !== null)
+    return [KEYS.business, KEYS.counter, KEYS.setup, KEYS.events, KEYS.orders, KEYS.customers].some(key => storage.getItem(key) !== null)
   } catch {
     return false
   }
@@ -629,6 +653,9 @@ export function applyRestore(backup, mode, currentQuotes, storage = browserStora
     [KEYS.counter]: plan.counter ? String(plan.counter) : null,
     [KEYS.setup]: plan.setup ? JSON.stringify(plan.setup) : null,
     [KEYS.events]: plan.events.length ? JSON.stringify(plan.events) : null,
+    [KEYS.orders]: plan.orders.length ? JSON.stringify(plan.orders) : null,
+    [KEYS.customers]: plan.customers.length ? JSON.stringify(plan.customers) : null,
+    [KEYS.orderCounter]: plan.orderCounter ? String(plan.orderCounter) : null,
     // Only written when it changes; otherwise the key isn't touched at all.
     ...(lastBackupAt ? { [KEYS.lastBackup]: lastBackupAt } : {}),
   }, storage)
@@ -652,8 +679,8 @@ export function backupFileName(now) {
    (business, counter, setup), hands it to the browser as a download and
    records when. Returns that time as an ISO string. */
 export function downloadBackup(quotes, { storage = browserStorage(), now = new Date() } = {}) {
-  const { business, counter, setup, events } = readSettings(storage)
-  const backup = buildBackup({ quotes, business, counter, setup, events, now })
+  const { business, counter, setup, events, orders, customers, orderCounter } = readSettings(storage)
+  const backup = buildBackup({ quotes, business, counter, setup, events, orders, customers, orderCounter, now })
   // Indented so anyone can open it in a text editor and see their data;
   // the extra size is irrelevant at a few hundred KB.
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
