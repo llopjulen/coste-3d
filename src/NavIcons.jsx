@@ -33,6 +33,13 @@ const PATHS = {
     </>
   ),
   moon: <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />,
+  // Planes: una etiqueta de precio
+  plans: (
+    <>
+      <path d="M3.5 12.6V4.5a1 1 0 0 1 1-1h8.1l8 8a1.4 1.4 0 0 1 0 2l-7.1 7.1a1.4 1.4 0 0 1-2 0z" />
+      <circle cx="8.2" cy="8.2" r="1.4" />
+    </>
+  ),
   // Impresora 3D: portico, cabezal y cama
   printer: (
     <>

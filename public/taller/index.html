@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- Not a page for search engines: it only exists to be counted. -->
+<meta name="robots" content="noindex" />
+<title>layercents</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<!--
+  "I'm interested" in the Workshop plan (src/Plans.jsx links here).
+  The visit itself is the measurement: Cloudflare Web Analytics counts
+  visits per page, so the number of visits to /taller/ is how many people
+  asked for the paid plan. Nothing else is stored or sent.
+  Plain HTML on purpose: it must load fast and count once, without the app.
+-->
+<style>
+  :root{--fondo:#111113;--panel:#1C1C1F;--texto:#F2F2F0;--tenue:#9C9CA2;--oro:#E3AE4F;color-scheme:dark}
+  @media (prefers-color-scheme:light){:root{--fondo:#F2F2F4;--panel:#FFFFFF;--texto:#1D1D1F;--tenue:#6E6E73;color-scheme:light}}
+  *{box-sizing:border-box;margin:0}
+  body{min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--fondo);color:var(--texto);
+    font:15px/1.5 'Inter',system-ui,-apple-system,sans-serif;letter-spacing:-.006em}
+  .card{max-width:440px;padding:32px 28px;background:var(--panel);border-radius:16px}
+  h1{font-size:1.6rem;font-weight:700;letter-spacing:-.025em;line-height:1.15}
+  p{margin-top:12px;color:var(--tenue)}
+  a{display:inline-block;margin-top:22px;padding:9px 16px;border-radius:9px;background:var(--oro);color:#1A1A1C;font-weight:500;text-decoration:none}
+  a:focus-visible{outline:2px solid var(--texto);outline-offset:2px}
+</style>
+</head>
+<body>
+<main class="card">
+  <h1 id="t">Thanks, noted.</h1>
+  <p id="p">The more people ask for it, the sooner the Workshop plan arrives. We don't store anything about you: we only count how many people press the button.</p>
+  <a id="a" href="/">Back to layercents</a>
+</main>
+<script>
+  // The text in the language the app was in (?lang=es / fr), English otherwise.
+  (function () {
+    var T = {
+      es: ['Gracias, apuntado.', 'Cuanta más gente lo pida, antes llega el plan Taller. No guardamos nada tuyo: solo contamos cuánta gente pulsa el botón.', 'Volver a layercents', '/es/'],
+      fr: ['Merci, c’est noté.', 'Plus il y a de demandes, plus vite le plan Atelier arrive. Nous ne gardons rien sur vous : nous comptons seulement combien de personnes appuient sur le bouton.', 'Retour à layercents', '/fr/']
+    }
+    var lang = new URLSearchParams(location.search).get('lang')
+    var x = T[lang]
+    if (!x) return
+    document.documentElement.lang = lang
+    document.getElementById('t').textContent = x[0]
+    document.getElementById('p').textContent = x[1]
+    var a = document.getElementById('a'); a.textContent = x[2]; a.href = x[3]
+  })()
+</script>
+<!-- Cloudflare Web Analytics: the same snippet as index.html; it is what counts this visit. --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "cb72017d95f74d0eac0692088522eb88"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>

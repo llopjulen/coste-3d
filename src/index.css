@@ -481,6 +481,23 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .stat .label{font-size:.76rem;color:var(--tenue)}
 .stat .value{font-size:1.35rem;font-weight:500;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
 
+.plans{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:32px;max-width:860px}
+@media(max-width:720px){.plans{grid-template-columns:1fr}}
+.plan{display:flex;flex-direction:column;padding:26px 24px;background:var(--panel);border-radius:var(--radio)}
+/* El plan de pago se distingue con un filo de oro, no con un degradado. */
+.plan-shop{box-shadow:inset 0 0 0 1.5px rgba(var(--oro-rgb),.55)}
+.plan h2{display:flex;align-items:center;gap:10px;font-size:1.05rem;font-weight:600}
+.soon{font-size:.72rem;font-weight:500;padding:2px 8px;border-radius:999px;background:rgba(var(--oro-rgb),.16);color:var(--oro-texto)}
+.plan-price{margin-top:14px;display:flex;align-items:baseline;gap:6px}
+.plan-price .amount{font-size:2.6rem;font-weight:300;letter-spacing:-.04em;line-height:1}
+.plan-price .per{color:var(--tenue)}
+.plan-for{margin-top:6px;font-size:.88rem;color:var(--tenue)}
+.plan-list{list-style:none;margin-top:18px;display:grid;align-content:start;gap:10px;font-size:.94rem;flex:1}
+.plan-list li{display:flex;gap:10px;align-items:flex-start}
+.plan-list svg{flex:none;margin-top:3px;color:var(--oro-texto)}
+.plan-cta{display:block;margin-top:22px;text-align:center;text-decoration:none}
+.plan-foot{margin-top:12px;font-size:.8rem}
+.wrap-foot{padding-top:0}
 .segmented{display:inline-flex;gap:2px;margin-top:22px;padding:3px;background:var(--panel-alto);border-radius:10px;max-width:100%;overflow-x:auto}
 /* Control segmentado, como en iOS: el activo es una pastilla clara que flota sobre el carril. */
 .segmented button{

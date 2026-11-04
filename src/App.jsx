@@ -8,6 +8,7 @@ import BackupPanel, { BackupReminder } from './BackupPanel.jsx'
 import { applyRestore, backupStatus, clearSetup, downloadBackup, readLastBackup, readSetup, saveSetupField } from './backup.js'
 import Printers from './Printers.jsx'
 import RealData from './RealData.jsx'
+import Plans from './Plans.jsx'
 import { adviceFor } from './advice.js'
 import NavIcon from './NavIcons.jsx'
 import SubNav from './SubNav.jsx'
@@ -593,6 +594,15 @@ export default function App({ agentOptIn = false }) {
             {/* The dot is decoration; the hidden text gives screen readers the same news. */}
             {backupDue && <><span className="tab-dot" aria-hidden="true" /><span className="sr-only">{t('nav.backupDue')}</span></>}
           </button>
+          <button
+            type="button"
+            className={`tab ${view === 'plans' ? 'active' : ''}`}
+            aria-current={view === 'plans' ? 'page' : undefined}
+            onClick={() => setView('plans')}
+          >
+            <NavIcon name="plans" />
+            <span className="tab-label">{t('nav.plans')}</span>
+          </button>
           {/* Only for those who turned it on: nobody else ever calls 127.0.0.1. */}
           {agentOn && (
             <button
@@ -644,7 +654,12 @@ export default function App({ agentOptIn = false }) {
       </header>
 
       {/* agentOn is checked again here: if the tab was hidden, the screen goes too. */}
-      {view === 'printers' && agentOn ? (
+      {view === 'plans' ? (
+        <>
+          <Plans />
+          <div className="wrap wrap-foot"><SiteFooter /></div>
+        </>
+      ) : view === 'printers' && agentOn ? (
         <Printers onTurnOff={turnOffAgent} />
       ) : view === 'quote' ? (
         <CustomerQuote
