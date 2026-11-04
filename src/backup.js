@@ -164,6 +164,9 @@ export function sanitizeQuote(raw) {
     else delete q.sale
   }
   if (q.status === 'sold' && !q.sale) q.status = 'order'
+  // Order dates (sales.js withOrder): a "YYYY-MM-DD" delivery day and an ISO acceptance time.
+  if (q.dueAt !== undefined && !(typeof q.dueAt === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(q.dueAt) && isDateString(q.dueAt))) delete q.dueAt
+  if (q.orderedAt !== undefined && !isDateString(q.orderedAt)) delete q.orderedAt
   return q
 }
 

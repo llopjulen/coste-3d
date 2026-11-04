@@ -33,6 +33,13 @@ const PATHS = {
     </>
   ),
   moon: <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />,
+  // Calendario: hoja con anillas
+  calendar: (
+    <>
+      <rect x="4" y="5" width="16" height="15" rx="2.5" />
+      <path d="M4 10h16M8.5 3v4M15.5 3v4" />
+    </>
+  ),
   // Planes: una etiqueta de precio
   plans: (
     <>

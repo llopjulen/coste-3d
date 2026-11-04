@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import SaleDialog from './SaleDialog.jsx'
+import OrderDialog from './OrderDialog.jsx'
 import { useI18n } from './i18n/context.js'
 import { fmtDay, fmtMonthYear } from './i18n/format.js'
-import { STATUSES, saleProfit, salesSummary, statusOf, withStatus } from './sales.js'
+import { STATUSES, saleProfit, salesSummary, statusOf, withOrder, withStatus } from './sales.js'
+import { dayStart, isDay } from './schedule.js'
 
 /* ==================================================================
    HISTORY — every saved quote, newest first, grouped by month.
@@ -24,7 +26,7 @@ function monthOf(q, locale) {
   }
 }
 
-export default function History({ quotes, formatMoney, currency, rate, onLoad, onDelete, onUpdate, onExport, exporting, onReport, onCustomerQuote, onGoToCalculator }) {
+export default function History({ quotes, formatMoney, currency, rate, weekHours, onLoad, onDelete, onUpdate, onExport, exporting, onReport, onCustomerQuote, onGoToCalculator }) {
   const { t, tp, locale } = useI18n()
   const day = dt => fmtDay(locale, dt)
   const [query, setQuery] = useState('')
@@ -33,6 +35,8 @@ export default function History({ quotes, formatMoney, currency, rate, onLoad, o
   // Which state is shown ('all' or one of STATUSES), and the quote whose sale is being entered.
   const [filter, setFilter] = useState('all')
   const [selling, setSelling] = useState(null)
+  // The quote becoming an order (or whose delivery date is being changed).
+  const [ordering, setOrdering] = useState(null)
 
   if (quotes.length === 0) {
     return (
@@ -95,7 +99,12 @@ export default function History({ quotes, formatMoney, currency, rate, onLoad, o
      the dialog; the others apply at once (and drop a recorded sale). */
   const changeStatus = (item, status) => {
     if (status === 'sold') setSelling(item)
+    else if (status === 'order') setOrdering(item)  // asks for the delivery date first
     else onUpdate(withStatus(item, status))
+  }
+  const saveOrder = dueAt => {
+    onUpdate(withOrder(ordering, dueAt))
+    setOrdering(null)
   }
   const saveSale = sale => {
     onUpdate(withStatus(selling, 'sold', sale))
@@ -244,6 +253,12 @@ export default function History({ quotes, formatMoney, currency, rate, onLoad, o
                       >
                         {STATUSES.map(s => <option key={s} value={s}>{t(`sales.status.${s}`)}</option>)}
                       </select>
+                      {/* Open orders show their delivery day; tapping it changes the date. */}
+                      {statusOf(item) === 'order' && isDay(item.dueAt) && (
+                        <button type="button" className="row-btn due-btn" onClick={() => setOrdering(item)} title={t('order.change')}>
+                          {t('order.dueShort', { date: day(dayStart(item.dueAt)) })}
+                        </button>
+                      )}
                     </td>
                     <td className="num wide">
                       {statusOf(item) === 'sold' ? (
@@ -280,6 +295,16 @@ export default function History({ quotes, formatMoney, currency, rate, onLoad, o
           </div>
         </section>
       ))}
+
+      {ordering && (
+        <OrderDialog
+          quote={ordering}
+          quotes={quotes}
+          weekHours={weekHours}
+          onSave={saveOrder}
+          onClose={() => setOrdering(null)}
+        />
+      )}
 
       {selling && (
         <SaleDialog

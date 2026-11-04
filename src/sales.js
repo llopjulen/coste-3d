@@ -79,6 +79,24 @@ export function withStatus(q, status, sale = null) {
   } else {
     delete next.sale
   }
+  // Back to a plain quote: it's no longer an order, so it has no delivery date.
+  if (status === 'quote') {
+    delete next.dueAt
+    delete next.orderedAt
+  }
+  return next
+}
+
+/* The quote as an accepted order, with the delivery date agreed with the
+   client ("YYYY-MM-DD", or null for none). `orderedAt` remembers when it
+   was accepted (kept if it already was an order), which breaks ties in the
+   print queue (schedule.js). The date stays when the order is later sold:
+   it's when it was delivered. */
+export function withOrder(q, dueAt, now = new Date()) {
+  const next = withStatus(q, 'order')
+  next.orderedAt = q.orderedAt ?? now.toISOString()
+  if (typeof dueAt === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dueAt)) next.dueAt = dueAt
+  else delete next.dueAt
   return next
 }
 

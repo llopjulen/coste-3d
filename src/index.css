@@ -485,6 +485,51 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .stat .label{font-size:.76rem;color:var(--tenue)}
 .stat .value{font-size:1.35rem;font-weight:500;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
 
+.cal-layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:28px;align-items:start;margin-top:32px}
+@media(max-width:900px){.cal-layout{grid-template-columns:1fr}}
+.cal{padding:18px 16px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;padding:0 4px 12px}
+.cal-head h2{font-size:1.15rem;font-weight:600;letter-spacing:-.015em}
+.cal-nav{display:flex;gap:2px}
+.cal-nav .row-btn{font-size:.9rem;padding:4px 10px;color:var(--texto)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
+.cal-wd{text-align:center;font-size:.74rem;font-weight:500;color:var(--tenue);padding:4px 0 8px;text-transform:uppercase}
+/* Cada dia: el numero y, debajo, un punto por cada tipo de cosa que pasa. */
+.cal-day{display:flex;flex-direction:column;align-items:center;gap:4px;padding:7px 0 6px;min-height:52px;border:0;border-radius:10px;background:none;color:var(--texto);font:inherit;cursor:pointer}
+.cal-day:hover{background:var(--velo)}
+.cal-day:focus-visible{outline:2px solid var(--oro);outline-offset:-2px}
+.cal-day.out{color:var(--tenue);opacity:.45}
+.cal-num{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;font-size:.92rem;font-variant-numeric:tabular-nums}
+.cal-day.today .cal-num{color:var(--oro-texto);font-weight:700}
+.cal-day.sel .cal-num{background:var(--texto);color:var(--fondo);font-weight:600}
+.cal-dots{display:flex;gap:3px;min-height:6px}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;flex:none}
+.dot-due{background:var(--oro)}
+.dot-ready{box-shadow:inset 0 0 0 1.5px var(--oro)}
+.dot-sold{background:var(--tenue)}
+.cal-legend{display:flex;flex-wrap:wrap;gap:14px;padding:12px 4px 4px;font-size:.78rem;color:var(--tenue)}
+.cal-legend span{display:inline-flex;align-items:center;gap:6px}
+.cal-daylist{margin-top:12px;padding:14px 4px 0;border-top:1px solid var(--borde)}
+.cal-daylist h3{font-size:.92rem;font-weight:600;margin-bottom:8px}
+.cal-daylist ul{list-style:none;display:grid;gap:8px}
+.cal-daylist li{display:flex;align-items:center;gap:10px;font-size:.9rem}
+.cal-daylist .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.group-title{display:flex;align-items:center;gap:10px;padding:0 16px 7px;font-size:.84rem;font-weight:500;color:var(--tenue)}
+.late-badge{font-size:.74rem;padding:2px 8px;border-radius:999px;background:rgba(var(--rojo-rgb),.14);color:var(--rojo)}
+.queue{list-style:none;padding:2px 16px}
+.queue-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px;min-height:60px;padding:8px 0}
+.queue-row + .queue-row{border-top:1px solid var(--borde)}
+.queue-main,.queue-dates{display:flex;flex-direction:column;gap:2px;min-width:0}
+.queue-main .name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.queue-main .muted,.queue-dates .muted{font-size:.8rem}
+.queue-dates{text-align:right;font-size:.86rem;font-variant-numeric:tabular-nums}
+.queue-state{font-size:.74rem;font-weight:500;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.queue-state.ok{background:var(--velo);color:var(--tenue)}
+.queue-state.late{background:rgba(var(--rojo-rgb),.14);color:var(--rojo)}
+@media(max-width:480px){.queue-row{grid-template-columns:minmax(0,1fr) auto}.queue-state{grid-column:2}}
+.cal-empty{padding:20px;display:grid;gap:12px;justify-items:start}
+.cal-note{margin-top:10px;padding:0 16px;font-size:.8rem}
+.row-btn.due-btn{display:block;margin:4px 0 0;padding:2px 4px;font-size:.76rem;color:var(--tenue)}
 .plans{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:32px;max-width:860px}
 @media(max-width:720px){.plans{grid-template-columns:1fr}}
 .plan{display:flex;flex-direction:column;padding:26px 24px;background:var(--panel);border-radius:var(--radio)}
