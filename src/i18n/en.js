@@ -479,7 +479,7 @@ export default {
   'plans.shop.name': 'Workshop',
   'plans.soon': 'Coming soon',
   'plans.perMonth': '/ month',
-  'plans.shop.year': 'or 79 € a year, two months free. VAT included.',
+  'plans.shop.year': 'or {price} a year, two months free. VAT included.',
   'plans.shop.f1': 'Everything in Free',
   'plans.shop.f2': 'Quotes without the layercents line',
   'plans.shop.f3': 'Several printers connected',
