@@ -445,7 +445,6 @@ export default {
   'sales.col.status': 'Status',
   'sales.col.profit': 'Real profit',
   'sales.statusOf': 'Status of {name}',
-  'sales.markSold': 'Sold',
   'sales.edit': 'Edit the sale',
   'sales.quotedWas': 'Quoted: {amount}',
   'sales.stat.revenue': 'Received',

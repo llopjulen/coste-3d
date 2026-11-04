@@ -433,7 +433,6 @@ export default {
   'sales.col.status': 'Statut',
   'sales.col.profit': 'Bénéfice réel',
   'sales.statusOf': 'Statut de {name}',
-  'sales.markSold': 'Vendu',
   'sales.edit': 'Modifier la vente',
   'sales.quotedWas': 'Devisé : {amount}',
   'sales.stat.revenue': 'Encaissé',

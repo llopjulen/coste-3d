@@ -2,6 +2,17 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-04, Historial en el móvil: lista de dos líneas y estado siempre visible
+- Archivo y sitio: src/History.jsx (columna de estado visible en el móvil, celda `total-cell`, fuera el botón «Vendido» solo para móvil), src/index.css (tabla como lista con CSS grid por debajo de 600 px, control segmentado a todo el ancho, pestañas que se deslizan de lado), src/i18n/{en,es,fr}.js (fuera `sales.markSold`).
+- Qué cambió: en el móvil cada presupuesto del historial ocupa dos líneas: nombre, datos e importe arriba; estado, «Cargar» y borrar abajo. El estado (Presupuesto, Pedido, Vendido) se puede cambiar también desde el móvil. Los cuatro filtros y las cuatro pestañas de arriba caben en 360 px.
+- Por qué:
+  - En el móvil la columna de estado estaba oculta: no se podía pasar un presupuesto a «Pedido». Al mostrarla, cinco columnas en 360 px partían el nombre letra a letra. La solución es reordenar la misma fila con CSS grid (`grid-template-areas`) en vez de escribir otra lista para el móvil: el marcado sigue siendo una tabla, así que los lectores de pantalla la leen igual y no hay dos versiones que mantener.
+  - El reset de las celdas va como `.history-table tr td` porque la regla base `.history-table td` está más abajo en el archivo y, con la misma especificidad, ganaría la última.
+  - Con cuatro pestañas (Calculadora, Historial, Planes, Impresoras) la última se cortaba. Ahora la fila se desliza de lado sin barra visible, como las pestañas de las apps de iOS.
+  - En el control segmentado del móvil se ocultan los números: sin ellos, los cuatro filtros caben a lo ancho.
+- Concepto nuevo: `grid-template-areas`. Das nombre a zonas de una rejilla y colocas cada hijo con `grid-area`. Ejemplo: `grid-template-areas: "check part total" "check status actions"` y `td.part { grid-area: part }`.
+- Cómo probarlo: `npm run dev` con el navegador en 360-390 px (modo móvil de las herramientas de desarrollo). Guarda dos presupuestos, ve al Historial: dos líneas por presupuesto, cambia uno a «Pedido» desde el móvil. Desliza las pestañas de arriba hasta «Impresoras».
+
 ### 2026-11-04, Plan Taller a 8,99 € al mes o 89 € al año
 - Archivo y sitio: src/Plans.jsx (constantes `SHOP_MONTH` y `SHOP_YEAR` y la función `eur`), src/i18n/{en,es,fr}.js (`plans.shop.year` con hueco `{price}`), CLAUDE.md.
 - Qué cambió: el plan Taller pasa de 8 € a 8,99 € al mes, y el anual de 79 € a 89 €.

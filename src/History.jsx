@@ -202,7 +202,8 @@ export default function History({ quotes, formatMoney, currency, rate, onLoad, o
                       for the sale state and the real profit; they are in the
                       loaded quote, the Excel and the PDF report. */}
                   <th className="num">{t('history.col.total')}</th>
-                  <th className="wide">{t('sales.col.status')}</th>
+                  {/* The state stays on phones too: it's how an order moves along. */}
+                  <th>{t('sales.col.status')}</th>
                   <th className="num wide">{t('sales.col.profit')}</th>
                   <th><span className="sr-only">{t('history.col.actions')}</span></th>
                 </tr>
@@ -228,13 +229,13 @@ export default function History({ quotes, formatMoney, currency, rate, onLoad, o
                     </td>
                     <td className="wide">{item.client || <span className="muted">—</span>}</td>
                     <td className="num wide">{item.units ?? 1}</td>
-                    <td className="num strong">
+                    <td className="num strong total-cell">
                       {/* Sold: what was really charged; the quoted total stays in the tooltip. */}
                       {statusOf(item) === 'sold'
                         ? <span title={t('sales.quotedWas', { amount: formatMoney(orderTotal(item)) })}>{formatMoney(item.sale.amount)}</span>
                         : formatMoney(orderTotal(item))}
                     </td>
-                    <td className="wide">
+                    <td className="status-cell">
                       <select
                         className={`status-select status-${statusOf(item)}`}
                         aria-label={t('sales.statusOf', { name: item.name ?? t('save.untitled') })}
@@ -254,10 +255,6 @@ export default function History({ quotes, formatMoney, currency, rate, onLoad, o
                     <td className="actions">
                       {/* Quotes saved before this version don't have the
                           form data, so there is nothing to load. */}
-                      {/* On a phone the state column is hidden: this button does the main step. */}
-                      {statusOf(item) !== 'sold' && (
-                        <button type="button" className="row-btn sell-btn" onClick={() => setSelling(item)}>{t('sales.markSold')}</button>
-                      )}
                       <button
                         type="button"
                         className="row-btn"
