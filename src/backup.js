@@ -14,6 +14,7 @@
      a fake one.
 ================================================================== */
 import { normalizeExtras } from './calculate.js'
+import { STATUSES, normalizeSale } from './sales.js'
 
 
 // Bump ONLY for breaking changes (a key renamed or removed, a value that
@@ -153,6 +154,15 @@ export function sanitizeQuote(raw) {
   if (q.units !== undefined && !(Number.isSafeInteger(q.units) && q.units >= 1)) delete q.units
   // orderTotal is optional: History falls back to price when it's missing.
   if (q.orderTotal !== undefined && !isFiniteNumber(q.orderTotal)) delete q.orderTotal
+  // Sale state (sales.js): a known status, and a sale only with a clean shape.
+  // Files from before have neither and are plain quotes.
+  if (q.status !== undefined && !STATUSES.includes(q.status)) delete q.status
+  if (q.sale !== undefined) {
+    const sale = normalizeSale(q.sale)
+    if (sale) q.sale = sale
+    else delete q.sale
+  }
+  if (q.status === 'sold' && !q.sale) q.status = 'order'
   return q
 }
 

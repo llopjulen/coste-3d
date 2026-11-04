@@ -495,6 +495,57 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .stat .label{font-size:.76rem;color:var(--tenue)}
 .stat .value{font-size:1.35rem;font-weight:500;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
 
+.segmented{display:inline-flex;gap:2px;margin-top:22px;padding:3px;background:var(--panel-alto);border-radius:10px;max-width:100%;overflow-x:auto}
+/* Control segmentado, como en iOS: el activo es una pastilla clara que flota sobre el carril. */
+.segmented button{
+  display:inline-flex;align-items:center;gap:7px;white-space:nowrap;
+  font:inherit;font-size:.86rem;font-weight:500;
+  padding:6px 14px;border:0;border-radius:8px;background:none;color:var(--tenue);cursor:pointer;
+}
+.segmented button:hover{color:var(--texto)}
+.segmented button.on{background:var(--panel);color:var(--texto);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.segmented button:focus-visible{outline:2px solid var(--oro);outline-offset:1px}
+.seg-count{font-size:.76rem;color:var(--tenue);font-variant-numeric:tabular-nums}
+.segmented + .stats{margin-top:14px}
+.stat .value.loss{color:var(--rojo)}
+/* Estado de cada fila: un select nativo con aspecto de pastilla. Nativo
+   porque en el movil abre el selector del sistema y funciona con teclado. */
+.status-select{
+  font:inherit;font-size:.8rem;font-weight:500;
+  padding:3px 22px 3px 9px;border:0;border-radius:999px;cursor:pointer;
+  background:var(--panel-alto) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23999' stroke-width='1.4'/%3E%3C/svg%3E") no-repeat right 8px center;
+  color:var(--texto);-webkit-appearance:none;appearance:none;
+}
+.status-select:focus-visible{outline:2px solid var(--oro);outline-offset:1px}
+.status-select.status-order{background-color:rgba(var(--oro-rgb),.16)}
+.status-select.status-sold{background-color:var(--velo);color:var(--tenue)}
+.row-btn.profit{font-variant-numeric:tabular-nums;font-size:.86rem;color:var(--texto)}
+.row-btn.profit.loss{color:var(--rojo)}
+.row-btn.sell-btn{color:var(--oro-texto)}
+/* El boton "Vendido" de la fila solo hace falta en el movil, donde la columna de estado se oculta. */
+@media(min-width:601px){.row-btn.sell-btn{display:none}}
+
+/* Hoja modal (<dialog>), como las de iOS: centrada, con el fondo oscurecido. */
+.sheet{
+  width:min(440px,calc(100vw - 32px));margin:auto;padding:22px;border:0;border-radius:16px;
+  background:var(--fondo);color:var(--texto);box-shadow:0 20px 60px rgba(0,0,0,.35);
+}
+.sheet::backdrop{background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.sheet h2{font-size:1.2rem;font-weight:600;letter-spacing:-.015em}
+.sheet-sub{margin-top:2px;font-size:.88rem}
+.sheet-group{margin-top:16px;padding:0 14px;background:var(--panel);border-radius:12px}
+.sheet-row{display:flex;align-items:center;gap:10px;min-height:46px;font-size:.95rem}
+.sheet-row + .sheet-row{border-top:1px solid var(--borde)}
+.sheet-row > span:first-child{flex:1}
+.sheet-row input{
+  width:150px;font:inherit;text-align:right;font-variant-numeric:tabular-nums;
+  padding:6px 8px;border:0;border-radius:8px;background:transparent;color:var(--texto);
+}
+.sheet-row input:hover{background:var(--velo)}
+.sheet-row input:focus-visible{outline:none;background:var(--hundido);box-shadow:0 0 0 2px rgba(var(--oro-rgb),.45)}
+.sheet-row .unit{width:34px;font-size:.84rem;color:var(--tenue)}
+.sheet-note{margin-top:10px;font-size:.82rem;line-height:1.5}
+.sheet-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
 .history-tools{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 12px}
 .no-results{margin:10px 0 18px;font-size:.88rem}
 
