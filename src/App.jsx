@@ -10,6 +10,10 @@ import Printers from './Printers.jsx'
 import RealData from './RealData.jsx'
 import Plans from './Plans.jsx'
 import Calendar from './Calendar.jsx'
+import Orders from './Orders.jsx'
+import { useOrders } from './useOrders.js'
+import { createLocalStore } from './ordersStore.js'
+import { OPEN_STATUSES } from './orders.js'
 import { adviceFor } from './advice.js'
 import NavIcon from './NavIcons.jsx'
 import SubNav from './SubNav.jsx'
@@ -286,6 +290,12 @@ function SiteFooter() {
   )
 }
 
+/* Where orders and customers are kept (ordersStore.js). One instance for
+   the whole app, created once: useOrders depends on it, and a new object on
+   every render would make it reload in a loop. Swapping this line for the
+   Supabase store is the only change the screens will need. */
+const ordersStore = createLocalStore()
+
 /* ==================================================================
    4) APP
 ================================================================== */
@@ -422,6 +432,8 @@ export default function App({ agentOptIn = false }) {
     setD(current => ({ ...current, ...restoredSetup }))
     setHasSavedSetup(Object.keys(restoredSetup).length > 0)
     if (result.lastBackupAt) setLastBackupAt(result.lastBackupAt)
+    // Orders and customers were written to storage by applyRestore: read them again.
+    orders.reload()
     return result.stats
   }
 
@@ -443,6 +455,13 @@ export default function App({ agentOptIn = false }) {
   }
 
   const [view, setView] = useState(agentOptIn ? 'printers' : 'calculator')
+
+  // Orders and customers, shared by the Orders tab (and soon the calendar).
+  const orders = useOrders(ordersStore)
+  // Which order or customer page is open in the Orders tab (null = the lists).
+  const [ordersOpen, setOrdersOpen] = useState(null)
+  const openOrders = target => { setOrdersOpen(target); setView('orders'); window.scrollTo(0, 0) }
+  const openOrdersCount = orders.orders.filter(o => OPEN_STATUSES.includes(o.status)).length
 
   // Whether this browser shows the Printers tab (opt-in, see agent.js).
   // State, not just storage, so hiding the tab takes effect at once.
@@ -669,6 +688,16 @@ export default function App({ agentOptIn = false }) {
           </button>
           <button
             type="button"
+            className={`tab ${view === 'orders' ? 'active' : ''}`}
+            aria-current={view === 'orders' ? 'page' : undefined}
+            onClick={() => openOrders(null)}
+          >
+            <NavIcon name="orders" />
+            <span className="tab-label">{t('nav.orders')}</span>
+            {openOrdersCount > 0 && <span className="count">{openOrdersCount}</span>}
+          </button>
+          <button
+            type="button"
             className={`tab ${view === 'calendar' ? 'active' : ''}`}
             aria-current={view === 'calendar' ? 'page' : undefined}
             onClick={() => setView('calendar')}
@@ -736,7 +765,20 @@ export default function App({ agentOptIn = false }) {
       </header>
 
       {/* agentOn is checked again here: if the tab was hidden, the screen goes too. */}
-      {view === 'calendar' ? (
+      {view === 'orders' ? (
+        <>
+          <Orders
+            api={orders}
+            quotes={savedQuotes}
+            formatMoney={formatMoney}
+            currency={currency}
+            rate={rates[currency] || 1}
+            open={ordersOpen}
+            onOpen={target => { setOrdersOpen(target); window.scrollTo(0, 0) }}
+          />
+          <div className="wrap wrap-foot"><SiteFooter /></div>
+        </>
+      ) : view === 'calendar' ? (
         <>
           {/* weekHours comes from the form, whose "Your setup" part is remembered on this device. */}
           <Calendar quotes={savedQuotes} weekHours={d.printHoursPerWeek} formatMoney={formatMoney} onGoToHistory={() => setView('history')} />

@@ -1081,3 +1081,131 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
   .cost-per .segmented{width:auto;flex:none}
   .cost-per .segmented button{flex:none;padding:6px 12px}
 }
+
+/* ------------------------------ Pedidos ------------------------------
+   Mismo lenguaje que el resto: listas agrupadas, filas de 48-60 px con
+   separadores finos, valores a la derecha sin caja. El oro solo en el
+   total del pedido (es el precio) y en el botón principal. Los estados
+   llevan un punto de color apagado Y la palabra: el color nunca es la
+   única pista. */
+.orders-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.orders-switch{margin-top:24px}
+.orders-error{margin:12px auto 0;max-width:1080px;padding:0 24px}
+
+.order-list{list-style:none;padding:0 16px;margin-top:14px}
+.order-list li + li{border-top:1px solid var(--borde)}
+.order-row{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"main side" "pills side";
+  gap:6px 16px;width:100%;padding:12px 0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;
+}
+.order-row:hover .order-title{text-decoration:underline;text-decoration-color:var(--borde-fuerte);text-underline-offset:3px}
+.order-row:focus-visible{outline:2px solid var(--oro);outline-offset:2px;border-radius:8px}
+.customer-row{grid-template-areas:"main side"}
+.order-main{grid-area:main;display:flex;flex-direction:column;gap:2px;min-width:0}
+.order-title{font-weight:500;display:flex;gap:8px;align-items:baseline;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.order-num{font-variant-numeric:tabular-nums;color:var(--tenue);font-weight:400;font-size:.88rem}
+.order-parts{font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.order-side{grid-area:side;display:flex;flex-direction:column;align-items:flex-end;gap:3px;justify-content:center}
+.order-total{font-variant-numeric:tabular-nums;font-weight:500}
+.order-due{font-size:.8rem;color:var(--tenue);white-space:nowrap}
+.order-due.late{color:var(--rojo)}
+.order-pills{grid-area:pills;display:flex;gap:6px;flex-wrap:wrap}
+.late-note{font-size:.8rem;font-weight:400;color:var(--rojo);letter-spacing:0}
+
+.opill{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;font-weight:500;padding:3px 9px;border-radius:999px;background:var(--velo);color:var(--tenue);white-space:nowrap}
+.opill i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.opill.st-pending{color:var(--tenue)}
+.opill.st-printing{color:var(--texto)}
+.opill.st-printing i{background:#8A9CB8}
+.opill.st-ready{color:var(--texto)}
+.opill.st-ready i{background:#7EA89F}
+.opill.st-delivered i{background:var(--borde-fuerte)}
+.opill.st-cancelled{text-decoration:line-through}
+.opill.pay-unpaid{background:transparent;box-shadow:inset 0 0 0 1px var(--borde-fuerte)}
+.opill.pay-deposit{background:transparent;box-shadow:inset 0 0 0 1px var(--borde-fuerte);color:var(--texto)}
+.opill.pay-paid{color:var(--texto)}
+.opill.late{background:rgba(var(--rojo-rgb),.14);color:var(--rojo)}
+
+/* Página de un pedido o de un cliente */
+.back-link{border:0;background:none;color:var(--tenue);font:inherit;font-size:.92rem;padding:4px 0;cursor:pointer;margin-bottom:14px}
+.back-link:hover{color:var(--texto)}
+.order-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+.order-head-pills{display:flex;gap:6px;flex-wrap:wrap}
+.order-flow{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+.order-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;margin-bottom:28px}
+.danger-link{color:var(--rojo)}
+.order-cols{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:28px;align-items:start}
+@media(max-width:900px){.order-cols{grid-template-columns:1fr}}
+.order-cols .group-title:not(:first-child){margin-top:26px}
+.order-detail .stats{margin:0 0 28px}
+.group-title.with-action{justify-content:space-between;padding-right:16px}
+
+.list-group{padding:0 16px}
+.lrow{display:flex;align-items:center;gap:12px;min-height:48px;font-size:.95rem}
+.lrow + .lrow,.line-row + .lrow,.line-row + .line-row,.lrow + .line-row{border-top:1px solid var(--borde)}
+.lrow > span:first-child{flex:1;min-width:0}
+.lrow input[type=date],.lrow-input,.lrow-select,.num-input input{
+  font:inherit;border:0;background:transparent;color:var(--texto);text-align:right;padding:6px 8px;border-radius:8px;
+}
+.lrow-input{flex:1;min-width:0}
+.lrow input:hover,.lrow-select:hover,.num-input input:hover{background:var(--velo)}
+.lrow input:focus-visible,.lrow-select:focus-visible,.num-input input:focus-visible,.line-row input:focus-visible,.notes-input:focus-visible{
+  outline:none;background:var(--hundido);box-shadow:0 0 0 2px rgba(var(--oro-rgb),.45)
+}
+.lrow-select{max-width:60%;cursor:pointer;text-align-last:right}
+.lrow-select.add-part{max-width:none;text-align:left;text-align-last:left;padding-left:0;color:var(--texto)}
+.lrow-link{width:100%;border:0;background:none;color:var(--texto);font:inherit;cursor:pointer;text-align:left;padding:0}
+.lrow-link span:last-child{color:var(--tenue)}
+.lrow-empty{padding:14px 0;font-size:.9rem}
+.lrow-total{font-weight:600}
+.num{font-variant-numeric:tabular-nums;text-align:right}
+.num.price{color:var(--oro-texto);font-size:1.05rem}
+.num.strong{font-weight:600}
+.num.loss{color:var(--rojo)}
+.num-input{display:inline-flex;align-items:center;gap:4px}
+.num-input input{width:96px;font-variant-numeric:tabular-nums}
+.num-input .unit{font-size:.84rem;color:var(--tenue);min-width:28px}
+.pay-main{flex:1;min-width:0}
+
+.line-row{display:flex;flex-direction:column;gap:2px;padding:8px 0}
+.line-name{font:inherit;font-weight:500;border:0;background:transparent;color:var(--texto);padding:6px 8px;margin-left:-8px;border-radius:8px}
+.line-name:hover{background:var(--velo)}
+.line-nums{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.line-nums input{font:inherit;border:0;background:transparent;color:var(--texto);text-align:right;padding:5px 6px;border-radius:8px;font-variant-numeric:tabular-nums}
+.line-nums input:hover,.line-cost input:hover{background:var(--velo)}
+.line-qty{width:56px}
+.line-price{width:84px}
+.line-total{min-width:92px;text-align:right;font-variant-numeric:tabular-nums}
+.line-cost{display:flex;align-items:center;justify-content:flex-end;gap:6px;font-size:.84rem}
+.line-cost input{font:inherit;border:0;background:transparent;color:var(--tenue);text-align:right;padding:4px 6px;border-radius:8px;width:84px}
+.notes-input{display:block;width:100%;min-height:76px;margin:10px 0;padding:6px 8px;border:0;border-radius:8px;background:transparent;color:var(--texto);font:inherit;font-size:.92rem;line-height:1.45;resize:vertical}
+
+.timeline{list-style:none}
+.timeline li{display:flex;justify-content:space-between;gap:12px;min-height:44px;align-items:center;font-size:.88rem}
+.timeline li + li{border-top:1px solid var(--borde)}
+.timeline .muted{font-size:.78rem;white-space:nowrap}
+.delete-order{margin:22px 16px 0}
+
+/* Hoja «Nuevo pedido»: más ancha, con la lista de piezas para marcar */
+.sheet.sheet-wide{width:min(560px,calc(100vw - 32px))}
+.sheet-row input.wide-right{flex:1;width:auto}
+.sheet-row select{font:inherit;border:0;background:transparent;color:var(--texto);text-align:right;text-align-last:right;padding:6px 8px;border-radius:8px}
+.sheet-section{font-size:.84rem;font-weight:500;color:var(--tenue);margin:18px 0 0;padding:0 14px}
+.sheet-filter{width:100%;margin-top:8px}
+.pick-list{max-height:min(320px,40vh);overflow-y:auto;margin-top:8px}
+.pick-row{display:flex;align-items:center;gap:8px;min-height:46px}
+.pick-row + .pick-row{border-top:1px solid var(--borde)}
+.pick-main{flex:1;display:flex;align-items:center;gap:10px;min-width:0;cursor:pointer;font-size:.92rem}
+.pick-main input{accent-color:var(--oro)}
+.pick-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick-price{font-variant-numeric:tabular-nums;font-size:.86rem}
+.pick-qty{display:flex;align-items:center;gap:2px;color:var(--tenue);font-size:.88rem}
+.pick-qty input{width:52px;font:inherit;text-align:right;border:0;background:var(--hundido);color:var(--texto);border-radius:6px;padding:4px 6px}
+.pick-empty{padding:14px 0;font-size:.88rem}
+
+@media(max-width:600px){
+  .order-flow .segmented.flow{width:100%}
+  .line-name{margin-left:-8px}
+  .line-total{min-width:76px}
+  .num-input input{width:80px}
+}

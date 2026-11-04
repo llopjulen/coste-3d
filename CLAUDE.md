@@ -73,7 +73,7 @@ Hecho el 2026-11-04: registro de ventas (src/sales.js, src/SaleDialog.jsx). Cada
 ## Pedidos y clientes: en curso, en PRs (decidido el 2026-11-04, diseño en docs/PEDIDOS.md)
 Pedido como entidad propia (varias líneas, cliente, entrega, pagos e historial), estado y pago por separado, clientes como entidad. Claude hace el front sobre el adaptador de src/ordersStore.js (hoy localStorage); Julen escribe las tablas, RLS y el adaptador de Supabase con el mismo contrato, y Claude lo revisa y escribe los tests. Los cambios de modelo se acuerdan primero en docs/PEDIDOS.md.
 1. Modelo, adaptador local, copia de seguridad y docs (PR `feature/orders-model`).
-2. Pestaña Pedidos y Clientes.
+2. Pestaña Pedidos y Clientes (hecho el 2026-11-04: src/Orders.jsx, src/OrderDetail.jsx, src/NewOrderDialog.jsx, src/OrderParts.jsx, src/useOrders.js).
 3. Conectar con Historial y Calendario y migrar los pedidos antiguos (`migrateQuoteOrders`).
 
 ## Conexión con impresoras: en curso, un PR por paso

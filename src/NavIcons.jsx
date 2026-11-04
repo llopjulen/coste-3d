@@ -40,6 +40,13 @@ const PATHS = {
       <path d="M4 10h16M8.5 3v4M15.5 3v4" />
     </>
   ),
+  // Pedidos: una caja, lo que sale del taller
+  orders: (
+    <>
+      <path d="M4 8l8-4 8 4v8l-8 4-8-4z" />
+      <path d="M4 8l8 4 8-4M12 12v8" />
+    </>
+  ),
   // Planes: una etiqueta de precio
   plans: (
     <>
