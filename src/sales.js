@@ -1,5 +1,12 @@
 /* ==================================================================
-   SALES — what happened to each quote after it was saved.
+   SALES — LEGACY since 2026-11-04: orders.js replaced this.
+
+   Kept because quotes saved before orders existed (and backup files people
+   already downloaded) still carry `status` and `sale`. backup.js validates
+   them with these functions, and migrateQuoteOrders (orders.js) turns them
+   into orders. Nothing on screen edits them any more.
+
+   What it was: what happened to each quote after it was saved.
 
    A saved quote moves through three states:
      'quote'  -> sent to the client, nothing decided yet

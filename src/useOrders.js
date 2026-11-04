@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { createOrder, sortOrders } from './orders.js'
-import { createCustomer, findByName, sortCustomers } from './customers.js'
+import { createOrder, migrateQuoteOrders, sortOrders } from './orders.js'
+import { createCustomer, findByName, linkCustomers, sortCustomers } from './customers.js'
 
 /* ==================================================================
    useOrders — orders and customers on screen, kept in step with a store.
@@ -110,6 +110,36 @@ export function useOrders(store) {
     }
   }, [data.customers, store, reload])
 
+  /* One-off move from the old model: saved quotes with state 'order' or
+     'sold' become orders (migrateQuoteOrders), with real numbers from the
+     store and customer cards (linkCustomers). Returns the quotes to keep,
+     each marked with `orderId` ONLY if its order was really saved: if the
+     browser fills up halfway, the rest are tried again next time instead
+     of being lost or duplicated. Null when there was nothing to do. */
+  const importLegacy = useCallback(async quotes => {
+    const { orders: fresh, quotes: marked } = migrateQuoteOrders(quotes)
+    if (fresh.length === 0) return null
+    const saved = new Set()
+    try {
+      const numbered = []
+      for (const o of fresh) numbered.push({ ...o, number: await store.nextOrderNumber() })
+      const known = new Set(data.customers.map(c => c.id))
+      const linked = linkCustomers(numbered, data.customers)
+      for (const c of linked.customers) if (!known.has(c.id)) await store.saveCustomer(c)
+      for (const o of linked.orders) { await store.saveOrder(o); saved.add(o.id) }
+    } catch (err) {
+      console.error(err)
+      setError('save')
+    }
+    await reload()
+    return marked.map(q => {
+      if (!q.orderId || saved.has(q.orderId)) return q
+      const rest = { ...q }
+      delete rest.orderId
+      return rest
+    })
+  }, [store, data.customers, reload])
+
   return useMemo(() => ({
     ...data,
     error,
@@ -120,5 +150,6 @@ export function useOrders(store) {
     saveCustomer,
     deleteCustomer,
     addOrder,
-  }), [data, error, reload, saveOrder, deleteOrder, saveCustomer, deleteCustomer, addOrder])
+    importLegacy,
+  }), [data, error, reload, saveOrder, deleteOrder, saveCustomer, deleteCustomer, addOrder, importLegacy])
 }

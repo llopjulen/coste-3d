@@ -382,3 +382,18 @@ export function mergeOrders(current, incoming) {
   }
   return { orders: sortOrders([...byId.values()]), renumbered }
 }
+
+/* quote id -> the order it went into, for History ("in order #0012").
+   If a quote is in several orders, the newest one that isn't cancelled
+   wins (orders come newest first). */
+export function ordersByQuote(orders) {
+  const map = new Map()
+  for (const o of orders) {
+    for (const l of o.lines) {
+      if (l.quoteId === null) continue
+      const current = map.get(l.quoteId)
+      if (!current || (current.status === 'cancelled' && o.status !== 'cancelled')) map.set(l.quoteId, o)
+    }
+  }
+  return map
+}

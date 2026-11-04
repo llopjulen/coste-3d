@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import History from './History.jsx'
 import Report from './Report.jsx'
 import ImportFile from './ImportFile.jsx'
@@ -13,7 +13,7 @@ import Calendar from './Calendar.jsx'
 import Orders from './Orders.jsx'
 import { useOrders } from './useOrders.js'
 import { createLocalStore } from './ordersStore.js'
-import { OPEN_STATUSES } from './orders.js'
+import { OPEN_STATUSES, ordersByQuote } from './orders.js'
 import { adviceFor } from './advice.js'
 import NavIcon from './NavIcons.jsx'
 import SubNav from './SubNav.jsx'
@@ -389,11 +389,6 @@ export default function App({ agentOptIn = false }) {
       window.scrollTo(0, 0)
     }
 
-    // Replace one saved quote by a new version of it (its sale state changed).
-    const updateQuote = (next) => {
-      setSavedQuotes(list => list.map(q => (q.id === next.id ? next : q)))
-    }
-
     const deleteQuote = (id) => {
       setSavedQuotes(savedQuotes.filter( q => q.id !== id))
     }
@@ -462,6 +457,22 @@ export default function App({ agentOptIn = false }) {
   const [ordersOpen, setOrdersOpen] = useState(null)
   const openOrders = target => { setOrdersOpen(target); setView('orders'); window.scrollTo(0, 0) }
   const openOrdersCount = orders.orders.filter(o => OPEN_STATUSES.includes(o.status)).length
+  // Parts ticked in History for a new order: Orders opens "New order" with them.
+  const [ordersPreset, setOrdersPreset] = useState(null)
+  const clearPreset = useCallback(() => setOrdersPreset(null), [])
+
+  /* Once, when the orders are loaded: quotes still marked 'order' or 'sold'
+     in the old model become orders (useOrders.importLegacy). The ref keeps
+     it to one run per page load (React's StrictMode runs effects twice in
+     development), and importLegacy is idempotent anyway: quotes already
+     carrying `orderId` are skipped. */
+  const legacyDone = useRef(false)
+  useEffect(() => {
+    if (legacyDone.current || orders.status !== 'ready') return
+    if (!savedQuotes.some(q => !q.orderId && (q.status === 'order' || q.status === 'sold'))) return
+    legacyDone.current = true
+    orders.importLegacy(savedQuotes).then(next => { if (next) setSavedQuotes(next) })
+  }, [orders, savedQuotes])
 
   // Whether this browser shows the Printers tab (opt-in, see agent.js).
   // State, not just storage, so hiding the tab takes effect at once.
@@ -542,7 +553,8 @@ export default function App({ agentOptIn = false }) {
     setExporting(true)
     try {
       const { exportQuotesToExcel } = await import('./exportExcel.js')
-      await exportQuotesToExcel(quotes, currency, rates[currency] || 1, lang)
+      const byQuote = ordersByQuote(orders.orders)
+      await exportQuotesToExcel(quotes, currency, rates[currency] || 1, lang, q => byQuote.get(q.id) ?? null)
     } catch (err) {
       console.error(err)
       alert(t('error.excel'))
@@ -775,13 +787,22 @@ export default function App({ agentOptIn = false }) {
             rate={rates[currency] || 1}
             open={ordersOpen}
             onOpen={target => { setOrdersOpen(target); window.scrollTo(0, 0) }}
+            preset={ordersPreset}
+            onPresetUsed={clearPreset}
+            weekHours={d.printHoursPerWeek}
           />
           <div className="wrap wrap-foot"><SiteFooter /></div>
         </>
       ) : view === 'calendar' ? (
         <>
           {/* weekHours comes from the form, whose "Your setup" part is remembered on this device. */}
-          <Calendar quotes={savedQuotes} weekHours={d.printHoursPerWeek} formatMoney={formatMoney} onGoToHistory={() => setView('history')} />
+          <Calendar
+            orders={orders.orders}
+            weekHours={d.printHoursPerWeek}
+            formatMoney={formatMoney}
+            onOpenOrder={id => openOrders({ kind: 'order', id })}
+            onGoToOrders={() => openOrders(null)}
+          />
           <div className="wrap wrap-foot"><SiteFooter /></div>
         </>
       ) : view === 'plans' ? (
@@ -815,12 +836,11 @@ export default function App({ agentOptIn = false }) {
           <History
             quotes={savedQuotes}
             formatMoney={formatMoney}
-            currency={currency}
-            rate={rates[currency] || 1}
+            orders={orders.orders}
             onLoad={loadQuote}
             onDelete={deleteQuote}
-            onUpdate={updateQuote}
-            weekHours={d.printHoursPerWeek}
+            onCreateOrder={parts => { setOrdersPreset(parts); openOrders(null) }}
+            onOpenOrder={id => openOrders({ kind: 'order', id })}
             onExport={exportExcel}
             exporting={exporting}
             onReport={openReport}

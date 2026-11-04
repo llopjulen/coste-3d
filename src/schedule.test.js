@@ -1,63 +1,62 @@
-/* Tests for schedule.js. Run them with:  npm test */
+/* Tests for schedule.js: the print queue over orders. Run: npm test */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { dayKey, eventsByDay, orderHours, planOrders, suggestDue } from './schedule.js'
+import { dayKey, eventsByDay, linesHours, planOrders, suggestDue } from './schedule.js'
+import { addPayment, createOrder, setStatus } from './orders.js'
 
-const TODAY = new Date(2026, 10, 4, 9) // 4 Nov 2026, local
-const order = (id, hours, units, dueAt, extra = {}) => ({
-  id, cost: 1, price: 2, units, status: 'order', dueAt, orderedAt: `2026-11-0${id}T10:00:00Z`,
-  inputs: { hours, failRate: 0 }, ...extra,
-})
+const TODAY = new Date(2026, 10, 4) // 4 Nov 2026, local
+const NOW = new Date('2026-11-04T10:00:00Z')
+// 70 h a week = 10 h a day, so the arithmetic is easy to follow.
+const WEEK = 70
+const line = (hours, qty = 1) => ({ id: `l${hours}-${qty}`, name: 'Part', qty, unitPrice: 5, unitCost: 2, hours, quoteId: null })
+const order = (number, hours, extra = {}) => ({ ...createOrder({ number, lines: [line(hours)], now: NOW }), ...extra })
 
-test('hours of an order count the parts and the failed prints', () => {
-  assert.equal(orderHours(order(1, 2, 3)), 6)
-  assert.equal(orderHours({ ...order(1, 2, 3), inputs: { hours: 2, failRate: 20 } }), 7.5)
-  assert.equal(orderHours({ id: 1, cost: 1, price: 2 }), null)
+test('hours of a set of lines: hours per part × quantity; null if no line knows its time', () => {
+  assert.equal(linesHours([line(2, 3), line(1.5)]), 7.5)
+  assert.equal(linesHours([{ ...line(1), hours: null }]), null)
 })
 
 test('earliest delivery first; each order is ready when everything before it is printed', () => {
-  // 14 h a week = 2 h a day.
-  const plan = planOrders([order(1, 2, 3, '2026-11-20'), order(2, 1, 2, '2026-11-06')], { weekHours: 14, today: TODAY })
-  assert.deepEqual(plan.map(p => p.quote.id), [2, 1])
-  assert.equal(dayKey(plan[0].readyAt), '2026-11-04')  // 2 h: today
-  assert.equal(dayKey(plan[1].readyAt), '2026-11-07')  // 2 + 6 = 8 h: 4 days, the 4th day is the 7th
-  assert.equal(plan[0].late, false)
+  const a = order(1, 20, { dueAt: '2026-11-10' })
+  const b = order(2, 10, { dueAt: '2026-11-06' })
+  const plan = planOrders([a, b], { weekHours: WEEK, today: TODAY })
+  assert.deepEqual(plan.map(p => p.order.number), [2, 1])
+  assert.deepEqual(plan.map(p => dayKey(p.readyAt)), ['2026-11-04', '2026-11-06'])
 })
 
-test('an order that the queue can not make in time is flagged late', () => {
-  const plan = planOrders([order(1, 10, 4, '2026-11-05')], { weekHours: 14, today: TODAY })
+test('an order the queue can not make in time is flagged late', () => {
+  const plan = planOrders([order(1, 50, { dueAt: '2026-11-05' })], { weekHours: WEEK, today: TODAY })
   assert.equal(plan[0].late, true)
 })
 
-test('orders without a delivery date go last; quotes and sales are not in the queue', () => {
-  const plan = planOrders([
-    order(1, 1, 1, undefined),
-    order(2, 1, 1, '2026-11-30'),
-    { ...order(3, 1, 1, '2026-11-05'), status: 'quote' },
-    { ...order(4, 1, 1, '2026-11-05'), status: 'sold', sale: { amount: 1, fees: 0, soldAt: '2026-11-03T10:00:00Z' } },
-  ], { weekHours: 14, today: TODAY })
-  assert.deepEqual(plan.map(p => p.quote.id), [2, 1])
+test('only pending and printing orders take printer time; no date goes last', () => {
+  const ready = setStatus(order(1, 99, { dueAt: '2026-11-05' }), 'ready', NOW)
+  const done = setStatus(order(2, 99), 'delivered', NOW)
+  const undated = order(3, 5)
+  const dated = order(4, 5, { dueAt: '2026-12-01' })
+  const plan = planOrders([ready, done, undated, dated], { weekHours: WEEK, today: TODAY })
+  assert.deepEqual(plan.map(p => p.order.number), [4, 3])
 })
 
 test('without printing hours there is no estimate, and nothing breaks', () => {
-  const plan = planOrders([order(1, 2, 1, '2026-11-10')], { weekHours: 0, today: TODAY })
-  assert.equal(plan[0].readyAt, null)
-  assert.equal(plan[0].late, false)
+  const plan = planOrders([order(1, 5, { dueAt: '2026-11-05' })], { today: TODAY })
+  assert.equal(plan[0].readyAt, null); assert.equal(plan[0].late, false)
+  assert.equal(suggestDue([], [line(5)], { today: TODAY }), null)
 })
 
-test('the suggested delivery date is the end of the queue', () => {
-  const quotes = [order(1, 2, 3, '2026-11-20')] // 6 h already queued
-  const fresh = { id: 9, cost: 1, price: 2, units: 2, inputs: { hours: 2, failRate: 0 } } // 4 h more
-  assert.equal(suggestDue(quotes, fresh, { weekHours: 14, today: TODAY }), '2026-11-08') // 10 h at 2 h/day: day 5
+test('the suggested delivery date is the end of the queue plus the new parts', () => {
+  const queue = [order(1, 15)]
+  assert.equal(suggestDue(queue, [line(10)], { weekHours: WEEK, today: TODAY }), '2026-11-06')
+  assert.equal(suggestDue([], [line(3)], { weekHours: WEEK, today: TODAY }), '2026-11-04')
 })
 
-test('the calendar shows deliveries, ready days and sales on their days', () => {
-  const sold = { ...order(5, 1, 1, '2026-11-02'), status: 'sold', sale: { amount: 3, fees: 0, soldAt: '2026-11-03T12:00:00' } }
-  const open = order(6, 4, 1, '2026-11-12')
-  const plan = planOrders([open, sold], { weekHours: 14, today: TODAY })
-  const ev = eventsByDay([open, sold], plan)
-  assert.deepEqual(ev['2026-11-12'].map(e => e.kind), ['due'])
-  assert.deepEqual(ev['2026-11-05'].map(e => e.kind), ['ready'])
-  assert.deepEqual(ev['2026-11-03'].map(e => e.kind), ['sold'])
-  assert.deepEqual(ev['2026-11-02'].map(e => e.kind), ['due'])
+test('the calendar shows deliveries, ready days and payments on their days', () => {
+  const a = addPayment(order(1, 25, { dueAt: '2026-11-20' }), { amount: 10, at: '2026-11-03' }, NOW)
+  const cancelled = setStatus(order(2, 5, { dueAt: '2026-11-21' }), 'cancelled', NOW)
+  const plan = planOrders([a, cancelled], { weekHours: WEEK, today: TODAY })
+  const ev = eventsByDay([a, cancelled], plan)
+  assert.deepEqual(ev['2026-11-20'].map(e => e.kind), ['due'])
+  assert.deepEqual(ev['2026-11-06'].map(e => e.kind), ['ready'])
+  assert.deepEqual(ev['2026-11-03'].map(e => [e.kind, e.amount]), [['paid', 10]])
+  assert.equal(ev['2026-11-21'], undefined)
 })

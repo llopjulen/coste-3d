@@ -45,10 +45,8 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/calculate.js` | `calculate(d)`, `capacity(d)` y sus ayudas (`materialCost`, `pricePerGram`, `totalGrams`, `normalizeExtras`, `MAX_EXTRA_FILAMENTS`). Puro, sin React, para que `node --test` lo importe. Tests en `calculate.test.js`. |
 | `src/advice.js` | `adviceFor(d)`: consejos con cifras a partir del formulario (precio por debajo del recomendado y margen real, 0 % de fallos, tiempo gratis, margen fino, comisión alta y precio en venta directa, mano de obra pesada). Reglas puras, máximo 3, sin IA. Tests en `advice.test.js`. Se pintan en el panel «Conviene saber» de App.jsx. |
 | `src/quoteStyle.js` | Aspecto del presupuesto para el cliente: color de acento (`ACCENTS` o cualquier `#RRGGBB`), diseño (`line`, `band`, `minimal`) y letra (`sans`, `serif`), guardados en `business` como `accent`, `docStyle` y `docFont`. `textOn` e `inkOf` calculan colores legibles (WCAG). Tests en `quoteStyle.test.js`. |
-| `src/sales.js` | Qué pasó con cada presupuesto: estados `quote` / `order` / `sold` (campo `status` del presupuesto) y la venta real (`sale`: `amount`, `fees`, `channel`, `soldAt`, en EUR). Los pedidos llevan `dueAt` (entrega) y `orderedAt`; `withOrder` los pone y volver a «presupuesto» los borra. `statusOf`, `withStatus`, `defaultSale`, `saleProfit` (cobrado − comisiones − coste × piezas), `salesSummary`. Puro, tests en `sales.test.js`. |
-| `src/SaleDialog.jsx` | Hoja «Marcar como vendido» (`<dialog>` nativo con `showModal`): cobrado, comisiones, dónde y fecha, en la moneda de la pantalla y guardado en EUR. |
-| `src/schedule.js` | Cola de impresión y calendario, puro: `orderHours` (horas de un pedido con sus fallos), `planOrders` (pedidos en orden de entrega, EDF, con día estimado de «listo» según `printHoursPerWeek` y `late` si no llega), `suggestDue` (fecha de entrega que proponer a un pedido nuevo), `eventsByDay` (entregas, impresos estimados y ventas por día). Tests en `schedule.test.js`. |
-| `src/OrderDialog.jsx` | Hoja «Pasar a pedido»: fecha de entrega, propuesta por `suggestDue` mirando la cola. Guarda con `withOrder` (sales.js) los campos `dueAt` y `orderedAt` (`YYYY-MM-DD`). |
+| `src/sales.js` | **Antiguo** (sustituido por orders.js el 2026-11-04). Se queda porque los presupuestos guardados antes y las copias ya descargadas llevan `status` y `sale`: backup.js los valida con él y `migrateQuoteOrders` los convierte en pedidos. Nada en pantalla los edita ya. |
+| `src/schedule.js` | Cola de impresión y calendario sobre los **pedidos** (orders.js), puro: `linesHours`, `planOrders` (pendientes e imprimiendo, EDF por entrega, día estimado de «listo» según `printHoursPerWeek` y `late`), `suggestDue` (fecha para un pedido nuevo, al final de la cola), `eventsByDay` (entregas, impresos estimados y cobros por día). Tests en `schedule.test.js`. |
 | `src/Calendar.jsx` | Pestaña Calendario: mes que empieza en lunes con puntos (entrega, impreso estimado, venta), lista del día elegido y la cola de impresión con «Va tarde» / «A tiempo». También los apuntes a mano (clave `calendarEvents`), que guarda en su propio estado.
 | `src/calendarEvents.js` | Apuntes a mano del calendario: `sanitizeEvent(s)` (validación, también para la copia), `upsertEvent`, `removeEvent`, `mergeEvents` (gana la versión de este navegador), `readEvents` / `writeEvents` (localStorage). Tests en `calendarEvents.test.js`. |
 | `src/orders.js` | Pedidos (modelo en docs/PEDIDOS.md): estados, líneas copiadas de presupuestos o libres, pagos, historial de eventos. `createOrder`, `setStatus`, `addPayment`, `removePayment`, `editOrder`, `orderTotals` (total, coste, pagado, pendiente, estado del pago derivado, beneficio), `ordersSummary`, `matchesOrder`, `sanitizeOrder(s)`, `mergeOrders`, `migrateQuoteOrders` (de los presupuestos con estado `order`/`sold`). Puro. |
@@ -274,3 +272,14 @@ En la app, la ruta manda sobre lo guardado (`readLang`: `/es/` > `?lang=` > elec
 - `npm run agent -- demo`: el agente con dos impresoras simuladas; no toca tu configuración real.
 - `npm test`: `node --test` busca y ejecuta todos los `*.test.js` del proyecto, con el test runner que ya trae Node. `--test-timeout=20000`: un test que se quede colgado falla a los 20 s en vez de bloquear la terminal.
 - `npm run deploy`: `gh-pages` publica `dist/` en la rama `gh-pages`. GitHub Pages sirve esa rama y `public/CNAME` le dice el dominio; Cloudflare va delante y pone el HTTPS.
+
+
+## Pedidos: de dónde viene cada dato (desde el 2026-11-04)
+
+```
+Historial ──«Crear pedido» / «Pedido con N»──► NewOrderDialog ──► useOrders.addOrder ──► ordersStore
+                                                     ▲ suggestDue (cola)                     │
+Pedidos (Orders.jsx) ◄──── useOrders (en App) ◄──────┴──────── load / reload ◄───────────────┘
+Calendario ◄─── planOrders / eventsByDay sobre orders.orders
+Arranque: presupuestos con status 'order'/'sold' sin orderId ──► useOrders.importLegacy (una vez)
+```

@@ -2,6 +2,28 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-04, Pedidos conectados con Historial y Calendario, y migración (paso 3 de 3)
+- Archivo y sitio: src/useOrders.js (`importLegacy`), src/App.jsx (efecto de migración al arrancar con `legacyDone`, `ordersPreset`, props nuevas de History, Calendar y Orders, Excel con el pedido de cada presupuesto), src/History.jsx (fuera el filtro por estado, el selector de estado y el beneficio por presupuesto; columna «Pedido» con enlace o «Crear pedido»; botón «Pedido con N»), src/schedule.js y src/schedule.test.js (reescritos sobre pedidos), src/Calendar.jsx (lee pedidos; cada fila abre su pedido; «Venta» pasa a «Cobro»), src/NewOrderDialog.jsx (fecha sugerida por la cola), src/orders.js (`ordersByQuote`), src/exportExcel.js (columna «Pedido» en vez de Estado, Cobrado y Beneficio real), src/sales.js (marcado como antiguo), borrados src/OrderDialog.jsx y src/SaleDialog.jsx, src/index.css, src/i18n/{en,es,fr}.js, docs/MAPA.md, CLAUDE.md.
+- Qué cambió:
+  - **Migración:** al abrir la web, los presupuestos que estaban como «Pedido» o «Vendido» se convierten en pedidos de verdad (los vendidos, entregados y con su cobro), con su ficha de cliente.
+  - **Historial:** cada presupuesto dice en qué pedido está (y en qué estado), o tiene un botón para crearlo. Las piezas marcadas se pueden convertir en un pedido juntas.
+  - **Calendario y cola:** leen los pedidos. Tocar uno lo abre.
+  - **Nuevo pedido:** propone la fecha de entrega según la cola.
+- Por qué:
+  - **Un solo sitio para «qué pasó después del presupuesto».** Si conviven el estado por presupuesto y los pedidos, tendrías dos verdades que se contradicen. Por eso el Historial deja de editar estados y la pestaña Pedidos es la única que lo hace.
+  - **Migración idempotente y a prueba de cortes:** `importLegacy` pide números reales al store (así el contador avanza también en Supabase), guarda clientes y pedidos, y solo marca con `orderId` los presupuestos cuyo pedido se guardó de verdad. Si el navegador se llena a medias, los que faltan se reintentan en la próxima carga: ni se pierden ni se duplican. Lo comprobé recargando dos veces: siguen siendo 3 pedidos.
+  - **`useRef` para que corra una vez:** en desarrollo, React (StrictMode) ejecuta los efectos dos veces. La ref lo evita, y aun así la función es idempotente.
+  - **sales.js no se borra:** los presupuestos antiguos y las copias ya descargadas llevan `status` y `sale`. backup.js los sigue validando, y la migración los lee.
+  - **La cola solo cuenta pendientes e imprimiendo:** un pedido «Listo» ya está impreso, así que sale en su día de entrega pero no ocupa impresora.
+  - **«Aceptados» en el Historial** es ahora el porcentaje de presupuestos que acabaron en un pedido no cancelado: la tasa de conversión.
+  - **El Excel lleva «#0012 · Entregado»** en vez de las tres columnas de venta, que ya no se rellenan desde el presupuesto. Las cifras de cobros están en Pedidos.
+- Concepto nuevo: **migración de datos en el cliente**. Igual que una migración de base de datos, pero se ejecuta en el navegador de cada persona al abrir la app, porque los datos viven allí. Tiene que ser idempotente: no sabes cuántas veces se va a ejecutar. Ejemplo: `if (!q.orderId && q.status === 'order') → crear pedido y poner orderId`.
+- De la carrera: Bases de datos: migración de esquema con datos existentes y atomicidad por elemento (solo se marca lo que se guardó), en `importLegacy`. Sistemas Operativos: la cola EDF ahora sobre pedidos, en `planOrders`.
+- Cómo probarlo: `npm test` (291 pasan).
+  - **Migración:** en un navegador con presupuestos marcados como «Pedido» o «Vendido» de antes, abre la web. Salen en Pedidos (los vendidos, entregados y pagados) y el Historial enseña «#000X · Pendiente».
+  - **Desde el Historial:** marca dos presupuestos → «Pedido con 2» → la hoja propone fecha → «Crear pedido».
+  - **Calendario:** sale en la cola; tócalo y se abre.
+
 ### 2026-11-04, Pestaña Pedidos y Clientes (paso 2 de 3)
 - Archivo y sitio: src/Orders.jsx, src/OrderDetail.jsx, src/NewOrderDialog.jsx, src/OrderParts.jsx y src/useOrders.js (nuevos); src/App.jsx (store único `ordersStore`, `useOrders`, pestaña «Pedidos» con el número de abiertos, vista `orders`, `orders.reload()` tras restaurar); src/NavIcons.jsx (icono de caja); src/index.css (bloque «Pedidos»); src/i18n/{en,es,fr}.js (`nav.orders`, `orders.*`, `order.*`, `neworder.*`, `customers.*`); docs/MAPA.md; CLAUDE.md.
 - Qué cambió: hay una pestaña Pedidos con dos listas, Pedidos y Clientes.
