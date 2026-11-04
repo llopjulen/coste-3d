@@ -1,6 +1,8 @@
 # Everything is public: let every search engine in.
 User-agent: *
 Allow: /
+# The "I'm interested" page only counts visits (src/Plans.jsx): not for search results.
+Disallow: /taller/
 
 # Where the list of pages is (see public/sitemap.xml).
 Sitemap: https://layercents.com/sitemap.xml

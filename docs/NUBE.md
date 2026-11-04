@@ -10,7 +10,7 @@ Lo que **no** está aquí, a propósito: qué es de pago, precios y plan comerci
 |---|---|---|
 | Backend | **Supabase** (Postgres + Auth + Edge Functions), región UE | Backend propio en un VPS: parches, copias y caídas serían de Julen, que trabaja a jornada completa. Solo licencias sin cuentas: no da sincronización ni ver las impresoras desde el móvil. |
 | Datos de impresoras | **El agente sube el estado y los trabajos a la cuenta de la persona** | Todo local: privacidad total, pero solo se ve la flota desde el PC del agente. Mixto: dos caminos que probar y mantener. |
-| Cobro | **Lemon Squeezy** (o Paddle), que actúa de vendedor oficial: cobra, calcula y declara el IVA por país | Stripe directo: menos comisión, pero el IVA de cada país europeo lo declararía Julen. |
+| Cobro | **Polar** (decidido el 2026-11-04), que actúa de vendedor oficial (*merchant of record*): cobra, calcula y declara el IVA de cada país, gestiona devoluciones y avisa por webhook con firma | Lemon Squeezy: lo compró Stripe y su futuro pasa por Stripe Managed Payments. Stripe directo: menos comisión, pero el IVA de cada país europeo lo declararía Julen. Paddle: misma comisión que Polar, pensado para empresas. |
 
 ## Qué sigue igual
 
@@ -77,13 +77,13 @@ La flota en vivo se pinta con **Supabase Realtime** sobre `printer_status`: la w
 4. Sincronizar presupuestos y datos del negocio (`backup.js` y `MAPA.md` al día).
 5. Agente: `link`, subida de estado y trabajos (`PROTOCOL` sube).
 6. Pestaña Printers: flota desde la nube, historial, tasa de fallos y tiempo medio.
-7. Pago con Lemon Squeezy y webhook.
+7. Pago con Polar y webhook (firma comprobada en una Edge Function; el plan se guarda en `subscriptions`).
 8. Páginas legales (privacidad, términos, borrado de datos): antes de cobrar el primer euro.
 
 ## Lo que solo puede hacer Julen
 
 - Crear el proyecto de Supabase (región UE, Frankfurt) y pasar la URL y la `anon key` (la `service_role` **nunca** por chat ni por el repositorio).
 - Revisar el plan gratuito de Supabase antes de lanzar: los proyectos gratuitos se pausan tras un periodo sin actividad. Para algo de pago hay que usar el plan de producción.
-- Abrir la cuenta de Lemon Squeezy (pide datos fiscales y bancarios suyos).
+- Abrir la cuenta de Polar (pide datos fiscales y bancarios suyos). Comprobar al darse de alta que acepta a una persona física en España; si no, Paddle.
 - Alta de actividad en Hacienda y mirar si su contrato actual le deja tener otra actividad (pluriempleo, cláusulas de exclusividad). No es consejo legal: es lo que hay que consultar con una gestoría antes de facturar.
 - Política de privacidad y términos: los redacta o revisa una persona cualificada. Aquí solo se prepara lo técnico para poder cumplirlos (exportar, borrar, no subir secretos).
