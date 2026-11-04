@@ -219,6 +219,10 @@ Lo que cuesta dinero: en macOS, un programa sin **firmar y notarizar** con una c
 
 Creality por el 9999, Elegoo, Anycubic, Flashforge y OctoPrint: cuando alguien que los tenga lo pida, y con esa persona probándolo.
 
+## Probar sin impresora: modo demo
+
+`npm run agent -- demo` arranca el agente real con dos impresoras simuladas (una P1S y una Voron) que preparan, imprimen, terminan y a veces fallan, más tres semanas de trabajos de ejemplo. Sirve para ver la pestaña Impresoras, el historial y «Usar datos reales» funcionando, y para capturas o vídeos. No sustituye a la prueba con la P1S: los protocolos (MQTT con TLS, Moonraker) solo se prueban de verdad contra una impresora real; en el código los cubren tests contra impresoras falsas (`fakeBroker.js`, `fakeMoonraker.js`).
+
 ## Qué probar en la P1S de Julen (antes del paso 4)
 
 Todo con la impresora en **modo normal** (nube), sin LAN only ni Developer Mode:

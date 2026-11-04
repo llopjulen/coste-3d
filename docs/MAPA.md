@@ -66,6 +66,7 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `agent/config.js` | Lee y guarda la lista de impresoras en `~/.layercents/printers.json` (fuera del proyecto, permisos 600) y valida cada campo al cargarla. |
 | `agent/printers.js` | Un driver por impresora según su marca; `list()` devuelve el estado común de todas y cada cambio de estado se pasa al registro de trabajos. |
 | `agent/drivers/moonraker.js` | Driver de Klipper/Moonraker: pregunta por HTTP cada 2 s (`getJson`, sin seguir redirecciones y con tope de tamaño), `printerStatus` (a estado común) e `historyToJobs` (el historial propio de Moonraker a trabajos). Solo lectura. |
+| `agent/demo.js` | `npm run agent -- demo`: el agente real con dos impresoras simuladas (una Bambu, una Klipper), una carpeta temporal que se borra al salir, tres semanas de trabajos de ejemplo y un reloj acelerado para el registro. Para ver Impresoras, el historial y «Usar datos reales» sin tener impresora. Tests en `demo.test.js`. |
 | `agent/fakeMoonraker.js` | Una impresora Klipper de mentira para los tests: un servidor HTTP de verdad con los datos que fija cada test. |
 | `agent/jobs.js` | Registro de trabajos: una máquina de estados por impresora (empieza al imprimir, acaba en `finished`, `failed` o `unknown`) que se guarda en `~/.layercents/jobs.json`. Un tiempo calculado nunca se presenta como medido (`startedApprox`). Para Bambu el registro se construye mirando cambios de estado (`observe`); para Moonraker se copia su historial (`importHistory`). |
 | `agent/drivers/bambu.js` | Driver de Bambu Lab: TLS con la huella del certificado fijada, MQTT, `pushall`, fusión de las actualizaciones parciales, reconexión con esperas crecientes, y `printerStatus` (de mensaje de Bambu a estado común). |
@@ -251,5 +252,6 @@ En la app, la ruta manda sobre lo guardado (`readLang`: `/es/` > `?lang=` > elec
 - `npm run lint`: oxlint, con las reglas de hooks de React.
 - `npm run agent`: arranca el agente local y se conecta a las impresoras guardadas. Para comprobarlo, abre `http://127.0.0.1:31415/health` o `/printers` en el navegador. Se para con Ctrl+C.
 - `npm run agent -- add` (y `list`, `remove <id>`): gestiona las impresoras del agente.
+- `npm run agent -- demo`: el agente con dos impresoras simuladas; no toca tu configuración real.
 - `npm test`: `node --test` busca y ejecuta todos los `*.test.js` del proyecto, con el test runner que ya trae Node. `--test-timeout=20000`: un test que se quede colgado falla a los 20 s en vez de bloquear la terminal.
 - `npm run deploy`: `gh-pages` publica `dist/` en la rama `gh-pages`. GitHub Pages sirve esa rama y `public/CNAME` le dice el dominio; Cloudflare va delante y pone el HTTPS.
