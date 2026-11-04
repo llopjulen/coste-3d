@@ -2,6 +2,16 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-04, Plan Taller a 8,99 € al mes o 89 € al año
+- Archivo y sitio: src/Plans.jsx (constantes `SHOP_MONTH` y `SHOP_YEAR` y la función `eur`), src/i18n/{en,es,fr}.js (`plans.shop.year` con hueco `{price}`), CLAUDE.md.
+- Qué cambió: el plan Taller pasa de 8 € a 8,99 € al mes, y el anual de 79 € a 89 €.
+- Por qué:
+  - Lo decidiste tú. El anual sigue siendo «dos meses gratis»: 8,99 × 10 ≈ 89 €, frente a 107,88 € pagando mes a mes. Con 79 € el anual habría salido a menos de 9 meses, y la frase «dos meses gratis» ya no sería verdad.
+  - Por cada cliente particular de España quedan unos 6,53 € al mes en vez de 5,76 € (quitando el 21 % de IVA incluido y la comisión de Polar, 5 % + 0,50 $): un 13 % más. Hacen falta unos 14 clientes en vez de 16 para cubrir la cuota de autónomo. Son cuentas aproximadas, con el mismo método que el plan de pago.
+  - El precio está en una constante y el texto del anual lleva un hueco `{price}`: el número sale de un solo sitio y no puede quedar distinto en los tres idiomas.
+  - Se formatea con `fmtNumber` del idioma: «8,99 €» en español y francés, «8.99 €» en inglés.
+- Cómo probarlo: `npm run dev`, pestaña Planes en ES, EN y FR: 8,99 € / 8.99 € al mes y «89 €» al año.
+
 ### 2026-11-04, Modo demo del agente: dos impresoras simuladas
 - Archivo y sitio: agent/demo.js (nuevo), agent/demo.test.js (nuevo, 5 tests), agent/server.js (comando `demo` con `startDemo`; `startAgent` acepta impresoras, drivers, reloj y una limpieza al salir), docs/IMPRESORAS.md, docs/MAPA.md, CLAUDE.md.
 - Qué cambió: `npm run agent -- demo` arranca el agente de verdad con dos impresoras simuladas, una P1S y una Voron, que preparan, imprimen, terminan y a veces fallan. Trae tres semanas de trabajos de ejemplo. Abriendo `layercents.com/?agent` se ve la pestaña Impresoras en vivo, el historial con tasa de fallos y tiempos, y «Usar datos reales» en la calculadora.

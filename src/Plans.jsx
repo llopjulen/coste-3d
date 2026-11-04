@@ -1,4 +1,5 @@
 import { useI18n } from './i18n/context.js'
+import { fmtNumber } from './i18n/format.js'
 
 /* ==================================================================
    PLANS — what is free and what the "Workshop" plan will add.
@@ -18,6 +19,11 @@ import { useI18n } from './i18n/context.js'
    approved by Julen on 2026-11-04).
 ================================================================== */
 
+// The Workshop price, in EUR (what the payment page will charge).
+// 8.99 a month; the year is 10 months' worth (89), "two months free".
+export const SHOP_MONTH = 8.99
+export const SHOP_YEAR = 89
+
 const FREE = ['plans.free.f1', 'plans.free.f2', 'plans.free.f3', 'plans.free.f4', 'plans.free.f5']
 const SHOP = ['plans.shop.f1', 'plans.shop.f2', 'plans.shop.f3', 'plans.shop.f4', 'plans.shop.f5']
 
@@ -30,7 +36,9 @@ function Check() {
 }
 
 export default function Plans() {
-  const { t, lang } = useI18n()
+  const { t, lang, locale } = useI18n()
+  // "8,99 €" in Spanish and French, "8.99 €" in English: the decimal mark follows the language.
+  const eur = n => `${fmtNumber(locale, n, 2)} €`
   return (
     <main className="wrap">
       <h1>{t('plans.title')}</h1>
@@ -50,9 +58,9 @@ export default function Plans() {
         <section className="plan plan-shop" aria-labelledby="plan-shop">
           <h2 id="plan-shop">{t('plans.shop.name')} <span className="soon">{t('plans.soon')}</span></h2>
           <p className="plan-price">
-            <span className="amount">8 €</span><span className="per">{t('plans.perMonth')}</span>
+            <span className="amount">{eur(SHOP_MONTH)}</span><span className="per">{t('plans.perMonth')}</span>
           </p>
-          <p className="plan-for">{t('plans.shop.year')}</p>
+          <p className="plan-for">{t('plans.shop.year', { price: eur(SHOP_YEAR) })}</p>
           <ul className="plan-list">
             {SHOP.map(key => <li key={key}><Check />{t(key)}</li>)}
           </ul>

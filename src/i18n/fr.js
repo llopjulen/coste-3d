@@ -467,7 +467,7 @@ export default {
   'plans.shop.name': 'Atelier',
   'plans.soon': 'Bientôt',
   'plans.perMonth': '/ mois',
-  'plans.shop.year': 'ou 79 € par an, deux mois offerts. TVA incluse.',
+  'plans.shop.year': 'ou {price} par an, deux mois offerts. TVA incluse.',
   'plans.shop.f1': 'Tout ce qu’offre Gratuit',
   'plans.shop.f2': 'Devis sans la ligne layercents',
   'plans.shop.f3': 'Plusieurs imprimantes connectées',

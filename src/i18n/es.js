@@ -466,7 +466,7 @@ export default {
   'plans.shop.name': 'Taller',
   'plans.soon': 'Próximamente',
   'plans.perMonth': '/ mes',
-  'plans.shop.year': 'o 79 € al año, dos meses gratis. IVA incluido.',
+  'plans.shop.year': 'o {price} al año, dos meses gratis. IVA incluido.',
   'plans.shop.f1': 'Todo lo de Gratis',
   'plans.shop.f2': 'Presupuestos sin la línea de layercents',
   'plans.shop.f3': 'Varias impresoras conectadas',
