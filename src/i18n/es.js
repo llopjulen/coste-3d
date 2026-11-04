@@ -432,7 +432,6 @@ export default {
   'sales.col.status': 'Estado',
   'sales.col.profit': 'Beneficio real',
   'sales.statusOf': 'Estado de {name}',
-  'sales.markSold': 'Vendido',
   'sales.edit': 'Editar la venta',
   'sales.quotedWas': 'Presupuestado: {amount}',
   'sales.stat.revenue': 'Cobrado',

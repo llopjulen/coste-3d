@@ -136,7 +136,11 @@ body{
 @media(max-width:520px){
   .topbar{flex-wrap:wrap;row-gap:8px}
   .topbar-end{order:1}
-  .tabs{order:2;flex-basis:100%;margin-left:0}
+  /* Con cuatro pestanas ya no caben en 360 px: la fila se desliza de lado
+     (sin barra visible) en vez de cortar la ultima. */
+  .tabs{order:2;flex-basis:100%;margin-left:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:none}
 }
 
 /* ------------------------- Barra lateral (escritorio) -------------------
@@ -524,9 +528,32 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .status-select.status-sold{background-color:var(--velo);color:var(--tenue)}
 .row-btn.profit{font-variant-numeric:tabular-nums;font-size:.86rem;color:var(--texto)}
 .row-btn.profit.loss{color:var(--rojo)}
-.row-btn.sell-btn{color:var(--oro-texto)}
-/* El boton "Vendido" de la fila solo hace falta en el movil, donde la columna de estado se oculta. */
-@media(min-width:601px){.row-btn.sell-btn{display:none}}
+/* En el movil la pastilla de estado es mas estrecha para que quepa junto al importe. */
+/* Movil: la tabla del historial pasa a ser una lista de dos lineas por
+   presupuesto (nombre e importe arriba; estado y acciones abajo). Con cinco
+   columnas en 360 px el nombre se partia letra a letra. Es CSS grid sobre
+   las mismas filas: el marcado y la accesibilidad de la tabla no cambian. */
+@media(max-width:600px){
+  .history-table thead{display:none}
+  .history-table,.history-table tbody{display:block}
+  .history-table tr{
+    display:grid;grid-template-columns:30px minmax(0,1fr) auto;
+    grid-template-areas:"check part total" "check status actions";
+    align-items:center;column-gap:8px;row-gap:6px;padding:12px 14px;border-top:1px solid var(--borde);
+  }
+  .history-table tbody tr:first-child{border-top:0}
+  .history-table tr td{display:block;padding:0;border:0}
+  .history-table td.check{grid-area:check;align-self:start;padding-top:2px}
+  .history-table td.part{grid-area:part}
+  .history-table td.total-cell{grid-area:total;align-self:start}
+  .history-table td.status-cell{grid-area:status}
+  .history-table td.actions{grid-area:actions;text-align:right}
+  .status-select{font-size:.76rem}
+  /* El control segmentado ocupa todo el ancho; sin los numeros, los cuatro caben en 360 px. */
+  .segmented{display:flex;width:100%}
+  .segmented button{flex:1;justify-content:center;padding:6px 4px;font-size:.8rem}
+  .seg-count{display:none}
+}
 
 /* Hoja modal (<dialog>), como las de iOS: centrada, con el fondo oscurecido. */
 .sheet{
