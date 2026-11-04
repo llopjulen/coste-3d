@@ -2,6 +2,21 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-04, Presupuesto personalizable: color, diseño y letra
+- Archivo y sitio: src/quoteStyle.js (nuevo), src/quoteStyle.test.js (nuevo, 5 tests), src/CustomerQuote.jsx (panel «Aspecto del presupuesto» y variables CSS en la hoja), src/backup.js (`sanitizeBusiness` valida `accent`, `docStyle` y `docFont`), src/backup.test.js, src/index.css (`.look-band`, `.look-minimal`, `.font-serif`, muestras de color y arreglo de impresión), src/i18n/{en,es,fr}.js (`quote.look.*`), docs/MAPA.md, CLAUDE.md.
+- Qué cambió: en el presupuesto para el cliente hay un panel «Aspecto del presupuesto». Tiene seis colores y un selector para cualquier otro, tres diseños (Líneas, Banda con la cabecera en color, Mínimo sin rayas) y dos letras (Moderna y Clásica). Se guarda con los datos del negocio, así que todos los presupuestos salen igual hasta que lo cambies.
+- Por qué:
+  - Lo pediste: que cada taller saque presupuestos con su imagen. Es lo que ve el cliente final.
+  - **Tres variables CSS en la hoja** (`--acento`, `--acento-tinta`, `--sobre-acento`) en vez de una hoja de estilos por combinación. Las reglas usan las variables, y cambiar el color es cambiar un valor en línea.
+  - **Contraste automático:** con un color claro (un amarillo), el título y el total sobre papel blanco no se leerían. `inkOf` lo oscurece hasta 3:1, el mínimo de WCAG para texto grande, y solo para el texto: el relleno sigue siendo el color elegido. En la banda, `textOn` elige blanco o casi negro según cuál contraste más. Los seis colores fijos cumplen 4,5:1 con su texto (hay test).
+  - **Seguridad:** el color acaba dentro de un `style` en línea. `sanitizeBusiness` solo deja pasar `#RRGGBB`, así que una copia de seguridad manipulada no puede meter CSS (por ejemplo, `url()` a un servidor ajeno). Hay test con ese caso.
+  - Sin migración: un negocio guardado antes no tiene los campos y `quoteStyleOf` le da el aspecto de siempre (líneas, negro, letra moderna).
+  - **Fallo que encontré al probarlo:** el PDF salía con un marco gris u oscuro alrededor de la hoja. Dos causas: la regla de impresión `html,body{background}` perdía contra la del tema claro de index.html (`html[data-theme="light"]`, más específica), y en el tema oscuro `color-scheme: dark` hace que Chromium pinte oscuros los márgenes de la página. Ahora en impresión el fondo es papel con `!important` y el esquema de color es claro. `!important` está justificado: es la única regla que tiene que ganar siempre.
+  - La letra clásica usa fuentes del sistema (Iowan Old Style, Palatino, Georgia): sin descargar ninguna fuente nueva.
+- Concepto nuevo: luminancia relativa y razón de contraste (WCAG). La luminancia convierte un color en un número de 0 (negro) a 1 (blanco) teniendo en cuenta cómo percibe el ojo cada canal; el contraste es (L1 + 0,05) / (L2 + 0,05). Ejemplo: negro sobre blanco = 21:1.
+- De la carrera: Informática Gráfica: espacio sRGB, corrección gamma (la potencia 2,4 de `luminance`) y luminancia perceptual con los pesos 0,2126 / 0,7152 / 0,0722.
+- Cómo probarlo: `npm test` (250 pasan). En Historial marca dos piezas y abre «Presupuesto para el cliente». En «Aspecto del presupuesto» cambia el color, el diseño y la letra: la hoja cambia al momento. Prueba «Otro color» con un amarillo claro: el título se oscurece para leerse. «Guardar como PDF» con el tema oscuro puesto: la página sale blanca, sin marco.
+
 ### 2026-11-04, Historial en el móvil: lista de dos líneas y estado siempre visible
 - Archivo y sitio: src/History.jsx (columna de estado visible en el móvil, celda `total-cell`, fuera el botón «Vendido» solo para móvil), src/index.css (tabla como lista con CSS grid por debajo de 600 px, control segmentado a todo el ancho, pestañas que se deslizan de lado), src/i18n/{en,es,fr}.js (fuera `sales.markSold`).
 - Qué cambió: en el móvil cada presupuesto del historial ocupa dos líneas: nombre, datos e importe arriba; estado, «Cargar» y borrar abajo. El estado (Presupuesto, Pedido, Vendido) se puede cambiar también desde el móvil. Los cuatro filtros y las cuatro pestañas de arriba caben en 360 px.

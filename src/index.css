@@ -718,7 +718,14 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
      de que cargue este archivo, y el fondo de html es el de toda la hoja.
      Con print-color-adjust:exact (abajo) ese oscuro salia en el papel como
      un bloque negro debajo del informe y del presupuesto. */
-  html,body{background:var(--papel)}
+  /* !important on purpose: index.html paints html and body before this file
+     loads, and its light-theme rule (html[data-theme="light"]) is more
+     specific than "html,body". Without it the PDF came out with a grey or
+     dark frame around the sheet (found 2026-11-04). */
+  html,body,html[data-theme],html[data-theme] body{background:var(--papel) !important}
+  /* The dark theme declares color-scheme:dark, and Chromium then paints the
+     page margins of the PDF dark. Paper is always light. */
+  :root,:root[data-theme]{color-scheme:light !important}
   body{padding-left:0}
   .report-screen{padding:0;max-width:none}
   .report{padding:0;border-radius:0;font-size:9.5pt}
@@ -824,7 +831,7 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 .logo-preview{max-height:40px;max-width:140px;padding:3px;border-radius:4px;background:var(--papel)}
 .file-label{position:relative;display:inline-block}
 
-.quote-doc .quote-top{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;padding-bottom:18px;border-bottom:2px solid var(--tinta)}
+.quote-doc .quote-top{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;padding-bottom:18px;border-bottom:2px solid var(--acento-tinta,var(--tinta))}
 .quote-from{display:flex;flex-direction:column;gap:4px;max-width:60%}
 .quote-logo{max-height:64px;max-width:220px;object-fit:contain;align-self:flex-start;margin-bottom:6px}
 .quote-business{font-size:1.05rem;font-weight:600}
@@ -832,7 +839,7 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 .quote-title{text-align:right}
 /* Titulo del documento en letra normal y grande: las mayusculas espaciadas
    eran el sello de plantilla de factura. */
-.quote-title h1{font-size:2.1rem;font-weight:600;letter-spacing:-.025em;margin-top:0;color:var(--tinta)}
+.quote-title h1{font-size:2.1rem;font-weight:600;letter-spacing:-.025em;margin-top:0;color:var(--acento-tinta,var(--tinta))}
 .quote-title dl{display:grid;grid-template-columns:auto auto;justify-content:end;gap:2px 12px;margin-top:6px;font-size:.8rem}
 .quote-title dt{color:var(--tinta-suave);text-align:right}
 .quote-title dd{text-align:right;font-variant-numeric:tabular-nums}
@@ -844,7 +851,29 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 .quote-totals dd{padding-left:18px}
 .quote-totals dt{color:var(--tinta-suave)}
 .quote-totals dd{text-align:right}
-.quote-totals .grand{padding-top:8px;border-top:2px solid var(--tinta);font-size:1.15rem;font-weight:700;color:var(--tinta)}
+.quote-totals .grand{padding-top:8px;border-top:2px solid var(--acento-tinta,var(--tinta));font-size:1.15rem;font-weight:700;color:var(--acento-tinta,var(--tinta))}
+
+/* Aspecto del presupuesto (quoteStyle.js): tres disposiciones y dos letras.
+   "band": la cabecera es un bloque del color, con el texto encima en el
+   color que mejor se lee (--sobre-acento). */
+.quote-doc.look-band .quote-top{margin:-36px -40px 0;padding:32px 40px 26px;background:var(--acento);color:var(--sobre-acento);border-bottom:0;border-radius:var(--radio) var(--radio) 0 0}
+.quote-doc.look-band .quote-title h1,.quote-doc.look-band .quote-title dd,.quote-doc.look-band .quote-business{color:var(--sobre-acento)}
+.quote-doc.look-band .quote-title dt,.quote-doc.look-band .quote-contact{color:var(--sobre-acento);opacity:.8}
+.quote-doc.look-minimal .quote-top{border-bottom:0}
+.quote-doc.look-minimal .quote-totals .grand{border-top:0}
+.quote-doc.font-serif{font-family:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,'Times New Roman',serif}
+.quote-doc.font-serif .quote-title h1{letter-spacing:-.01em;font-weight:600}
+/* Selector de color: muestras redondas; la marcada lleva un anillo. */
+.swatches{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.swatch-btn{width:30px;height:30px;border-radius:50%;border:0;padding:0;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.swatch-btn[aria-checked="true"]{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--texto)}
+.swatch-btn:focus-visible{outline:2px solid var(--oro);outline-offset:3px}
+.swatch-custom{position:relative;overflow:hidden;background:conic-gradient(#e5484d,#f2b33d,#46a758,#3e8fd0,#8e4ec6,#e5484d)}
+.swatch-custom input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.segmented.segmented-inline{margin-top:0}
+@media(max-width:700px){.quote-doc.look-band .quote-top{margin:-22px -18px 0;padding:22px 18px 20px}}
+/* Al imprimir la hoja no tiene relleno (ver @media print): la banda va a ras del margen de la pagina. */
+@media print{.quote-doc.look-band .quote-top{margin:0 0 4px;padding:18px 20px;border-radius:6px}}
 .quote-notes{margin-top:26px;break-inside:avoid}
 .quote-notes p{white-space:pre-line;font-size:.82rem;line-height:1.5}
 @media(max-width:700px){

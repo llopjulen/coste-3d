@@ -5,7 +5,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   KEYS, BACKUP_SCHEMA_VERSION, sanitizeSetup, buildBackup, parseBackup, planRestore,
-  readSetup, saveSetupField, clearSetup, applyRestore, hasStoredSettings, sanitizeQuote,
+  readSetup, saveSetupField, clearSetup, applyRestore, hasStoredSettings, sanitizeQuote, sanitizeBusiness,
 } from './backup.js'
 
 // A stand-in for localStorage: same three methods, backed by a Map.
@@ -164,4 +164,12 @@ test('sanitizeQuote keeps a clean sale and status, and drops broken ones', () =>
   assert.equal('sale' in broken, false)
   assert.equal(broken.status, 'order', 'sold without a valid sale is an order')
   assert.equal('status' in sanitizeQuote({ ...base, status: 'hacked' }), false)
+})
+
+/* ---- the quote's look (quoteStyle.js) ---- */
+test('sanitizeBusiness keeps a valid look and drops anything that could inject CSS', () => {
+  const ok = sanitizeBusiness({ name: 'A', accent: '#1F3A5F', docStyle: 'band', docFont: 'serif' })
+  assert.equal(ok.accent, '#1F3A5F'); assert.equal(ok.docStyle, 'band'); assert.equal(ok.docFont, 'serif')
+  const bad = sanitizeBusiness({ name: 'A', accent: 'red;background:url(//x)', docStyle: 'neon', docFont: 1 })
+  assert.equal('accent' in bad, false); assert.equal('docStyle' in bad, false); assert.equal('docFont' in bad, false)
 })
