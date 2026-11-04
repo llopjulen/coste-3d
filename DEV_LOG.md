@@ -2,6 +2,30 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-04, Pestaña Pedidos y Clientes (paso 2 de 3)
+- Archivo y sitio: src/Orders.jsx, src/OrderDetail.jsx, src/NewOrderDialog.jsx, src/OrderParts.jsx y src/useOrders.js (nuevos); src/App.jsx (store único `ordersStore`, `useOrders`, pestaña «Pedidos» con el número de abiertos, vista `orders`, `orders.reload()` tras restaurar); src/NavIcons.jsx (icono de caja); src/index.css (bloque «Pedidos»); src/i18n/{en,es,fr}.js (`nav.orders`, `orders.*`, `order.*`, `neworder.*`, `customers.*`); docs/MAPA.md; CLAUDE.md.
+- Qué cambió: hay una pestaña Pedidos con dos listas, Pedidos y Clientes.
+  - **Lista de pedidos:** cifras arriba (abiertos y cuántos van tarde, por cobrar, cobrado, beneficio de los entregados), buscador y filtros (abiertos, entregados, cancelados, todos).
+  - **Página de cada pedido:** estado en un control segmentado, cliente, entrega y canal, piezas editables (cantidad y precio), líneas libres, envío, descuento y comisiones, pagos con su forma y fecha, notas e historial con hora.
+  - **Ficha de cada cliente:** sus datos, lo que ha pagado y lo que debe, y sus pedidos.
+- Por qué:
+  - **Escritura optimista** en `useOrders`: la pantalla cambia al momento y luego se guarda. Si el store falla, sale un aviso y se vuelve a leer lo guardado, así que nunca se queda en pantalla algo que no está guardado. Con localStorage no se nota; con tu Supabase es la diferencia entre una app ágil y un spinner en cada toque.
+  - **Los campos guardan al salir** (blur o Enter), no en cada tecla. Cada guardado es una escritura en el store, y con red detrás una nota escrita letra a letra serían cuarenta peticiones. El borrador vive en el estado del campo.
+  - **Un solo store en todo el módulo** (`const ordersStore = createLocalStore()` fuera del componente): `useOrders` depende de él, y un objeto nuevo en cada render lo recargaría en bucle. Cambiar esa línea por el store de Supabase es todo lo que necesitará la pantalla.
+  - **La página abierta la guarda `App`** (`ordersOpen`) y no la pestaña. Así el Historial y el Calendario podrán abrir un pedido directamente en el paso 3. La app no tiene router y no hace falta uno para esto.
+  - **Al crear un pedido, el cliente se escribe con sugerencias** (`<datalist>`). Un nombre que ya existe, aunque cambien las mayúsculas o las tildes, se enlaza con su ficha (`findByName`), y uno nuevo crea ficha. Así «Bar Pepe» y «bar pepe» no acaban siendo dos clientes; lo comprobé en el navegador.
+  - **Importes en la moneda de la pantalla y guardados en EUR**, como en la hoja de venta. Se escriben con la coma o el punto del idioma: al probarlo salía «4.95» entre importes con coma.
+  - **El total de la hoja «Nuevo pedido» se calcula pasando por `lineFromQuote`:** salía un céntimo distinto del total del pedido, porque sumaba los precios sin redondear como lo hace el pedido.
+  - **Estados y pagos con un punto de color apagado Y la palabra:** el color nunca es la única pista (WCAG 1.4.1). El oro solo en el total, que es el precio, y en el botón principal.
+  - **Borrar pide confirmación** y recomienda cancelar: un pedido cancelado se queda en el historial sin contar en las sumas.
+- Concepto nuevo: **actualización optimista**. Aplicas el cambio en pantalla antes de que el servidor responda y lo deshaces si falla. Ejemplo: `setData(nuevo); try { await store.save(x) } catch { await reload() }`.
+- De la carrera: Interacción Persona-Ordenador: los campos que guardan al salir, la confirmación antes de una acción destructiva y no depender solo del color, en OrderParts.jsx y OrderDetail.jsx. Sistemas Distribuidos: la consistencia que da la actualización optimista con reconciliación (`persist` en useOrders.js).
+- Cómo probarlo: `npm test` (291 pasan). Guarda dos o tres presupuestos y ve a Pedidos → «+ Nuevo pedido». Escribe un cliente, una fecha, marca piezas y crea el pedido. En la página del pedido:
+  - Pasa el estado a «Imprimiendo».
+  - Añade una línea libre y pon el envío.
+  - Añade un pago menor que el total: sale «Señal».
+  Vuelve a la lista y crea otro pedido para el mismo cliente escrito en minúsculas: en «Clientes» sigue habiendo uno solo, con dos pedidos. Recarga y todo sigue ahí.
+
 ### 2026-11-04, Pedidos y clientes: modelo, adaptador y contrato (paso 1 de 3)
 - Archivo y sitio: src/orders.js, src/customers.js y src/ordersStore.js (nuevos), src/orders.test.js (nuevo, 15 tests), src/backup.js (claves `orders`, `customers` y `orderCounter` en `KEYS`, `buildBackup`, `parseBackup`, `planRestore`, `readSettings`, `hasStoredSettings`, `applyRestore`), docs/PEDIDOS.md (nuevo), docs/MAPA.md, CLAUDE.md.
 - Qué cambió: existe el modelo de datos de pedidos y clientes, con un almacén local detrás de un adaptador y dentro de la copia de seguridad. Todavía no hay pantalla: eso es el paso 2. docs/PEDIDOS.md es el contrato y el esquema propuesto para tu base de datos.
