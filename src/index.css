@@ -1045,3 +1045,27 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 .extra-add .controls{padding:8px 0;background:none;color:var(--oro-texto);font-size:.95rem}
 .extra-add .controls:hover:not(:disabled){background:none;text-decoration:underline}
 .extra-filaments:empty + .extra-add{margin-top:0}
+
+/* Calendario: apuntes propios. Cuadrado en vez de punto, para que se
+   distinga de «Venta» por la forma y no solo por el color. */
+.dot-own{background:var(--texto);border-radius:1.5px}
+.cal-daylist-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.cal-daylist-head h3{margin-bottom:0}
+.cal-add{font-size:.88rem;color:var(--texto);padding:6px 10px}
+.cal-own{
+  display:flex;align-items:center;gap:10px;width:100%;min-height:44px;margin:-6px 0;padding:6px 0;
+  border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;border-radius:8px;
+}
+.cal-own:hover{background:var(--velo)}
+.cal-own .name{display:flex;flex-direction:column;white-space:normal}
+.cal-own-note{font-size:.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet-row input.wide{flex:1;width:auto;text-align:left;padding-left:0}
+.sheet-row-text{padding:10px 0}
+.sheet-row-text textarea{
+  flex:1;font:inherit;font-size:.92rem;resize:vertical;min-height:64px;
+  border:0;background:transparent;color:var(--texto);
+}
+.sheet-row-text textarea:focus-visible{outline:none}
+.sheet-group + .sheet-group{margin-top:12px}
+.sheet-spacer{flex:1}
+.controls.danger-text{color:var(--rojo)}
