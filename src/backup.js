@@ -16,6 +16,7 @@
 import { normalizeExtras } from './calculate.js'
 import { STATUSES, normalizeSale } from './sales.js'
 import { FONTS, STYLES, isHexColor } from './quoteStyle.js'
+import { EVENTS_KEY, mergeEvents, readEvents, sanitizeEvents } from './calendarEvents.js'
 
 
 // Bump ONLY for breaking changes (a key renamed or removed, a value that
@@ -41,6 +42,9 @@ export const KEYS = {
   // A map of field name -> number. It came after the first backup format
   // and is optional in the file, so it needed no schemaVersion bump.
   setup: 'setup',
+  // Things written into the calendar by hand (calendarEvents.js). Optional
+  // in the file like setup: older backups don't have it, no version bump.
+  events: EVENTS_KEY,
   // Per-device bookkeeping, deliberately NOT inside the backup: it says
   // when THIS browser was last backed up, which is meaningless elsewhere.
   lastBackup: 'lastBackupAt',
@@ -220,7 +224,7 @@ export function sanitizeSetup(raw) {
 
 /* The backup object. `exportedAt` lets the restore screen (and the
    person, opening the file) tell two backups apart. */
-export function buildBackup({ quotes, business, counter, setup, now = new Date() }) {
+export function buildBackup({ quotes, business, counter, setup, events, now = new Date() }) {
   return {
     app: APP_ID,
     kind: KIND,
@@ -233,6 +237,7 @@ export function buildBackup({ quotes, business, counter, setup, now = new Date()
       business: business ?? null,
       quoteCounter: counter ?? null,
       setup: setup ?? null,
+      calendarEvents: events?.length ? events : null,
     },
   }
 }
@@ -301,6 +306,9 @@ export function parseBackup(text) {
     counter: data.quoteCounter == null ? null : sanitizeCounter(data.quoteCounter),
     // Files made before "Your setup" existed simply don't have the key: null.
     setup: data.setup == null ? null : sanitizeSetup(data.setup),
+    // null = the file says nothing about the calendar (made before it
+    // existed, or with no events): restoring must not wipe this browser's.
+    events: data.calendarEvents == null ? null : sanitizeEvents(data.calendarEvents),
   }
 }
 
@@ -411,6 +419,8 @@ export function planRestore(current, backup, mode) {
       quotes: backup.quotes,
       business: backup.business,
       setup: backup.setup ?? current.setup ?? null,
+      // Same reasoning as setup: a file without events keeps the ones here.
+      events: backup.events ?? current.events ?? [],
       counter,
       // After a replace, this browser holds exactly what's in the file.
       coveredByFile: true,
@@ -423,6 +433,7 @@ export function planRestore(current, backup, mode) {
     quotes: merged.quotes,
     business: mergeBusiness(current.business, backup.business),
     setup: mergeSetup(current.setup ?? null, backup.setup),
+    events: mergeEvents(current.events ?? [], backup.events ?? []),
     counter,
     // Only if nothing here is missing from the file does that file count
     // as a backup of this browser (e.g. restoring the same file twice).
@@ -488,6 +499,7 @@ export function readSettings(storage = browserStorage()) {
     business: sanitizeBusiness(readJson(storage, KEYS.business)),
     counter,
     setup: sanitizeSetup(readJson(storage, KEYS.setup)),
+    events: readEvents(storage),
   }
 }
 
@@ -495,7 +507,7 @@ export function readSettings(storage = browserStorage()) {
    enough to call while rendering). */
 export function hasStoredSettings(storage = browserStorage()) {
   try {
-    return [KEYS.business, KEYS.counter, KEYS.setup].some(key => storage.getItem(key) !== null)
+    return [KEYS.business, KEYS.counter, KEYS.setup, KEYS.events].some(key => storage.getItem(key) !== null)
   } catch {
     return false
   }
@@ -614,6 +626,7 @@ export function applyRestore(backup, mode, currentQuotes, storage = browserStora
     [KEYS.business]: plan.business ? JSON.stringify(plan.business) : null,
     [KEYS.counter]: plan.counter ? String(plan.counter) : null,
     [KEYS.setup]: plan.setup ? JSON.stringify(plan.setup) : null,
+    [KEYS.events]: plan.events.length ? JSON.stringify(plan.events) : null,
     // Only written when it changes; otherwise the key isn't touched at all.
     ...(lastBackupAt ? { [KEYS.lastBackup]: lastBackupAt } : {}),
   }, storage)
@@ -637,8 +650,8 @@ export function backupFileName(now) {
    (business, counter, setup), hands it to the browser as a download and
    records when. Returns that time as an ISO string. */
 export function downloadBackup(quotes, { storage = browserStorage(), now = new Date() } = {}) {
-  const { business, counter, setup } = readSettings(storage)
-  const backup = buildBackup({ quotes, business, counter, setup, now })
+  const { business, counter, setup, events } = readSettings(storage)
+  const backup = buildBackup({ quotes, business, counter, setup, events, now })
   // Indented so anyone can open it in a text editor and see their data;
   // the extra size is irrelevant at a few hundred KB.
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })

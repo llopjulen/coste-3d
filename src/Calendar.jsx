@@ -1,7 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useI18n } from './i18n/context.js'
 import { fmtDay, fmtLongDay, fmtMonthYear, fmtNumber } from './i18n/format.js'
 import { dayKey, dayStart, eventsByDay, planOrders } from './schedule.js'
+import { readEvents, removeEvent, upsertEvent, writeEvents } from './calendarEvents.js'
+import EventDialog from './EventDialog.jsx'
 
 /* ==================================================================
    CALENDAR — deliveries, the print queue and sales, by day.
@@ -12,20 +14,39 @@ import { dayKey, dayStart, eventsByDay, planOrders } from './schedule.js'
    Right: the print queue (schedule.js), earliest delivery first, with the
    estimated ready day of each order and a warning when it can't make it.
 
-   Nothing here is stored: it's all worked out from the saved quotes and
-   the printing hours a week of "Your setup", every time it's drawn.
+   Deliveries, the queue and sales are not stored: they're worked out from
+   the saved quotes and the printing hours a week of "Your setup", every
+   time it's drawn. The person's own entries ("buy PETG", "craft fair")
+   are the one thing stored here (calendarEvents.js). They live in this
+   component's state, read once on mount: a restore happens in History,
+   and coming back here mounts the calendar again, so it reads the
+   restored ones without App having to hold them.
 ================================================================== */
 
-const KIND_ORDER = { due: 0, ready: 1, sold: 2 }
+const KIND_ORDER = { due: 0, ready: 1, sold: 2, own: 3 }
 
 export default function Calendar({ quotes, weekHours, formatMoney, onGoToHistory }) {
   const { t, tp, locale } = useI18n()
   const today = dayKey(new Date())
   const [month, setMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1) })
   const [selected, setSelected] = useState(today)
+  const [own, setOwn] = useState(() => readEvents())
+  // null, or the entry in the dialog: an existing one, or { date } for a new one.
+  const [editing, setEditing] = useState(null)
+  const [storageError, setStorageError] = useState(false)
+
+  // Every change goes to state AND storage; if storage refuses (full,
+  // blocked), the entry stays on screen and a line says it won't survive a reload.
+  const commit = next => { setOwn(next); setStorageError(!writeEvents(next)); setEditing(null) }
+  // Stable identity: the dialog's effect depends on onClose.
+  const closeDialog = useCallback(() => setEditing(null), [])
 
   const plan = useMemo(() => planOrders(quotes, { weekHours }), [quotes, weekHours])
-  const events = useMemo(() => eventsByDay(quotes, plan), [quotes, plan])
+  const events = useMemo(() => {
+    const byDay = eventsByDay(quotes, plan)
+    for (const e of own) (byDay[e.date] ??= []).push({ kind: 'own', event: e })
+    return byDay
+  }, [quotes, plan, own])
 
   // The 6 × 7 grid: from the Monday on or before the 1st.
   const first = new Date(month)
@@ -81,15 +102,38 @@ export default function Calendar({ quotes, weekHours, formatMoney, onGoToHistory
             <span><i className="dot dot-due" />{t('cal.kind.due')}</span>
             <span><i className="dot dot-ready" />{t('cal.kind.ready')}</span>
             <span><i className="dot dot-sold" />{t('cal.kind.sold')}</span>
+            <span><i className="dot dot-own" />{t('cal.kind.own')}</span>
           </div>
 
           <div className="cal-daylist">
-            <h3>{fmtLongDay(locale, dayStart(selected))}</h3>
+            <div className="cal-daylist-head">
+              <h3>{fmtLongDay(locale, dayStart(selected))}</h3>
+              <button
+                type="button"
+                className="row-btn cal-add"
+                aria-label={t('cal.addLabel', { date: fmtLongDay(locale, dayStart(selected)) })}
+                onClick={() => setEditing({ date: selected })}
+              >
+                + {t('cal.add')}
+              </button>
+            </div>
             {dayEvents.length === 0
               ? <p className="muted">{t('cal.nothing')}</p>
               : (
                 <ul>
-                  {dayEvents.map((e, i) => (
+                  {dayEvents.map((e, i) => e.kind === 'own' ? (
+                    <li key={e.event.id}>
+                      {/* The whole row opens the entry: a 44 px target, like a row in iOS Calendar. */}
+                      <button type="button" className="cal-own" onClick={() => setEditing(e.event)}>
+                        <i className="dot dot-own" aria-hidden="true" />
+                        <span className="name">
+                          {e.event.title}
+                          {e.event.note && <span className="muted cal-own-note">{e.event.note}</span>}
+                        </span>
+                        <span className="muted">{e.event.time ?? ''}</span>
+                      </button>
+                    </li>
+                  ) : (
                     <li key={i}>
                       <i className={`dot dot-${e.kind}`} aria-hidden="true" />
                       <span className="name">{e.quote.name ?? t('save.untitled')}{e.quote.client ? ` — ${e.quote.client}` : ''}</span>
@@ -100,6 +144,7 @@ export default function Calendar({ quotes, weekHours, formatMoney, onGoToHistory
                   ))}
                 </ul>
               )}
+            {storageError && <p className="import-error" role="alert">{t('cal.storageError')}</p>}
           </div>
         </section>
 
@@ -139,6 +184,21 @@ export default function Calendar({ quotes, weekHours, formatMoney, onGoToHistory
           </p>
         </section>
       </div>
+
+      {editing && (
+        <EventDialog
+          event={editing}
+          onSave={e => {
+            commit(upsertEvent(own, e))
+            // Follow the entry if its day was changed to another one, maybe in another month.
+            const d = dayStart(e.date)
+            setSelected(e.date)
+            setMonth(new Date(d.getFullYear(), d.getMonth(), 1))
+          }}
+          onDelete={id => commit(removeEvent(own, id))}
+          onClose={closeDialog}
+        />
+      )}
     </main>
   )
 }
