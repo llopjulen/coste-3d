@@ -9,6 +9,7 @@ import { applyRestore, backupStatus, clearSetup, downloadBackup, readLastBackup,
 import Printers from './Printers.jsx'
 import RealData from './RealData.jsx'
 import Plans from './Plans.jsx'
+import Calendar from './Calendar.jsx'
 import { adviceFor } from './advice.js'
 import NavIcon from './NavIcons.jsx'
 import SubNav from './SubNav.jsx'
@@ -596,6 +597,15 @@ export default function App({ agentOptIn = false }) {
           </button>
           <button
             type="button"
+            className={`tab ${view === 'calendar' ? 'active' : ''}`}
+            aria-current={view === 'calendar' ? 'page' : undefined}
+            onClick={() => setView('calendar')}
+          >
+            <NavIcon name="calendar" />
+            <span className="tab-label">{t('nav.calendar')}</span>
+          </button>
+          <button
+            type="button"
             className={`tab ${view === 'plans' ? 'active' : ''}`}
             aria-current={view === 'plans' ? 'page' : undefined}
             onClick={() => setView('plans')}
@@ -654,7 +664,13 @@ export default function App({ agentOptIn = false }) {
       </header>
 
       {/* agentOn is checked again here: if the tab was hidden, the screen goes too. */}
-      {view === 'plans' ? (
+      {view === 'calendar' ? (
+        <>
+          {/* weekHours comes from the form, whose "Your setup" part is remembered on this device. */}
+          <Calendar quotes={savedQuotes} weekHours={d.printHoursPerWeek} formatMoney={formatMoney} onGoToHistory={() => setView('history')} />
+          <div className="wrap wrap-foot"><SiteFooter /></div>
+        </>
+      ) : view === 'plans' ? (
         <>
           <Plans />
           <div className="wrap wrap-foot"><SiteFooter /></div>
@@ -690,6 +706,7 @@ export default function App({ agentOptIn = false }) {
             onLoad={loadQuote}
             onDelete={deleteQuote}
             onUpdate={updateQuote}
+            weekHours={d.printHoursPerWeek}
             onExport={exportExcel}
             exporting={exporting}
             onReport={openReport}

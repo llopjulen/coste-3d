@@ -173,3 +173,11 @@ test('sanitizeBusiness keeps a valid look and drops anything that could inject C
   const bad = sanitizeBusiness({ name: 'A', accent: 'red;background:url(//x)', docStyle: 'neon', docFont: 1 })
   assert.equal('accent' in bad, false); assert.equal('docStyle' in bad, false); assert.equal('docFont' in bad, false)
 })
+
+test('sanitizeQuote keeps valid order dates and drops broken ones', () => {
+  const base = { id: 6, cost: 2, price: 4, status: 'order' }
+  const ok = sanitizeQuote({ ...base, dueAt: '2026-11-20', orderedAt: '2026-11-04T08:00:00.000Z' })
+  assert.equal(ok.dueAt, '2026-11-20'); assert.equal(ok.orderedAt, '2026-11-04T08:00:00.000Z')
+  const bad = sanitizeQuote({ ...base, dueAt: '20/11/2026', orderedAt: 'yesterday' })
+  assert.equal('dueAt' in bad, false); assert.equal('orderedAt' in bad, false)
+})
