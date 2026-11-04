@@ -7,6 +7,7 @@
 import writeExcelFile from 'write-excel-file/browser'
 import { translatorFor } from './i18n/dicts.js'
 import { totalGrams } from './calculate.js'
+import { saleProfit, statusOf } from './sales.js'
 
 const HEADER_BG = '#212125'
 const HEADER_TEXT = '#FFFFFF'
@@ -41,6 +42,10 @@ function buildColumns(currency, t) {
     { title: money(t('history.col.price')), width: 18, money: true, bold: true, accent: true, get: q => q.price },
     { title: money(t('history.col.total')), width: 18, money: true, bold: true, sum: true,
       get: q => q.orderTotal ?? q.price },
+    // What happened after the quote (sales.js): state, what was received and the real profit.
+    { title: t('sales.col.status'), width: 14, type: String, get: q => t(`sales.status.${statusOf(q)}`) },
+    { title: money(t('sales.stat.revenue')), width: 16, money: true, sum: true, get: q => (statusOf(q) === 'sold' ? q.sale.amount : null) },
+    { title: money(t('sales.col.profit')), width: 16, money: true, bold: true, sum: true, get: q => saleProfit(q) },
   ]
 }
 

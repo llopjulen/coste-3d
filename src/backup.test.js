@@ -153,3 +153,15 @@ test('a damaged list of extras is cleaned, never trusted', () => {
 test('adding extra filaments did not change the format version either', () => {
   assert.equal(BACKUP_SCHEMA_VERSION, 1)
 })
+
+/* ---- sales (sales.js) survive a backup, cleaned ---- */
+test('sanitizeQuote keeps a clean sale and status, and drops broken ones', () => {
+  const base = { id: 5, cost: 2, price: 4 }
+  const sold = sanitizeQuote({ ...base, status: 'sold', sale: { amount: 10, fees: 1, channel: 'Etsy', soldAt: '2026-11-04T12:00:00.000Z' } })
+  assert.equal(sold.status, 'sold')
+  assert.deepEqual(sold.sale, { amount: 10, fees: 1, channel: 'Etsy', soldAt: '2026-11-04T12:00:00.000Z' })
+  const broken = sanitizeQuote({ ...base, status: 'sold', sale: { amount: 'lots' } })
+  assert.equal('sale' in broken, false)
+  assert.equal(broken.status, 'order', 'sold without a valid sale is an order')
+  assert.equal('status' in sanitizeQuote({ ...base, status: 'hacked' }), false)
+})

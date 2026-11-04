@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import SaleDialog from './SaleDialog.jsx'
 import { useI18n } from './i18n/context.js'
 import { fmtDay, fmtMonthYear } from './i18n/format.js'
+import { STATUSES, saleProfit, salesSummary, statusOf, withStatus } from './sales.js'
 
 /* ==================================================================
    HISTORY — every saved quote, newest first, grouped by month.
@@ -22,12 +24,15 @@ function monthOf(q, locale) {
   }
 }
 
-export default function History({ quotes, formatMoney, onLoad, onDelete, onExport, exporting, onReport, onCustomerQuote, onGoToCalculator }) {
+export default function History({ quotes, formatMoney, currency, rate, onLoad, onDelete, onUpdate, onExport, exporting, onReport, onCustomerQuote, onGoToCalculator }) {
   const { t, tp, locale } = useI18n()
   const day = dt => fmtDay(locale, dt)
   const [query, setQuery] = useState('')
   // Ids of the quotes ticked for a customer quote. A Set holds each id once.
   const [selected, setSelected] = useState(() => new Set())
+  // Which state is shown ('all' or one of STATUSES), and the quote whose sale is being entered.
+  const [filter, setFilter] = useState('all')
+  const [selling, setSelling] = useState(null)
 
   if (quotes.length === 0) {
     return (
@@ -41,12 +46,15 @@ export default function History({ quotes, formatMoney, onLoad, onDelete, onExpor
 
   // Search by part name or client, ignoring upper/lower case.
   const q = query.trim().toLowerCase()
-  const visible = quotes
-    .filter(item =>
-      !q ||
-      (item.name ?? '').toLowerCase().includes(q) ||
-      (item.client ?? '').toLowerCase().includes(q)
-    )
+  const matching = quotes.filter(item =>
+    !q ||
+    (item.name ?? '').toLowerCase().includes(q) ||
+    (item.client ?? '').toLowerCase().includes(q)
+  )
+  // Counts per state for the segmented control, over what the search matches.
+  const summary = salesSummary(matching)
+  const visible = matching
+    .filter(item => filter === 'all' || statusOf(item) === filter)
     .sort((a, b) => quoteDate(b) - quoteDate(a))
 
   // Group the visible quotes by month: [{ key, label, items, total }]
@@ -64,7 +72,6 @@ export default function History({ quotes, formatMoney, onLoad, onDelete, onExpor
 
   const totalValue = visible.reduce((sum, item) => sum + orderTotal(item), 0)
   const avgPrice = visible.length ? visible.reduce((sum, item) => sum + item.price, 0) / visible.length : 0
-  const clients = new Set(visible.map(item => item.client).filter(Boolean)).size
 
   // Ticking works on a copy of the Set: React only redraws on a new object.
   const toggle = id => setSelected(prev => {
@@ -84,20 +91,63 @@ export default function History({ quotes, formatMoney, onLoad, onDelete, onExpor
   })
   const ticked = quotes.filter(item => selected.has(item.id))
 
+  /* Changing the state: 'sold' needs the sale's details first, so it opens
+     the dialog; the others apply at once (and drop a recorded sale). */
+  const changeStatus = (item, status) => {
+    if (status === 'sold') setSelling(item)
+    else onUpdate(withStatus(item, status))
+  }
+  const saveSale = sale => {
+    onUpdate(withStatus(selling, 'sold', sale))
+    setSelling(null)
+  }
+
   const remove = item => {
     if (window.confirm(t('history.confirmDelete', { name: item.name ?? t('save.untitled'), date: day(quoteDate(item)) }))) {
       onDelete(item.id)
     }
   }
 
+  const pct = n => (n === null ? '—' : `${Math.round(n * 100)} %`)
+
   return (
     <>
-      <div className="stats">
-        <div className="stat"><span className="label">{t('history.stat.quotes')}</span><span className="value">{visible.length}</span></div>
-        <div className="stat"><span className="label">{t('history.stat.total')}</span><span className="value">{formatMoney(totalValue)}</span></div>
-        <div className="stat"><span className="label">{t('history.stat.avg')}</span><span className="value">{formatMoney(avgPrice)}</span></div>
-        <div className="stat"><span className="label">{t('history.stat.clients')}</span><span className="value">{clients}</span></div>
+      {/* Segmented control, as in iOS: one tap filters the list by state.
+          aria-pressed tells screen readers which one is on. */}
+      <div className="segmented" role="group" aria-label={t('sales.filter')}>
+        {['all', ...STATUSES].map(key => (
+          <button
+            key={key}
+            type="button"
+            aria-pressed={filter === key}
+            className={filter === key ? 'on' : undefined}
+            onClick={() => setFilter(key)}
+          >
+            {t(`sales.tab.${key}`)}
+            <span className="seg-count">{key === 'all' ? matching.length : summary.count[key]}</span>
+          </button>
+        ))}
       </div>
+
+      {/* The sold view shows what really came in; the others, what was quoted. */}
+      {filter === 'sold' ? (
+        <div className="stats">
+          <div className="stat"><span className="label">{t('sales.stat.revenue')}</span><span className="value">{formatMoney(summary.revenue)}</span></div>
+          <div className="stat"><span className="label">{t('sales.stat.profit')}</span><span className={`value${summary.profit < 0 ? ' loss' : ''}`}>{formatMoney(summary.profit)}</span></div>
+          <div className="stat"><span className="label">{t('sales.stat.margin')}</span><span className="value">{pct(summary.margin)}</span></div>
+          <div className="stat">
+            <span className="label">{t('sales.stat.vsQuoted')}</span>
+            <span className="value">{formatMoney(summary.revenue - summary.quoted)}</span>
+          </div>
+        </div>
+      ) : (
+        <div className="stats">
+          <div className="stat"><span className="label">{t('history.stat.quotes')}</span><span className="value">{visible.length}</span></div>
+          <div className="stat"><span className="label">{t('history.stat.total')}</span><span className="value">{formatMoney(totalValue)}</span></div>
+          <div className="stat"><span className="label">{t('history.stat.avg')}</span><span className="value">{formatMoney(avgPrice)}</span></div>
+          <div className="stat"><span className="label">{t('sales.stat.won')}</span><span className="value">{pct(summary.won)}</span></div>
+        </div>
+      )}
 
       <div className="history-tools">
         <input
@@ -148,9 +198,12 @@ export default function History({ quotes, formatMoney, onLoad, onDelete, onExpor
                   <th>{t('history.col.part')}</th>
                   <th className="wide">{t('history.col.client')}</th>
                   <th className="num wide">{t('history.col.qty')}</th>
-                  <th className="num wide">{t('history.col.cost')}</th>
-                  <th className="num wide">{t('history.col.price')}</th>
+                  {/* Cost and price per part left the table (2026-11-04) to make room
+                      for the sale state and the real profit; they are in the
+                      loaded quote, the Excel and the PDF report. */}
                   <th className="num">{t('history.col.total')}</th>
+                  <th className="wide">{t('sales.col.status')}</th>
+                  <th className="num wide">{t('sales.col.profit')}</th>
                   <th><span className="sr-only">{t('history.col.actions')}</span></th>
                 </tr>
               </thead>
@@ -175,12 +228,36 @@ export default function History({ quotes, formatMoney, onLoad, onDelete, onExpor
                     </td>
                     <td className="wide">{item.client || <span className="muted">—</span>}</td>
                     <td className="num wide">{item.units ?? 1}</td>
-                    <td className="num wide">{formatMoney(item.cost)}</td>
-                    <td className="num accent wide">{formatMoney(item.price)}</td>
-                    <td className="num strong">{formatMoney(orderTotal(item))}</td>
+                    <td className="num strong">
+                      {/* Sold: what was really charged; the quoted total stays in the tooltip. */}
+                      {statusOf(item) === 'sold'
+                        ? <span title={t('sales.quotedWas', { amount: formatMoney(orderTotal(item)) })}>{formatMoney(item.sale.amount)}</span>
+                        : formatMoney(orderTotal(item))}
+                    </td>
+                    <td className="wide">
+                      <select
+                        className={`status-select status-${statusOf(item)}`}
+                        aria-label={t('sales.statusOf', { name: item.name ?? t('save.untitled') })}
+                        value={statusOf(item)}
+                        onChange={e => changeStatus(item, e.target.value)}
+                      >
+                        {STATUSES.map(s => <option key={s} value={s}>{t(`sales.status.${s}`)}</option>)}
+                      </select>
+                    </td>
+                    <td className="num wide">
+                      {statusOf(item) === 'sold' ? (
+                        <button type="button" className={`row-btn profit${saleProfit(item) < 0 ? ' loss' : ''}`} title={t('sales.edit')} onClick={() => setSelling(item)}>
+                          {formatMoney(saleProfit(item))}
+                        </button>
+                      ) : <span className="muted">—</span>}
+                    </td>
                     <td className="actions">
                       {/* Quotes saved before this version don't have the
                           form data, so there is nothing to load. */}
+                      {/* On a phone the state column is hidden: this button does the main step. */}
+                      {statusOf(item) !== 'sold' && (
+                        <button type="button" className="row-btn sell-btn" onClick={() => setSelling(item)}>{t('sales.markSold')}</button>
+                      )}
                       <button
                         type="button"
                         className="row-btn"
@@ -206,6 +283,16 @@ export default function History({ quotes, formatMoney, onLoad, onDelete, onExpor
           </div>
         </section>
       ))}
+
+      {selling && (
+        <SaleDialog
+          quote={selling}
+          currency={currency}
+          rate={rate}
+          onSave={saveSale}
+          onClose={() => setSelling(null)}
+        />
+      )}
     </>
   )
 }

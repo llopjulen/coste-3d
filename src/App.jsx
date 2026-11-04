@@ -312,6 +312,11 @@ export default function App({ agentOptIn = false }) {
       window.scrollTo(0, 0)
     }
 
+    // Replace one saved quote by a new version of it (its sale state changed).
+    const updateQuote = (next) => {
+      setSavedQuotes(list => list.map(q => (q.id === next.id ? next : q)))
+    }
+
     const deleteQuote = (id) => {
       setSavedQuotes(savedQuotes.filter( q => q.id !== id))
     }
@@ -665,8 +670,11 @@ export default function App({ agentOptIn = false }) {
           <History
             quotes={savedQuotes}
             formatMoney={formatMoney}
+            currency={currency}
+            rate={rates[currency] || 1}
             onLoad={loadQuote}
             onDelete={deleteQuote}
+            onUpdate={updateQuote}
             onExport={exportExcel}
             exporting={exporting}
             onReport={openReport}
