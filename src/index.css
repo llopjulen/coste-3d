@@ -1209,3 +1209,11 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
   .line-total{min-width:76px}
   .num-input input{width:80px}
 }
+/* Calendario sobre pedidos: el punto de cobro es el de la antigua «venta»,
+   y las filas de la cola abren el pedido. */
+.dot-paid{background:var(--tenue)}
+.queue-open{border:0;background:none;color:inherit;font:inherit;text-align:left;padding:0;cursor:pointer}
+.queue-open:hover .name{text-decoration:underline;text-decoration-color:var(--borde-fuerte);text-underline-offset:3px}
+/* Historial: el pedido de cada presupuesto, como enlace con su estado. */
+.row-btn.order-link{display:inline-flex;align-items:center;gap:8px;color:var(--texto)}
+.row-btn.order-link .order-num{font-size:.84rem}

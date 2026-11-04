@@ -1,15 +1,19 @@
-import { useState } from 'react'
-import SaleDialog from './SaleDialog.jsx'
-import OrderDialog from './OrderDialog.jsx'
+import { useMemo, useState } from 'react'
 import { useI18n } from './i18n/context.js'
 import { fmtDay, fmtMonthYear } from './i18n/format.js'
-import { STATUSES, saleProfit, salesSummary, statusOf, withOrder, withStatus } from './sales.js'
-import { dayStart, isDay } from './schedule.js'
+import { formatOrderNumber, ordersByQuote } from './orders.js'
+import { StatusPill } from './OrderParts.jsx'
 
 /* ==================================================================
    HISTORY — every saved quote, newest first, grouped by month.
    It doesn't own any data: App passes the quotes in and gets told
    when the user wants to load, delete or export something.
+
+   Since 2026-11-04 what happens after a quote lives in ORDERS (orders.js):
+   a quote here is the priced part. Each row says which order it went
+   into, or offers to create one; ticked rows become one order together.
+   The old per-quote states (quote / order / sold, sales.js) are turned
+   into orders once by migrateQuoteOrders and are no longer edited here.
 ================================================================== */
 
 // Older quotes only have `id` (a Date.now() timestamp), newer ones
@@ -26,17 +30,14 @@ function monthOf(q, locale) {
   }
 }
 
-export default function History({ quotes, formatMoney, currency, rate, weekHours, onLoad, onDelete, onUpdate, onExport, exporting, onReport, onCustomerQuote, onGoToCalculator }) {
+export default function History({ quotes, orders, formatMoney, onLoad, onDelete, onExport, exporting, onReport, onCustomerQuote, onCreateOrder, onOpenOrder, onGoToCalculator }) {
   const { t, tp, locale } = useI18n()
   const day = dt => fmtDay(locale, dt)
   const [query, setQuery] = useState('')
   // Ids of the quotes ticked for a customer quote. A Set holds each id once.
   const [selected, setSelected] = useState(() => new Set())
-  // Which state is shown ('all' or one of STATUSES), and the quote whose sale is being entered.
-  const [filter, setFilter] = useState('all')
-  const [selling, setSelling] = useState(null)
-  // The quote becoming an order (or whose delivery date is being changed).
-  const [ordering, setOrdering] = useState(null)
+  // quote id -> its order, worked out once per change of the orders.
+  const orderOf = useMemo(() => ordersByQuote(orders), [orders])
 
   if (quotes.length === 0) {
     return (
@@ -55,11 +56,7 @@ export default function History({ quotes, formatMoney, currency, rate, weekHours
     (item.name ?? '').toLowerCase().includes(q) ||
     (item.client ?? '').toLowerCase().includes(q)
   )
-  // Counts per state for the segmented control, over what the search matches.
-  const summary = salesSummary(matching)
-  const visible = matching
-    .filter(item => filter === 'all' || statusOf(item) === filter)
-    .sort((a, b) => quoteDate(b) - quoteDate(a))
+  const visible = [...matching].sort((a, b) => quoteDate(b) - quoteDate(a))
 
   // Group the visible quotes by month: [{ key, label, items, total }]
   const months = []
@@ -76,6 +73,8 @@ export default function History({ quotes, formatMoney, currency, rate, weekHours
 
   const totalValue = visible.reduce((sum, item) => sum + orderTotal(item), 0)
   const avgPrice = visible.length ? visible.reduce((sum, item) => sum + item.price, 0) / visible.length : 0
+  // Share of quotes that became an order (not counting cancelled ones): the "win rate".
+  const won = visible.length ? visible.filter(item => { const o = orderOf.get(item.id); return o && o.status !== 'cancelled' }).length / visible.length : null
 
   // Ticking works on a copy of the Set: React only redraws on a new object.
   const toggle = id => setSelected(prev => {
@@ -95,21 +94,6 @@ export default function History({ quotes, formatMoney, currency, rate, weekHours
   })
   const ticked = quotes.filter(item => selected.has(item.id))
 
-  /* Changing the state: 'sold' needs the sale's details first, so it opens
-     the dialog; the others apply at once (and drop a recorded sale). */
-  const changeStatus = (item, status) => {
-    if (status === 'sold') setSelling(item)
-    else if (status === 'order') setOrdering(item)  // asks for the delivery date first
-    else onUpdate(withStatus(item, status))
-  }
-  const saveOrder = dueAt => {
-    onUpdate(withOrder(ordering, dueAt))
-    setOrdering(null)
-  }
-  const saveSale = sale => {
-    onUpdate(withStatus(selling, 'sold', sale))
-    setSelling(null)
-  }
 
   const remove = item => {
     if (window.confirm(t('history.confirmDelete', { name: item.name ?? t('save.untitled'), date: day(quoteDate(item)) }))) {
@@ -121,42 +105,12 @@ export default function History({ quotes, formatMoney, currency, rate, weekHours
 
   return (
     <>
-      {/* Segmented control, as in iOS: one tap filters the list by state.
-          aria-pressed tells screen readers which one is on. */}
-      <div className="segmented" role="group" aria-label={t('sales.filter')}>
-        {['all', ...STATUSES].map(key => (
-          <button
-            key={key}
-            type="button"
-            aria-pressed={filter === key}
-            className={filter === key ? 'on' : undefined}
-            onClick={() => setFilter(key)}
-          >
-            {t(`sales.tab.${key}`)}
-            <span className="seg-count">{key === 'all' ? matching.length : summary.count[key]}</span>
-          </button>
-        ))}
+      <div className="stats">
+        <div className="stat"><span className="label">{t('history.stat.quotes')}</span><span className="value">{visible.length}</span></div>
+        <div className="stat"><span className="label">{t('history.stat.total')}</span><span className="value">{formatMoney(totalValue)}</span></div>
+        <div className="stat"><span className="label">{t('history.stat.avg')}</span><span className="value">{formatMoney(avgPrice)}</span></div>
+        <div className="stat"><span className="label">{t('sales.stat.won')}</span><span className="value">{pct(won)}</span></div>
       </div>
-
-      {/* The sold view shows what really came in; the others, what was quoted. */}
-      {filter === 'sold' ? (
-        <div className="stats">
-          <div className="stat"><span className="label">{t('sales.stat.revenue')}</span><span className="value">{formatMoney(summary.revenue)}</span></div>
-          <div className="stat"><span className="label">{t('sales.stat.profit')}</span><span className={`value${summary.profit < 0 ? ' loss' : ''}`}>{formatMoney(summary.profit)}</span></div>
-          <div className="stat"><span className="label">{t('sales.stat.margin')}</span><span className="value">{pct(summary.margin)}</span></div>
-          <div className="stat">
-            <span className="label">{t('sales.stat.vsQuoted')}</span>
-            <span className="value">{formatMoney(summary.revenue - summary.quoted)}</span>
-          </div>
-        </div>
-      ) : (
-        <div className="stats">
-          <div className="stat"><span className="label">{t('history.stat.quotes')}</span><span className="value">{visible.length}</span></div>
-          <div className="stat"><span className="label">{t('history.stat.total')}</span><span className="value">{formatMoney(totalValue)}</span></div>
-          <div className="stat"><span className="label">{t('history.stat.avg')}</span><span className="value">{formatMoney(avgPrice)}</span></div>
-          <div className="stat"><span className="label">{t('sales.stat.won')}</span><span className="value">{pct(summary.won)}</span></div>
-        </div>
-      )}
 
       <div className="history-tools">
         <input
@@ -183,6 +137,10 @@ export default function History({ quotes, formatMoney, currency, rate, weekHours
         <button type="button" className="controls primary" onClick={() => onCustomerQuote(ticked)} disabled={ticked.length === 0}>
           {t('history.customerQuote', { n: ticked.length })}
         </button>
+        {/* The same ticked parts, as one order: the client said yes to the quote. */}
+        <button type="button" className="controls" onClick={() => onCreateOrder(ticked)} disabled={ticked.length === 0}>
+          {t('history.createOrder', { n: ticked.length })}
+        </button>
         {ticked.length === 0 && <span className="muted">{t('history.tickHint')}</span>}
       </div>
 
@@ -207,13 +165,11 @@ export default function History({ quotes, formatMoney, currency, rate, weekHours
                   <th>{t('history.col.part')}</th>
                   <th className="wide">{t('history.col.client')}</th>
                   <th className="num wide">{t('history.col.qty')}</th>
-                  {/* Cost and price per part left the table (2026-11-04) to make room
-                      for the sale state and the real profit; they are in the
+                  {/* Cost and price per part left the table (2026-11-04); they are in the
                       loaded quote, the Excel and the PDF report. */}
                   <th className="num">{t('history.col.total')}</th>
-                  {/* The state stays on phones too: it's how an order moves along. */}
-                  <th>{t('sales.col.status')}</th>
-                  <th className="num wide">{t('sales.col.profit')}</th>
+                  {/* Which order it went into; it stays on phones too. */}
+                  <th>{t('history.col.order')}</th>
                   <th><span className="sr-only">{t('history.col.actions')}</span></th>
                 </tr>
               </thead>
@@ -238,34 +194,17 @@ export default function History({ quotes, formatMoney, currency, rate, weekHours
                     </td>
                     <td className="wide">{item.client || <span className="muted">—</span>}</td>
                     <td className="num wide">{item.units ?? 1}</td>
-                    <td className="num strong total-cell">
-                      {/* Sold: what was really charged; the quoted total stays in the tooltip. */}
-                      {statusOf(item) === 'sold'
-                        ? <span title={t('sales.quotedWas', { amount: formatMoney(orderTotal(item)) })}>{formatMoney(item.sale.amount)}</span>
-                        : formatMoney(orderTotal(item))}
-                    </td>
+                    <td className="num strong total-cell">{formatMoney(orderTotal(item))}</td>
                     <td className="status-cell">
-                      <select
-                        className={`status-select status-${statusOf(item)}`}
-                        aria-label={t('sales.statusOf', { name: item.name ?? t('save.untitled') })}
-                        value={statusOf(item)}
-                        onChange={e => changeStatus(item, e.target.value)}
-                      >
-                        {STATUSES.map(s => <option key={s} value={s}>{t(`sales.status.${s}`)}</option>)}
-                      </select>
-                      {/* Open orders show their delivery day; tapping it changes the date. */}
-                      {statusOf(item) === 'order' && isDay(item.dueAt) && (
-                        <button type="button" className="row-btn due-btn" onClick={() => setOrdering(item)} title={t('order.change')}>
-                          {t('order.dueShort', { date: day(dayStart(item.dueAt)) })}
+                      {orderOf.has(item.id) ? (
+                        <button type="button" className="row-btn order-link" onClick={() => onOpenOrder(orderOf.get(item.id).id)}
+                          title={t('history.openOrder')}>
+                          <span className="order-num">{formatOrderNumber(orderOf.get(item.id).number)}</span>
+                          <StatusPill status={orderOf.get(item.id).status} />
                         </button>
+                      ) : (
+                        <button type="button" className="row-btn" onClick={() => onCreateOrder([item])}>{t('history.toOrder')}</button>
                       )}
-                    </td>
-                    <td className="num wide">
-                      {statusOf(item) === 'sold' ? (
-                        <button type="button" className={`row-btn profit${saleProfit(item) < 0 ? ' loss' : ''}`} title={t('sales.edit')} onClick={() => setSelling(item)}>
-                          {formatMoney(saleProfit(item))}
-                        </button>
-                      ) : <span className="muted">—</span>}
                     </td>
                     <td className="actions">
                       {/* Quotes saved before this version don't have the
@@ -296,25 +235,6 @@ export default function History({ quotes, formatMoney, currency, rate, weekHours
         </section>
       ))}
 
-      {ordering && (
-        <OrderDialog
-          quote={ordering}
-          quotes={quotes}
-          weekHours={weekHours}
-          onSave={saveOrder}
-          onClose={() => setOrdering(null)}
-        />
-      )}
-
-      {selling && (
-        <SaleDialog
-          quote={selling}
-          currency={currency}
-          rate={rate}
-          onSave={saveSale}
-          onClose={() => setSelling(null)}
-        />
-      )}
     </>
   )
 }

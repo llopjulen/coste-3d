@@ -20,7 +20,7 @@ import NewOrderDialog from './NewOrderDialog.jsx'
 const FILTERS = ['open', 'delivered', 'cancelled', 'all']
 const day = key => { const [y, m, d] = key.split('-').map(Number); return new Date(y, m - 1, d) }
 
-export default function Orders({ api, quotes, formatMoney, currency, rate, open, onOpen, preset, onPresetUsed }) {
+export default function Orders({ api, quotes, formatMoney, currency, rate, open, onOpen, preset, onPresetUsed, weekHours }) {
   const { t } = useI18n()
   // open = null (lists) | { kind: 'order' | 'customer', id }. Held by App so
   // other tabs (History, Calendar) can open an order directly.
@@ -109,6 +109,8 @@ export default function Orders({ api, quotes, formatMoney, currency, rate, open,
         <NewOrderDialog
           quotes={quotes}
           customers={api.customers}
+          orders={api.orders}
+          weekHours={weekHours}
           formatMoney={formatMoney}
           preset={preset ?? []}
           onCreate={async input => {

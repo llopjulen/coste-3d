@@ -8,7 +8,7 @@ import { isDay } from './schedule.js'
 
    `event` is an existing entry (edit, with Delete) or { date } for a new
    one on the day that was selected. Same native <dialog> + showModal() as
-   OrderDialog and SaleDialog: focus trap, Esc to close and the backdrop
+   NewOrderDialog and PaymentDialog: focus trap, Esc to close and the backdrop
    come from the browser. Validation lives in calendarEvents.js
    (sanitizeEvent); this only refuses to save without a title or a day,
    so the person sees why instead of the entry silently not appearing.

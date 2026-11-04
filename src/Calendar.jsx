@@ -4,6 +4,7 @@ import { fmtDay, fmtLongDay, fmtMonthYear, fmtNumber } from './i18n/format.js'
 import { dayKey, dayStart, eventsByDay, planOrders } from './schedule.js'
 import { readEvents, removeEvent, upsertEvent, writeEvents } from './calendarEvents.js'
 import EventDialog from './EventDialog.jsx'
+import { formatOrderNumber } from './orders.js'
 
 /* ==================================================================
    CALENDAR — deliveries, the print queue and sales, by day.
@@ -15,7 +16,7 @@ import EventDialog from './EventDialog.jsx'
    estimated ready day of each order and a warning when it can't make it.
 
    Deliveries, the queue and sales are not stored: they're worked out from
-   the saved quotes and the printing hours a week of "Your setup", every
+   the orders (orders.js) and the printing hours a week of "Your setup", every
    time it's drawn. The person's own entries ("buy PETG", "craft fair")
    are the one thing stored here (calendarEvents.js). They live in this
    component's state, read once on mount: a restore happens in History,
@@ -23,9 +24,12 @@ import EventDialog from './EventDialog.jsx'
    restored ones without App having to hold them.
 ================================================================== */
 
-const KIND_ORDER = { due: 0, ready: 1, sold: 2, own: 3 }
+const KIND_ORDER = { due: 0, ready: 1, paid: 2, own: 3 }
 
-export default function Calendar({ quotes, weekHours, formatMoney, onGoToHistory }) {
+// "#0012 · Bar Pepe": how an order is named in the day list and the queue.
+const orderLabel = (o, t) => `${formatOrderNumber(o.number)} · ${o.customerName || t('order.noClient')}`
+
+export default function Calendar({ orders, weekHours, formatMoney, onOpenOrder, onGoToOrders }) {
   const { t, tp, locale } = useI18n()
   const today = dayKey(new Date())
   const [month, setMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1) })
@@ -41,12 +45,13 @@ export default function Calendar({ quotes, weekHours, formatMoney, onGoToHistory
   // Stable identity: the dialog's effect depends on onClose.
   const closeDialog = useCallback(() => setEditing(null), [])
 
-  const plan = useMemo(() => planOrders(quotes, { weekHours }), [quotes, weekHours])
+  // Since 2026-11-04 the calendar reads ORDERS (orders.js), not quote states.
+  const plan = useMemo(() => planOrders(orders, { weekHours }), [orders, weekHours])
   const events = useMemo(() => {
-    const byDay = eventsByDay(quotes, plan)
+    const byDay = eventsByDay(orders, plan)
     for (const e of own) (byDay[e.date] ??= []).push({ kind: 'own', event: e })
     return byDay
-  }, [quotes, plan, own])
+  }, [orders, plan, own])
 
   // The 6 × 7 grid: from the Monday on or before the 1st.
   const first = new Date(month)
@@ -101,7 +106,7 @@ export default function Calendar({ quotes, weekHours, formatMoney, onGoToHistory
           <div className="cal-legend" aria-hidden="true">
             <span><i className="dot dot-due" />{t('cal.kind.due')}</span>
             <span><i className="dot dot-ready" />{t('cal.kind.ready')}</span>
-            <span><i className="dot dot-sold" />{t('cal.kind.sold')}</span>
+            <span><i className="dot dot-paid" />{t('cal.kind.paid')}</span>
             <span><i className="dot dot-own" />{t('cal.kind.own')}</span>
           </div>
 
@@ -135,11 +140,14 @@ export default function Calendar({ quotes, weekHours, formatMoney, onGoToHistory
                     </li>
                   ) : (
                     <li key={i}>
-                      <i className={`dot dot-${e.kind}`} aria-hidden="true" />
-                      <span className="name">{e.quote.name ?? t('save.untitled')}{e.quote.client ? ` — ${e.quote.client}` : ''}</span>
-                      <span className="muted">
-                        {e.kind === 'sold' ? formatMoney(e.quote.sale.amount) : t(`cal.kind.${e.kind}`)}
-                      </span>
+                      {/* Opens the order: from "what's on today" to the order in one tap. */}
+                      <button type="button" className="cal-own" onClick={() => onOpenOrder(e.order.id)}>
+                        <i className={`dot dot-${e.kind}`} aria-hidden="true" />
+                        <span className="name">{orderLabel(e.order, t)}</span>
+                        <span className="muted">
+                          {e.kind === 'paid' ? formatMoney(e.amount) : t(`cal.kind.${e.kind}`)}
+                        </span>
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -156,18 +164,18 @@ export default function Calendar({ quotes, weekHours, formatMoney, onGoToHistory
           {plan.length === 0 ? (
             <div className="panel cal-empty">
               <p>{t('cal.empty')}</p>
-              <button type="button" className="controls" onClick={onGoToHistory}>{t('cal.goHistory')}</button>
+              <button type="button" className="controls" onClick={onGoToOrders}>{t('cal.goOrders')}</button>
             </div>
           ) : (
             <ul className="panel queue">
               {plan.map(p => (
-                <li key={p.quote.id} className="queue-row">
-                  <div className="queue-main">
-                    <span className="name">{p.quote.name ?? t('save.untitled')}</span>
+                <li key={p.order.id} className="queue-row">
+                  <button type="button" className="queue-main queue-open" onClick={() => onOpenOrder(p.order.id)}>
+                    <span className="name">{orderLabel(p.order, t)}</span>
                     <span className="muted">
-                      {[p.quote.client, p.hours !== null && t('cal.hours', { h: fmtNumber(locale, p.hours, 1) })].filter(Boolean).join(' · ')}
+                      {[t(`order.status.${p.order.status}`), p.hours !== null && t('cal.hours', { h: fmtNumber(locale, p.hours, 1) })].filter(Boolean).join(' · ')}
                     </span>
-                  </div>
+                  </button>
                   <div className="queue-dates">
                     <span>{p.readyAt ? t('cal.readyOn', { date: fmtDay(locale, p.readyAt) }) : t('cal.noEstimate')}</span>
                     <span className="muted">{p.dueAt ? t('cal.dueOn', { date: fmtDay(locale, p.dueAt) }) : t('cal.noDue')}</span>

@@ -74,7 +74,8 @@ Hecho el 2026-11-04: registro de ventas (src/sales.js, src/SaleDialog.jsx). Cada
 Pedido como entidad propia (varias líneas, cliente, entrega, pagos e historial), estado y pago por separado, clientes como entidad. Claude hace el front sobre el adaptador de src/ordersStore.js (hoy localStorage); Julen escribe las tablas, RLS y el adaptador de Supabase con el mismo contrato, y Claude lo revisa y escribe los tests. Los cambios de modelo se acuerdan primero en docs/PEDIDOS.md.
 1. Modelo, adaptador local, copia de seguridad y docs (PR `feature/orders-model`).
 2. Pestaña Pedidos y Clientes (hecho el 2026-11-04: src/Orders.jsx, src/OrderDetail.jsx, src/NewOrderDialog.jsx, src/OrderParts.jsx, src/useOrders.js).
-3. Conectar con Historial y Calendario y migrar los pedidos antiguos (`migrateQuoteOrders`).
+3. Conectar con Historial y Calendario y migrar los pedidos antiguos (hecho el 2026-11-04: `useOrders.importLegacy` al arrancar; el Historial crea pedidos y enlaza al suyo; el Calendario y la cola leen pedidos; fuera OrderDialog.jsx y SaleDialog.jsx; sales.js queda solo para validar y migrar datos antiguos).
+Siguiente: el adaptador de Supabase de Julen (contrato en docs/PEDIDOS.md); Claude lo revisa y escribe los tests de RLS y concurrencia.
 
 ## Conexión con impresoras: en curso, un PR por paso
 Investigación por marca, protocolos, puertos y orden en docs/IMPRESORAS.md: léelo antes de tocar el agente, y corrígelo si un firmware cambia algo. Empieza por Bambu, con la P1S de Julen. Él prueba cada PR con su impresora; Claude no puede verla.

@@ -44,7 +44,7 @@ export function CommitText({ value, onCommit, multiline = false, ...rest }) {
 }
 
 /* Money in EUR, typed in the currency on screen (× rate to show, ÷ rate to
-   store, like SaleDialog). An empty or invalid entry goes back to what it
+   store, like the old sale sheet). An empty or invalid entry goes back to what it
    was instead of saving NaN. */
 export function MoneyInput({ value, rate, onCommit, ...rest }) {
   const { decimal } = useI18n()

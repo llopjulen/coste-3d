@@ -5,9 +5,9 @@
    the Excel library is not downloaded until someone actually needs it.
 ================================================================== */
 import writeExcelFile from 'write-excel-file/browser'
+import { formatOrderNumber } from './orders.js'
 import { translatorFor } from './i18n/dicts.js'
 import { totalGrams } from './calculate.js'
-import { saleProfit, statusOf } from './sales.js'
 
 const HEADER_BG = '#212125'
 const HEADER_TEXT = '#FFFFFF'
@@ -18,7 +18,7 @@ const MONEY = '#,##0.00'
 /* One entry per column. `get` reads the value from a saved quote;
    returning null leaves the cell empty (older quotes don't have
    every field). Money columns are multiplied by the exchange rate. */
-function buildColumns(currency, t) {
+function buildColumns(currency, t, orderOf) {
   const money = label => `${label} (${currency})`
   // The same texts as the screen (history.col.*, layer.*), so a column is
   // called the same in the table, the report and the spreadsheet.
@@ -44,10 +44,10 @@ function buildColumns(currency, t) {
     { title: money(t('history.col.price')), width: 18, money: true, bold: true, accent: true, get: q => q.price },
     { title: money(t('history.col.total')), width: 18, money: true, bold: true, sum: true,
       get: q => q.orderTotal ?? q.price },
-    // What happened after the quote (sales.js): state, what was received and the real profit.
-    { title: t('sales.col.status'), width: 14, type: String, get: q => t(`sales.status.${statusOf(q)}`) },
-    { title: money(t('sales.stat.revenue')), width: 16, money: true, sum: true, get: q => (statusOf(q) === 'sold' ? q.sale.amount : null) },
-    { title: money(t('sales.col.profit')), width: 16, money: true, bold: true, sum: true, get: q => saleProfit(q) },
+    // What happened after the quote lives in orders (orders.js) since 2026-11-04:
+    // here, which order it went into and its state ("#0012 · Delivered").
+    { title: t('history.col.order'), width: 20, type: String,
+      get: q => { const o = orderOf(q); return o ? `${formatOrderNumber(o.number)} · ${t(`order.status.${o.status}`)}` : null } },
   ]
 }
 
@@ -55,9 +55,9 @@ function buildColumns(currency, t) {
 const letter = n => String.fromCharCode(64 + n)
 
 // `lang` is the language of the column names and titles (the screen's language).
-export async function exportQuotesToExcel(quotes, currency, rate, lang = 'en') {
+export async function exportQuotesToExcel(quotes, currency, rate, lang = 'en', orderOf = () => null) {
   const { t, tp } = translatorFor(lang)
-  const columns = buildColumns(currency, t)
+  const columns = buildColumns(currency, t, orderOf)
   const titleRows = [
     [{ value: t('excel.title'), fontWeight: 'bold', fontSize: 16, columnSpan: columns.length }],
     [{

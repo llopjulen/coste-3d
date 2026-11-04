@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useI18n } from './i18n/context.js'
 import { lineFromQuote, isDay } from './orders.js'
+import { dayStart, suggestDue } from './schedule.js'
+import { fmtLongDay } from './i18n/format.js'
 
 /* ==================================================================
    NEW ORDER — who, which parts, when.
@@ -14,8 +16,8 @@ import { lineFromQuote, isDay } from './orders.js'
    an existing name links to its card; a new name creates one (useOrders).
    `preset` lets History open this with parts already ticked.
 ================================================================== */
-export default function NewOrderDialog({ quotes, customers, formatMoney, preset = [], onCreate, onClose }) {
-  const { t } = useI18n()
+export default function NewOrderDialog({ quotes, customers, orders = [], weekHours, formatMoney, preset = [], onCreate, onClose }) {
+  const { t, locale } = useI18n()
   const ref = useRef(null)
   const [client, setClient] = useState(() => preset[0]?.client ?? '')
   // quote id -> quantity, for the ticked parts.
@@ -57,6 +59,11 @@ export default function NewOrderDialog({ quotes, customers, formatMoney, preset 
     return s + l.unitPrice * l.qty
   }, 0)
 
+  // When could it be ready? The end of the print queue plus these parts
+  // (schedule.js). Offered, not imposed: the date agreed with the client wins.
+  const pickedLines = [...picked].map(([id, qty]) => lineFromQuote(quotes.find(q => q.id === id), qty))
+  const suggested = suggestDue(orders, pickedLines, { weekHours })
+
   const submit = async e => {
     e.preventDefault()
     if (!client.trim() && picked.size === 0) { setError(t('neworder.err.empty')); return }
@@ -85,6 +92,12 @@ export default function NewOrderDialog({ quotes, customers, formatMoney, preset 
             <input type="date" value={dueAt} onChange={e => setDueAt(e.target.value)} />
           </label>
         </div>
+        {suggested && suggested !== dueAt && (
+          <p className="muted sheet-note">
+            {t('neworder.suggest', { date: fmtLongDay(locale, dayStart(suggested)) })}{' '}
+            <button type="button" className="link" onClick={() => setDueAt(suggested)}>{t('neworder.useSuggest')}</button>
+          </p>
+        )}
 
         {/* Outside the group: between two rows it would break the `.sheet-row + .sheet-row` separator. */}
         <datalist id="customer-names">
