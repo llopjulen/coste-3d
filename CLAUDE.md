@@ -81,6 +81,7 @@ Investigación por marca, protocolos, puertos y orden en docs/IMPRESORAS.md: lé
 7. Driver PrusaLink.
 8. Pestaña Printers: historial, tasa de fallos y tiempo medio. (Hecho en el PR `feature/printers-history`: src/jobStats.js y el panel «Print history». Con datos de la Bambu y de Klipper cuando se prueben.)
 9. "Use real data" en la calculadora. (Hecho en el PR `feature/use-real-data`: src/RealData.jsx; solo con el agente activado y con al menos 5 impresiones terminadas. Falta verlo con datos reales de la P1S.)
+Modo demo (2026-11-04): `npm run agent -- demo` arranca el agente con dos impresoras simuladas y trabajos de ejemplo (agent/demo.js), para ver todo funcionando sin impresora. No sustituye a la prueba con la P1S.
 Creality por WebSocket 9999, Elegoo SDCP, Anycubic, Flashforge y OctoPrint: solo cuando lo pida alguien que pueda probarlo.
 
 ## Pendiente, por orden
