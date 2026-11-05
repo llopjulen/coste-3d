@@ -70,7 +70,7 @@ La flota en vivo se pinta con **Supabase Realtime** sobre `printer_status`: la w
 - Las funciones solo aceptan `Origin: https://layercents.com` (más `localhost` en desarrollo) cuando las llama un navegador.
 - El webhook de pago comprueba la **firma HMAC** del cuerpo antes de hacer nada. Sin firma válida, 401.
 - Lo que se cobra se aplica **en el servidor**: la web solo usa el plan para enseñar u ocultar botones. Nada de pago se protege en el cliente, porque el código es público y cualquiera podría saltárselo.
-- Borrar la cuenta de una persona que trabaja sola borra todo lo suyo (`on delete cascade`). Si es el jefe de un taller con más miembros, **no se puede** hasta traspasar la propiedad o borrar el taller (`on delete restrict` en `workspaces.owner_id`): su cuenta se llevaría por delante los datos de los demás. La copia de seguridad en JSON sigue existiendo y es el «exportar mis datos».
+- Borrar la cuenta de quien es dueño de un taller **no se puede** mientras el taller exista (`on delete restrict` en `workspaces.owner_id`): primero se borra el taller (`cascade` a todo lo suyo) o se traspasa. Para quien trabaja solo, «borrar mi cuenta» borra el taller y después la cuenta; si el taller tiene más miembros, se niega (su cuenta se llevaría por delante los datos de los demás). La copia de seguridad en JSON sigue existiendo y es el «exportar mis datos».
 
 ## Orden de PRs
 
