@@ -38,24 +38,27 @@ Es el mismo patrón de `gh auth login` o de la tele que enseña un código: el a
 3. El agente consulta `agent-pair-poll` con el `device_code` hasta que le devuelve el **token del agente**: 256 bits aleatorios.
 4. El token se guarda **hasheado (SHA-256)** en la tabla `agents` y en claro solo en `~/.layercents/cloud.json` (permisos 600). Un volcado de la base de datos no sirve para suplantar a ningún agente.
 
-El agente usa ese token, **no** la sesión de la persona. Un token robado solo puede escribir estado de impresoras de esa cuenta: no puede leer presupuestos ni datos del negocio. Se revoca desde la web (`agents.revoked_at`).
+El agente usa ese token, **no** la sesión de la persona. El token pertenece al **taller**, no a quien lo vinculó. Un token robado solo puede escribir estado de impresoras de ese taller: no puede leer presupuestos ni datos del negocio. Se revoca desde la web (`agents.revoked_at`).
 
 ## Esquema (se concreta en `supabase/migrations/`)
 
-Todas las tablas llevan `user_id` y **Row Level Security activado**: sin política, no se ve ni se escribe nada.
+**Actualizado el 2026-11-05 por el modo taller (docs/TALLER.md):** los datos son de un **taller** y no de una persona. Todas las tablas de datos llevan `workspace_id` (no `user_id`) y **Row Level Security activado**: sin política, no se ve ni se escribe nada. Una cuenta suelta es un taller de una sola persona, así que no hay dos modelos. Las tablas de pedidos y clientes están en docs/PEDIDOS.md.
 
 | Tabla | Contenido | Quién escribe |
 |---|---|---|
-| `profiles` | `user_id`, preferencias | la persona |
-| `quotes` | un presupuesto: `id`, `payload jsonb` (el mismo que `savedQuotes`), `schema_version`, `updated_at` | la persona |
-| `business` | datos del negocio (nombre, logo, impuesto…) | la persona |
-| `agents` | `id`, `user_id`, `name`, `token_hash`, `last_seen_at`, `revoked_at` | funciones |
+| `workspaces` | el taller: `id`, `name`, `owner_id` | la persona (`create_workspace`) |
+| `memberships` | quién es miembro de qué taller y con qué rol (`owner`, `manager`, `operator`) | funciones (invitaciones) |
+| `invitations` | invitaciones por correo: hash del token, caducidad, uso | funciones |
+| `profiles` | `user_id`, preferencias (esta sí es de la persona, no del taller) | la persona |
+| `quotes` | un presupuesto: `id`, `payload jsonb` (el mismo que `savedQuotes`), `schema_version`, `updated_at`. Finanzas: solo jefe y encargado | jefe y encargado |
+| `business` | datos del negocio (nombre, logo, impuesto…). Finanzas | jefe y encargado |
+| `agents` | `id`, `workspace_id`, `name`, `token_hash`, `last_seen_at`, `revoked_at` | funciones |
 | `printers` | `id`, `agent_id`, `name`, `brand`, `model`. Sin IP, serie ni código | función `agent-ingest` |
 | `printer_status` | último estado de cada impresora (`jsonb`) y `updated_at` | función `agent-ingest` |
 | `jobs` | un trabajo (`id` estable, impresora, nombre, inicio, fin, resultado, minutos estimados y reales) | función `agent-ingest` |
-| `subscriptions` | plan y estado, según el webhook de pago | solo la función `payments-webhook` |
+| `subscriptions` | plan y estado **del taller**, según el webhook de pago | solo la función `payments-webhook` |
 
-Política tipo: `using (user_id = auth.uid())`. La web **solo lee** `printers`, `printer_status`, `jobs` y `subscriptions`; escribirlas es cosa de funciones con la clave de servicio.
+Política tipo: `using (public.is_member(workspace_id))` para lo que ven todos los miembros, y `using (public.has_role(workspace_id, array['owner','manager']))` para lo que es de finanzas (docs/TALLER.md explica por qué hay dos grupos y cómo se comprueba el rol sin recursión). La web **solo lee** `printers`, `printer_status`, `jobs` y `subscriptions`; escribirlas es cosa de funciones con la clave de servicio.
 
 La flota en vivo se pinta con **Supabase Realtime** sobre `printer_status`: la web se suscribe a cambios en lugar de preguntar cada 3 s.
 
@@ -67,16 +70,17 @@ La flota en vivo se pinta con **Supabase Realtime** sobre `printer_status`: la w
 - Las funciones solo aceptan `Origin: https://layercents.com` (más `localhost` en desarrollo) cuando las llama un navegador.
 - El webhook de pago comprueba la **firma HMAC** del cuerpo antes de hacer nada. Sin firma válida, 401.
 - Lo que se cobra se aplica **en el servidor**: la web solo usa el plan para enseñar u ocultar botones. Nada de pago se protege en el cliente, porque el código es público y cualquiera podría saltárselo.
-- Borrar la cuenta borra todas sus filas (`on delete cascade`). La copia de seguridad en JSON sigue existiendo y es el «exportar mis datos».
+- Borrar la cuenta de una persona que trabaja sola borra todo lo suyo (`on delete cascade`). Si es el jefe de un taller con más miembros, **no se puede** hasta traspasar la propiedad o borrar el taller (`on delete restrict` en `workspaces.owner_id`): su cuenta se llevaría por delante los datos de los demás. La copia de seguridad en JSON sigue existiendo y es el «exportar mis datos».
 
 ## Orden de PRs
 
 1. Este documento y la regla nueva de CLAUDE.md.
-2. `supabase/migrations/`: tablas, RLS y tests de las políticas contra un Postgres local.
+2. `supabase/migrations/`: tablas, RLS y tests de las políticas contra un Postgres local. Con el modelo de taller (`workspaces`, `memberships`, `workspace_id` en todas las tablas, `is_member` y `has_role`): docs/TALLER.md.
 3. Cuenta en la web: entrar con enlace por correo, salir, borrar cuenta. Sin sincronizar aún.
 4. Sincronizar presupuestos y datos del negocio (`backup.js` y `MAPA.md` al día).
 5. Agente: `link`, subida de estado y trabajos (`PROTOCOL` sube).
 6. Pestaña Printers: flota desde la nube, historial, tasa de fallos y tiempo medio.
+6 bis. Modo taller: invitar por correo, lista de miembros, roles y asientos (docs/TALLER.md). Va antes del pago porque es el pago quien hace cumplir los asientos.
 7. Pago con Polar y webhook (firma comprobada en una Edge Function; el plan se guarda en `subscriptions`).
 8. Páginas legales (privacidad, términos, borrado de datos): antes de cobrar el primer euro.
 
