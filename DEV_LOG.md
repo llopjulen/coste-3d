@@ -2,6 +2,21 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-05, Tests pgTAP del modelo de taller (workspaces, membresías, invitaciones, presupuestos, negocio)
+- Archivo y sitio: supabase/tests/workspaces.test.sql (nuevo). Borrados supabase/tests/prelude.sql y supabase/rls.test.js. docs/TALLER.md (sección «Quién lee y quién escribe» y fila «El jefe borra su cuenta») y docs/NUBE.md (lista de Seguridad). docs/MAPA.md (tabla de archivos).
+- Qué cambió: 95 tests pgTAP que fijan el contrato de docs/TALLER.md antes de que exista la migración (TDD): estructura, `is_member`/`has_role`, permisos por rol, aislamiento entre talleres, `anon`, y ciclo de vida (crear y borrar taller y cuenta). Fuera el arnés antiguo del modelo `user_id`. La documentación tenía una contradicción (`restrict` y «cascada» a la vez) y queda corregida.
+- Por qué:
+  - **pgTAP dentro de la base de datos y no un runner en JS.** El test corre con `set local role` y `request.jwt.claims` como lo haría PostgREST, así que prueba las políticas reales, no una imitación. Todo va dentro de `begin … rollback`, por lo que no deja datos.
+  - **Una persona por rol más un segundo taller.** Un test de «el operario no ve nada» solo vale si se demuestra también que el jefe sí ve; y el aislamiento solo se prueba con datos de otro taller al lado.
+  - **Distinguir `42501` de permiso y de RLS.** `permission denied` (capa de privilegios, `GRANT`) y `violates row-level security policy` (capa de filas) llevan el mismo código; los tests miran el efecto (filas que quedan) y no solo el mensaje.
+  - **Pruebas de las pruebas.** Con 14 mutaciones de una migración de referencia (quitar una política, abrir un permiso, etc.) se comprobó que los tests las detectan. Una se escapaba (el operario intentaba ascenderse a `owner`, que ya bloquea el índice único, así que no probaba la política); ahora intenta `manager`.
+  - **Corrección de docs.** Con `owner_id on delete restrict`, borrar un usuario con taller falla siempre; «cascada» solo es posible borrando antes el taller. Se documenta el orden. Alternativa descartada: `cascade` en `owner_id`, que borraría los datos de otros miembros al borrar al jefe.
+  - **Trampa documentada:** un trigger que restaura `created_by` en cada `update` rompe `on delete set null`, porque la clave foránea hace un `update` interno. La protección se aplica solo a roles de la web.
+  - **Fuera `prelude.sql`:** `supabase test db` ejecuta todos los `.sql` de supabase/tests/ y el prelude no tiene plan. Supabase ya trae roles, `auth.users` y `auth.uid()`.
+- Concepto nuevo: **pgTAP** son funciones SQL que imprimen TAP (`ok 1 - descripción`). `select plan(2); select is(1+1, 2, 'suma'); select ok(true); select * from finish();` imprime `1..2`, `ok 1 - suma`, `ok 2`. `throws_ok(sql, '42501', null, 'msg')` comprueba que una sentencia falla con ese código.
+- De la carrera: Bases de datos (transacciones y aislamiento: todo el test es una transacción con `rollback`; integridad referencial: `restrict`/`cascade`/`set null`; vistas y permisos: `GRANT`/`REVOKE`). Ingeniería del software (pruebas: TDD y pruebas de mutación).
+- Cómo probarlo: `supabase start`, `supabase db reset` y `supabase test db`. Con tu migración sin terminar se espera ROJO en workspaces.test.sql (no existen las tablas); va pasando a verde según escribes `workspaces`, `memberships`… `orders.test.sql` seguirá en rojo: usa el modelo antiguo y se reescribe en el PR siguiente.
+
 ### 2026-11-05, Modo taller: el modelo de datos pasa de `user_id` a `workspace_id` (solo documentos)
 - Archivo y sitio: docs/TALLER.md (nuevo). docs/PEDIDOS.md: cabecera, límites, contrato del adaptador (`createSupabaseStore({ workspaceId })`), `save_order`, la sección «Esquema propuesto» entera, las notas para escribirlo y un aviso en «Tests». docs/NUBE.md: sección «Esquema», token del agente, borrado de cuenta y orden de PRs (paso 6 bis). CLAUDE.md: párrafo de pedidos y de la nube.
 - Qué cambió: el diseño admite talleres de varias personas (jefe, encargado, operario, cada uno con su cuenta). Los datos son de un taller (`workspace_id`), y una cuenta suelta es un taller de una persona. Pedidos y clientes se parten en tablas de producción y de finanzas. No hay código ni SQL: es el contrato que tu migración tiene que cumplir.

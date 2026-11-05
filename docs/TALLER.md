@@ -64,6 +64,21 @@ Los eventos son una sola tabla, y la política mira el tipo de cada **fila**, qu
 
 Una persona puede ser miembro de **varios** talleres (el suyo y el de quien la contrata). Por eso el taller nunca es implícito: lo indica el front en cada llamada, y RLS comprueba que es miembro.
 
+### Quién lee y quién escribe (lo que fijan los tests de `supabase/tests/workspaces.test.sql`)
+
+| Tabla | La web lee | La web escribe |
+|---|---|---|
+| `workspaces` | los talleres de los que es miembro, y **el suyo aunque aún no tenga membresía** (hace falta para poder insertar su primera membresía) | crear uno a su nombre (`owner_id = auth.uid()`). El jefe puede cambiar el `name` y borrar el taller. **Nadie** cambia `owner_id` con un `update`: el traspaso es de una función |
+| `memberships` | quién es miembro de su taller (todos los roles) | **nada**, salvo la fila de jefe al crear el taller. Altas, bajas y cambios de rol son de funciones |
+| `invitations` | solo el jefe, y **sin `token_hash`** (permiso por columna: `select *` falla con `permission denied`) | **nada**. Crear, aceptar y revocar son de funciones |
+| `quotes`, `business` | jefe y encargado | jefe y encargado. `created_by` lo pone el servidor y no cambia desde la web |
+
+`anon` no tiene permiso sobre ninguna (`permission denied`, no «0 filas»).
+
+Dos trampas que los tests cubren:
+- **`insert … returning` sobre `workspaces`** aplica también la política de lectura: si esa política solo dijera «soy miembro», el jefe no vería el taller que acaba de crear (aún no tiene membresía) y el `insert` fallaría. Por eso la lectura incluye `owner_id = auth.uid()`, o `create_workspace` genera el `id` antes y no usa `returning`.
+- **Un trigger que «protege» `created_by` restaurando el valor antiguo en cada `update`** rompe `on delete set null`: la clave foránea hace un `update` por debajo, el trigger lo deshace y el borrado de la cuenta falla. La protección solo debe aplicarse a las peticiones de la web (por ejemplo con `current_user in ('authenticated', 'anon')`), no a la propia base de datos.
+
 ## Cómo se comprueba el rol (y la recursión)
 
 Una política de `memberships` que consulta `memberships` provoca **recursión infinita**: para decidir si puedes leer la tabla, Postgres tiene que leer la tabla, y para eso vuelve a aplicar la política. Se rompe con dos funciones auxiliares:
@@ -120,7 +135,7 @@ No se puede evitar que alguien le preste su bandeja de entrada a un compañero. 
 |---|---|
 | Se quita a un miembro | Se borra su membresía. Sus `created_by` y `actor_id` se quedan (el historial sigue diciendo quién lo hizo). Los agentes que vinculó siguen: son del taller, no suyos. |
 | Una persona borra su cuenta | Sus membresías se borran en cascada y sus `created_by` / `actor_id` pasan a `null` (`on delete set null`). |
-| El jefe borra su cuenta | **Bloqueado** si hay más miembros (`on delete restrict`): primero traspasa la propiedad o borra el taller. Si es un taller de una sola persona, se borra todo (cascada), como dice NUBE.md. |
+| El jefe borra su cuenta | La cuenta **no se borra mientras sea dueña de un taller**, esté sola o no: `workspaces.owner_id` va con `on delete restrict`, y Postgres rechaza el borrado del usuario (`23503`). Hay que borrar o traspasar el taller antes. Borrar el taller es un `delete` del jefe sobre `workspaces` y se lleva todo lo del taller (`cascade`). El flujo «borrar mi cuenta» de la web lo hace en ese orden: si el taller tiene más miembros, **se niega** y explica que hay que traspasar la propiedad; si es de una sola persona, borra el taller y después la cuenta. (Corregido el 2026-11-05: antes decía a la vez `restrict` y «cascada», y con un `restrict` normal lo segundo es imposible.) |
 | Impago | El taller pasa a solo lectura y se puede exportar, no se borra nada. Se concreta en el PR de pago: «lo que se cobra se aplica en el servidor». |
 
 ## Cambios que esto obliga a hacer en el resto
