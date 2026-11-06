@@ -2,6 +2,12 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-06, CLAUDE.md al día con los perfiles de impresora
+- Archivo y sitio: CLAUDE.md, «Pendiente, por orden», punto 2.
+- Qué cambió: dice que los perfiles de Bambu Lab están hechos (PR #71) y qué falta: otras marcas y los materiales.
+- Por qué: CLAUDE.md es lo primero que lee cada chat nuevo; si no se actualiza, el siguiente propondría hacer lo mismo otra vez.
+- Cómo probarlo: leer el punto 2 de «Pendiente».
+
 ### 2026-11-06, Modelo de impresora en «Your setup» (rellena el consumo)
 - Archivo y sitio: src/printerPresets.js (nuevo, con tests en printerPresets.test.js); src/App.jsx, dentro de la función App, junto a `resetSetup` (`presetId`, `pickPreset`), y en el panel «Your setup», encima de los campos del grupo de la impresora; src/index.css (`.preset-select`, `.preset-note`); claves `preset.*` en los tres diccionarios.
 - Qué cambió: en «Your setup» hay un desplegable «Modelo» con las Bambu Lab (A1 mini, A1, P1P, P1S, X1C, X1E, H2D). Al elegir una, el campo Consumo se rellena con la potencia media imprimiendo PLA que publica Bambu Lab, y una nota debajo dice de dónde sale, con un enlace a la fuente.
