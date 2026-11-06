@@ -1217,3 +1217,39 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 /* Historial: el pedido de cada presupuesto, como enlace con su estado. */
 .row-btn.order-link{display:inline-flex;align-items:center;gap:8px;color:var(--texto)}
 .row-btn.order-link .order-num{font-size:.84rem}
+
+/* ------------------------------------------------------------------
+   Auditoría con las Web Interface Guidelines de Vercel (2026-11-06).
+   Cada regla dice qué arregla; el porqué largo, en DEV_LOG.md.
+------------------------------------------------------------------ */
+
+/* En el iPhone, Safari hace zoom al tocar un campo con letra de menos de
+   16 px, y la web entera usa 15 px. Solo en pantallas táctiles: en el
+   ordenador los campos siguen al tamaño del texto que los rodea. */
+@media (pointer:coarse){
+  input,select,textarea{font-size:16px !important}
+}
+
+/* Un toque es un clic al momento: sin la espera del doble toque para hacer
+   zoom, y sin el recuadro gris que pinta iOS (cada botón ya tiene su
+   estado al pulsarlo). */
+a,button,input,select,textarea,label,summary{touch-action:manipulation}
+html{-webkit-tap-highlight-color:transparent}
+
+/* Con ratón, la página no rebota al llegar al final (el «rubber band» de
+   macOS); en táctil se deja, que tirar hacia abajo para recargar es útil. */
+@media (pointer:fine){html{overscroll-behavior:none}}
+/* El scroll dentro de una hoja no arrastra la página de detrás. */
+.sheet{overscroll-behavior:contain}
+
+/* Las notas de las hojas no tenían foco visible al llegar con el teclado. */
+.sheet-row-text textarea:focus-visible{background:var(--hundido);box-shadow:0 0 0 2px rgba(var(--oro-rgb),.45);border-radius:8px}
+
+/* «Saltar al contenido»: fuera de la pantalla hasta que recibe el foco. */
+.skip-link{
+  position:fixed;left:12px;top:-60px;z-index:200;
+  padding:10px 14px;border-radius:var(--radio-campo);
+  background:var(--texto);color:var(--fondo);font-weight:600;text-decoration:none;
+}
+.skip-link:focus-visible{top:12px;outline:2px solid var(--oro);outline-offset:2px}
+.skip-target{height:0;outline:none}

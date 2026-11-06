@@ -14,6 +14,7 @@ import Orders from './Orders.jsx'
 import { useOrders } from './useOrders.js'
 import { createLocalStore } from './ordersStore.js'
 import { OPEN_STATUSES, ordersByQuote } from './orders.js'
+import { TRANSIENT, buildSearch, parseRoute } from './route.js'
 import { adviceFor } from './advice.js'
 import NavIcon from './NavIcons.jsx'
 import SubNav from './SubNav.jsx'
@@ -449,12 +450,21 @@ export default function App({ agentOptIn = false }) {
     saveTheme(next)
   }
 
-  const [view, setView] = useState(agentOptIn ? 'printers' : 'calculator')
+  // The open screen comes from the URL (route.js): a reload, a shared link
+  // or Back land where they should. Report and customer quote show what was
+  // selected in History a moment ago, so opened cold they fall back to it.
+  const [view, setView] = useState(() => {
+    if (agentOptIn) return 'printers'
+    const { view: linked } = parseRoute(window.location.search)
+    if (TRANSIENT.includes(linked)) return 'history'
+    if (linked === 'printers' && !isAgentEnabled()) return 'calculator'
+    return linked
+  })
 
   // Orders and customers, shared by the Orders tab (and soon the calendar).
   const orders = useOrders(ordersStore)
   // Which order or customer page is open in the Orders tab (null = the lists).
-  const [ordersOpen, setOrdersOpen] = useState(null)
+  const [ordersOpen, setOrdersOpen] = useState(() => parseRoute(window.location.search).open)
   const openOrders = target => { setOrdersOpen(target); setView('orders'); window.scrollTo(0, 0) }
   const openOrdersCount = orders.orders.filter(o => OPEN_STATUSES.includes(o.status)).length
   // Parts ticked in History for a new order: Orders opens "New order" with them.
@@ -495,6 +505,34 @@ export default function App({ agentOptIn = false }) {
 
   // The quotes ticked in History for a customer quote.
   const [quoteParts, setQuoteParts] = useState([])
+
+  /* Screen -> URL. Every change of tab or order page becomes a history entry
+     (pushState), so Back steps through them like pages. The first sync only
+     REPLACES the entry: correcting "?view=report" opened cold to History must
+     not leave a Back step into nothing. Compared first, so a change that
+     came FROM the URL (Back, below) doesn't push itself again. */
+  const firstSync = useRef(true)
+  useEffect(() => {
+    const next = buildSearch(window.location.search, { view, open: view === 'orders' ? ordersOpen : null })
+    if (next !== window.location.search) {
+      const url = window.location.pathname + next + window.location.hash
+      if (firstSync.current) window.history.replaceState(null, '', url)
+      else window.history.pushState(null, '', url)
+    }
+    firstSync.current = false
+  }, [view, ordersOpen])
+
+  /* URL -> screen, when the person presses Back or Forward. */
+  useEffect(() => {
+    const onPop = () => {
+      const r = parseRoute(window.location.search)
+      const lost = (r.view === 'report' && !report.quotes.length) || (r.view === 'quote' && !quoteParts.length)
+      setView(lost ? 'history' : r.view)
+      setOrdersOpen(r.open)
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [report, quoteParts])
   const openCustomerQuote = (quotes) => {
     setQuoteParts(quotes)
     setView('quote')
@@ -670,6 +708,9 @@ export default function App({ agentOptIn = false }) {
 
   return (
     <>
+      {/* Hidden until focused with Tab: lets keyboard users jump past the
+          sidebar (nine stops) straight to the screen. Web Interface Guidelines. */}
+      <a className="skip-link no-print" href="#contenido">{t('a11y.skip')}</a>
       <header className="topbar no-print">
         <strong className="brand"><Logo size={20} small /> <span className="brand-name">layercents</span></strong>
         <nav className="tabs">
@@ -775,6 +816,8 @@ export default function App({ agentOptIn = false }) {
           </select>
         </div>
       </header>
+      {/* Where the skip link lands. tabIndex -1: focusable by the link, not by Tab. */}
+      <div id="contenido" tabIndex={-1} className="skip-target" />
 
       {/* agentOn is checked again here: if the tab was hidden, the screen goes too. */}
       {view === 'orders' ? (
