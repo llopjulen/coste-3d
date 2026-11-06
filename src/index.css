@@ -812,6 +812,17 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
   padding:3px 9px;border:1px solid var(--borde);border-radius:999px;
   font-size:.78rem;font-variant-numeric:tabular-nums;
 }
+/* Printer model in "Your setup" (2026-11-06): the value sits on the right
+   like the numbers, without a box until hover or focus. */
+.preset-select{
+  max-width:60%;font-family:inherit;font-size:.95rem;text-align:right;
+  padding:6px 8px;border:0;border-radius:8px;background:transparent;color:var(--texto);cursor:pointer;
+}
+.preset-select:hover{background:var(--velo)}
+.preset-select:focus-visible{outline:none;background:var(--hundido);box-shadow:0 0 0 2px rgba(var(--oro-rgb),.45)}
+.preset-note{margin:0;padding:0 16px 10px;font-size:.8rem;color:var(--tenue)}
+.preset-note a{color:inherit}
+@media (pointer:coarse){.preset-select{font-size:16px}}
 .import-select{
   max-width:60%;
   font-family:inherit;font-size:.86rem;

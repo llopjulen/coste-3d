@@ -5,6 +5,7 @@ import ImportFile from './ImportFile.jsx'
 import CustomerQuote from './CustomerQuote.jsx'
 import Logo from './Logo.jsx'
 import BackupPanel, { BackupReminder } from './BackupPanel.jsx'
+import { PRINTER_PRESETS, SOURCE as PRESET_SOURCE, presetById } from './printerPresets.js'
 import { applyRestore, backupStatus, clearSetup, downloadBackup, readLastBackup, readSetup, saveSetupField } from './backup.js'
 import Printers from './Printers.jsx'
 import RealData from './RealData.jsx'
@@ -620,6 +621,18 @@ export default function App({ agentOptIn = false }) {
     if (SETUP_FIELDS.includes(key) && saveSetupField(key, value)) setHasSavedSetup(true)
   }
 
+  /* Printer model picked in "Your setup". Only for this visit: what is
+     remembered is the power it filled in (the `watts` setup field, saved by
+     `set`), so no new localStorage key and nothing new in the backup. */
+  const [presetId, setPresetId] = useState('')
+  const preset = presetById(presetId)
+  const pickPreset = id => {
+    setPresetId(id)
+    const p = presetById(id)
+    // Through `set`, like typing it: the power is saved as the person's setup.
+    if (p) set('watts')(p.watts)
+  }
+
   // Back to the app's defaults for every setup field, and forget what was saved.
   const resetSetup = () => {
     if (!window.confirm(t('setup.resetConfirm'))) return
@@ -973,6 +986,29 @@ export default function App({ agentOptIn = false }) {
                   {SECTIONS.filter(section => section.setup).map(section => (
                     <div className="body setup-group" key={section.id}>
                       <h3>{t(section.titleKey)}</h3>
+                      {section.id === 'sec-printer' && (
+                        /* A list row like the fields: label left, native
+                           <select> right (the phone opens its own picker). */
+                        <div className="field">
+                          <div className="row">
+                            <label htmlFor="printerPreset">{t('preset.label')}</label>
+                            <select id="printerPreset" className="preset-select" value={presetId}
+                              aria-describedby={preset ? 'help-printerPreset' : undefined}
+                              onChange={e => pickPreset(e.target.value)}>
+                              <option value="">{t('preset.other')}</option>
+                              {PRINTER_PRESETS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                            </select>
+                          </div>
+                          {/* Says where the number came from while it is still
+                              the published one; once the person edits it, it's theirs. */}
+                          {preset && d.watts === preset.watts && (
+                            <p className="preset-note" id="help-printerPreset">
+                              {t('preset.note', { watts: preset.watts, name: preset.name })}{' '}
+                              <a href={PRESET_SOURCE} target="_blank" rel="noreferrer">{t('preset.source')}</a>
+                            </p>
+                          )}
+                        </div>
+                      )}
                       {section.fields.map(renderField)}
                     </div>
                   ))}
