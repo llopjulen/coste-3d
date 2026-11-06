@@ -39,7 +39,6 @@ export default {
   'setup.resetConfirm': 'Reset your setup to the default numbers?',
 
   // --- Campos
-  'field.whatIs': 'What is {label}',
   'unit.pcs': 'pcs',
   'field.spoolPrice.label': 'Spool price',
   'field.spoolPrice.help': 'What you paid for the whole spool, shipping included.',
@@ -221,8 +220,8 @@ export default {
   // --- Import from the slicer
   'import.title': 'Import from your slicer',
   'import.dropActive': 'Drop it to fill in the form',
-  'import.drop': 'Drop your sliced file anywhere on this page',
-  'import.hint': '.gcode, .bgcode or .gcode.3mf from Bambu Studio, OrcaSlicer, PrusaSlicer or Cura. Time and grams fill in by themselves. The file never leaves your browser.',
+  'import.drop': "Drop a sliced file anywhere on the page",
+  'import.hint': ".gcode, .bgcode or .3mf from any slicer. Fills in time and grams; the file stays in your browser.",
   'import.choose': 'Choose file',
   'import.reading': 'Reading file…',
   'import.plate': 'Plate',

@@ -222,7 +222,9 @@ body{
 /* Titulos en Inter, la misma letra que el resto: una sola familia da calma.
    La Bricolage (mas caprichosa) queda solo para el nombre de la marca. */
 /* Titulo grande y compacto, como los "large titles" de Apple. */
-h1{font-size:clamp(1.9rem,4.6vw,2.6rem);font-weight:700;letter-spacing:-.032em;line-height:1.08;text-wrap:balance}
+/* Título de pantalla a escala de app (rediseño 2026-11-06): antes era un
+   titular de landing de 2,6 rem encima de cada herramienta. */
+h1{font-size:1.75rem;font-weight:650;letter-spacing:-.024em;line-height:1.15;text-wrap:balance}
 .subtitle{margin-top:10px;color:var(--tenue);font-size:1.06rem;line-height:1.45;max-width:34em;text-wrap:pretty}
 
 .columns{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:32px;align-items:start;margin-top:36px}
@@ -241,7 +243,7 @@ h1{font-size:clamp(1.9rem,4.6vw,2.6rem);font-weight:700;letter-spacing:-.032em;l
 .form-col .panel{background:none;overflow:visible}
 .form-col .panel > h2{padding:0 16px 7px;font-size:.84rem;font-weight:500;color:var(--tenue)}
 .form-col .panel > h2.with-value{border-bottom:0;padding-bottom:7px}
-.form-col .panel > h2.with-value .link{color:var(--oro-texto);text-decoration:none;font-weight:500}
+.form-col .panel > h2.with-value .link{color:var(--texto);text-decoration:none;font-weight:500}
 .form-col .panel > .body{background:var(--panel);border-radius:var(--radio);padding:2px 16px}
 /* "Tu configuracion": dos grupos (impresora; tu y tu plataforma), cada uno
    con su subtitulo dentro, y la version plegada como un grupo de solo lectura. */
@@ -265,28 +267,18 @@ h1{font-size:clamp(1.9rem,4.6vw,2.6rem);font-weight:700;letter-spacing:-.032em;l
 .label-group{flex:1;display:flex;align-items:center;gap:6px;min-width:0}
 .field label{font-size:.95rem;color:var(--texto)}
 
-/* Boton de ayuda: es un <button> de verdad, no un icono decorativo,
-   para que funcione con teclado y con lector de pantalla. */
-.info{
-  width:16px;height:16px;flex:none;
-  display:grid;place-items:center;
-  padding:0;line-height:1;
-  border:1.2px solid currentColor;border-radius:50%;
-  background:none;color:var(--tenue);opacity:.65;
-  font-family:inherit;font-size:.62rem;font-weight:600;
-  cursor:pointer;
-}
-.info:hover{opacity:1}
-.info:focus-visible{outline:2px solid var(--oro);outline-offset:2px}
-.info[aria-expanded="true"]{opacity:1;color:var(--oro-texto)}
-
 .help{
-  margin:0 0 12px;
-  padding:10px 12px;
-  background:var(--velo);
-  border-radius:var(--radio-campo);
-  font-size:.84rem;line-height:1.5;color:var(--tenue);
+  /* Rediseño 2026-11-06: la ayuda sale debajo de la fila mientras el campo
+     tiene el foco, como el pie de un ajuste en iOS: texto pequeño y gris,
+     sin caja. Siempre está en la página (aria-describedby la lee); solo se
+     esconde a la vista. */
+  display:none;
+  margin:-4px 0 12px;
+  font-size:.8rem;line-height:1.45;color:var(--tenue);
+  max-width:40em;
 }
+.field:focus-within .help{display:block}
+.field .row > label{flex:1;min-width:0}
 .field input{
   /* Como en Ajustes: el valor es texto alineado a la derecha, sin caja.
      La caja aparece al pasar el raton y al editar, para que se vea que se
@@ -406,8 +398,8 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
   max-width:none;margin-top:44px;padding-top:18px;border-top:1px solid var(--borde);
 }
 .site-foot .brand{font-size:.92rem;color:var(--texto)}
-.site-foot a{color:var(--oro-texto)}
-.site-foot a:hover{color:var(--oro-texto)}
+.site-foot a{color:var(--texto);text-decoration-color:var(--borde-fuerte);text-underline-offset:3px}
+.site-foot a:hover{text-decoration-color:currentColor}
 
 /* Barra fija abajo en el movil: coste y precio sin bajar hasta el final.
    Se esconde cuando el panel del resultado ya se ve en pantalla. */
@@ -464,7 +456,7 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .text-input:focus-visible{outline:none;border-color:var(--oro);box-shadow:0 0 0 2px rgba(var(--oro-rgb),.22)}
 
 /* Aviso "Saved · View history" debajo del formulario de guardar */
-.saved-note{min-height:1.3em;margin-top:6px;font-size:.82rem;color:var(--oro-texto)}
+.saved-note{min-height:1.3em;margin-top:6px;font-size:.82rem;color:var(--tenue)}
 .link{
   font:inherit;padding:0;border:0;background:none;
   color:var(--texto);text-decoration:underline;cursor:pointer;
@@ -543,7 +535,7 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .plan-for{margin-top:6px;font-size:.88rem;color:var(--tenue)}
 .plan-list{list-style:none;margin-top:18px;display:grid;align-content:start;gap:10px;font-size:.94rem;flex:1}
 .plan-list li{display:flex;gap:10px;align-items:flex-start}
-.plan-list svg{flex:none;margin-top:3px;color:var(--oro-texto)}
+.plan-list svg{flex:none;margin-top:3px;color:var(--tenue)}
 .plan-cta{display:block;margin-top:22px;text-align:center;text-decoration:none}
 .plan-foot{margin-top:12px;font-size:.8rem}
 .wrap-foot{padding-top:0}
@@ -781,16 +773,23 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 
 /* ------------------------- Importar del laminador ------------------
    Zona para soltar el archivo, resumen de lo leido y notas. */
+/* Importar: de caja discontinua a una fila de la lista. Título y pista a
+   la izquierda, botón a la derecha; el resalte al arrastrar se queda (el
+   archivo se puede soltar en cualquier parte de la página). */
 .dropzone{
-  display:flex;flex-direction:column;align-items:flex-start;gap:7px;
-  margin:14px 0 14px;padding:20px;
-  border:1.5px dashed var(--borde-fuerte);border-radius:12px;
-  background:transparent;
-  transition:border-color .15s,background-color .15s;
+  padding:14px 0;
+  transition:box-shadow .15s;
+  display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:16px;row-gap:3px;align-items:center;
 }
-.dropzone.over{border-color:var(--oro);background:rgba(var(--oro-rgb),.08)}
-.drop-title{font-size:1rem;font-weight:600;letter-spacing:-.01em}
-.drop-hint{font-size:.86rem;line-height:1.5;color:var(--tenue);max-width:34em}
+.drop-title{grid-column:1;font-size:.95rem;font-weight:500;letter-spacing:0}
+.drop-hint{grid-column:1;font-size:.8rem;line-height:1.5;color:var(--tenue);max-width:40em}
+.dropzone > .controls{grid-column:2;grid-row:1 / span 2}
+.dropzone.over{background:none;box-shadow:inset 0 0 0 2px var(--oro);border-radius:var(--radio-campo);padding:14px 12px}
+@media(max-width:560px){
+  .dropzone{grid-template-columns:1fr}
+  .dropzone > .controls{grid-column:1;grid-row:auto;justify-self:start;margin-top:8px}
+}
+
 
 .import-status{font-size:.82rem;color:var(--tenue)}
 .import-status:empty{display:none}
@@ -839,7 +838,7 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .preview-layer-text{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--tenue)}
 @media(max-width:560px){.preview-layers{flex-wrap:wrap}.preview-layers input[type="range"]{flex-basis:100%;order:3}}
 .preview-hint{margin-top:6px;font-size:.78rem;color:var(--tenue)}
-.import-filled{font-size:.82rem;color:var(--oro-texto)}
+.import-filled{font-size:.82rem;color:var(--texto)}
 .import-filled .link{color:var(--texto)}
 .import-note{font-size:.8rem;line-height:1.45;color:var(--tenue)}
 .import .field{padding:5px 0}
@@ -977,7 +976,7 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 /* Mensaje despues de restaurar. Vacio sigue en la pagina (los lectores de
    pantalla solo anuncian cambios en zonas que ya existian), pero sin ocupar
    sitio: el margen negativo anula el hueco (gap) que le deja el flex. */
-.backup-done{font-size:.84rem;color:var(--oro-texto)}
+.backup-done{font-size:.84rem;color:var(--texto)}
 .backup-body .form-error{font-size:.84rem}
 .backup-body [role="status"]:empty{margin-top:-10px}
 
@@ -1042,7 +1041,8 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 .extra-add{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:6px 0 10px;border-top:1px solid var(--borde);font-size:.8rem;color:var(--tenue)}
 /* "Añadir otro filamento" como la fila de añadir de una lista de iOS: texto en
    el color de acento, sin caja. */
-.extra-add .controls{padding:8px 0;background:none;color:var(--oro-texto);font-size:.95rem}
+/* En color de texto, no oro: el oro es solo del precio y del botón principal (DESIGN.md). */
+.extra-add .controls{padding:8px 0;background:none;color:var(--texto);font-size:.95rem;font-weight:500}
 .extra-add .controls:hover:not(:disabled){background:none;text-decoration:underline}
 .extra-filaments:empty + .extra-add{margin-top:0}
 
@@ -1253,3 +1253,22 @@ html{-webkit-tap-highlight-color:transparent}
 }
 .skip-link:focus-visible{top:12px;outline:2px solid var(--oro);outline-offset:2px}
 .skip-target{height:0;outline:none}
+
+/* ------------------------------------------------------------------
+   Rediseño sereno (2026-11-06). Lo que hacía que pareciera plantilla:
+   un titular de landing encima de cada herramienta, una caja de borde
+   discontinuo para soltar archivos y un círculo «i» tras cada campo.
+------------------------------------------------------------------ */
+
+/* El título de pantalla (h1, arriba del todo) ya es a escala de app. El
+   texto no cambia: el h1 también lo lee Google en el HTML prerenderizado. */
+.subtitle{margin-top:6px;font-size:.95rem;line-height:1.5}
+@media(max-width:560px){h1{font-size:1.5rem}.subtitle{font-size:.9rem}}
+.wrap > .subtitle + *,.wrap > .subtitle + .columns{margin-top:28px}
+
+/* Pestañas del móvil: un fundido en el lado donde quedan pestañas fuera
+   dice «hay más, desliza», en vez de cortar «Calendari» como si fuera un
+   fallo. Las clases las pone App según el scroll real. */
+.tabs.more-right{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent)}
+.tabs.more-left{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 36px),transparent)}
+.tabs.more-left.more-right{-webkit-mask-image:linear-gradient(to right,transparent,#000 36px,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to right,transparent,#000 36px,#000 calc(100% - 36px),transparent)}

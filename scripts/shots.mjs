@@ -30,11 +30,12 @@ const VIEWS = {
   calendar: 'Calendario',
   plans: 'Planes',
 }
-// Datos de ejemplo, para que Historial y Pedidos no salgan vacíos.
+// Datos de ejemplo, para que Historial y Pedidos no salgan vacíos. El id es
+// la fecha en milisegundos (History la usa como fecha): noviembre de 2026.
 const SAMPLE_QUOTES = [
-  { id: 1730700000001, name: 'Llavero logo', client: 'Bar Pepe', price: 2.5, cost: 1.2, units: 25, date: '2026-11-02T10:00:00Z', inputs: { hours: 0.5, failRate: 8 } },
-  { id: 1730700000002, name: 'Soporte de móvil', client: 'Laura G.', price: 7.94, cost: 5.22, units: 2, date: '2026-11-03T10:00:00Z', inputs: { hours: 3.5, failRate: 8 } },
-  { id: 1730700000003, name: 'Maceta autorriego', client: '', price: 14.6, cost: 8.9, units: 1, date: '2026-10-28T10:00:00Z', inputs: { hours: 6, failRate: 8 } },
+  { id: 1793613600001, name: 'Llavero logo', client: 'Bar Pepe', price: 2.5, cost: 1.2, units: 25, date: '2026-11-02T10:00:00Z', inputs: { hours: 0.5, failRate: 8 } },
+  { id: 1793700000002, name: 'Soporte de móvil', client: 'Laura G.', price: 7.94, cost: 5.22, units: 2, date: '2026-11-03T10:00:00Z', inputs: { hours: 3.5, failRate: 8 } },
+  { id: 1793180000003, name: 'Maceta autorriego', client: '', price: 14.6, cost: 8.9, units: 1, date: '2026-10-28T10:00:00Z', inputs: { hours: 6, failRate: 8 } },
 ]
 
 const only = process.argv.slice(2)
