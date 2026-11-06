@@ -679,6 +679,7 @@ export default {
   'cal.goOrders': "Ir a Pedidos",
   'neworder.suggest': "Con tu cola de impresión estaría listo el {date}.",
   'neworder.useSuggest': "Usar esa fecha",
+  'a11y.skip': "Saltar al contenido",
   // --- SEO: el <head> y el texto de #root de cada idioma. Los lee scripts/prerender.js al construir.
   'seo.title': 'Calculadora de costes de impresión 3D y presupuestos · layercents',
   'seo.description': 'Calculadora gratis del coste de impresión 3D: material, electricidad, desgaste de la impresora, fallos y tu tiempo. Obtén el coste real, un precio y un presupuesto para el cliente. Sin cuenta.',

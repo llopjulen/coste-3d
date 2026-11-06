@@ -692,6 +692,7 @@ export default {
   'cal.goOrders': "Go to Orders",
   'neworder.suggest': "With your print queue it would be ready on {date}.",
   'neworder.useSuggest': "Use this date",
+  'a11y.skip': "Skip to content",
   // --- SEO: el <head> y el texto de #root de cada idioma. Los lee scripts/prerender.js al construir.
   'seo.title': '3D Print Cost Calculator & Quote Maker · layercents',
   'seo.description': 'Free 3D print cost calculator: material, power, printer wear, failed prints and your time. Get the real cost, a price and a customer quote. No account.',

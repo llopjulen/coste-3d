@@ -11,7 +11,8 @@
     "agent": "node agent/server.js",
     "test": "node --test --test-timeout=20000",
     "deploy": "gh-pages -d dist",
-    "test:db": "supabase test db && bash scripts/db/order-numbers-race.sh"
+    "test:db": "supabase test db && bash scripts/db/order-numbers-race.sh",
+    "shots": "node scripts/shots.mjs"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",
@@ -28,6 +29,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "gh-pages": "^6.3.0",
     "oxlint": "^1.81.0",
+    "playwright-core": "1.59",
     "vite": "^8.3.0"
   }
 }

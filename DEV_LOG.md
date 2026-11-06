@@ -32,6 +32,37 @@ Registro de cambios del proyecto. La entrada más nueva va arriba.
 - De la carrera: Bases de datos: la partición vertical (dividir una tabla por columnas según quién las usa) y las claves foráneas con `on delete restrict / cascade / set null`. Seguridad / Sistemas: control de acceso basado en roles y mínimo privilegio, y por qué `security definer` es una escalada de privilegios que hay que acotar (`search_path`). Concurrencia: el `select … for update` que serializa las aceptaciones de invitación para no pasarse de asientos.
 - Cómo probarlo: no hay código. Lee docs/TALLER.md y comprueba contra la tabla de roles que cada acción tiene su sitio; comprueba que cada tabla de «Esquema propuesto» (docs/PEDIDOS.md) cae en un solo grupo (producción o finanzas). `npm test` y `npm run build` no cambian. **Ojo:** `npm run test:db` deja de ser válido para pedidos hasta el PR de tests nuevo.
 
+### 2026-11-06, Auditoría de la interfaz, la pantalla en la URL, DESIGN.md y capturas automáticas
+- Archivo y sitio: src/route.js y src/route.test.js (nuevos); src/App.jsx (estado inicial de `view` y `ordersOpen` leído de la URL, dos `useEffect` junto a `quoteParts` que sincronizan URL y pantalla, enlace «Saltar al contenido» antes de la barra y su destino `#contenido` después); src/index.css (bloque «Auditoría» al final); src/i18n/{en,es,fr}.js (`a11y.skip`); scripts/shots.mjs (nuevo); package.json (script `shots` y `playwright-core` en devDependencies); .gitignore (`shots/`); DESIGN.md (reescrito); docs/MAPA.md; CLAUDE.md.
+- Qué cambió:
+  - **La pestaña abierta va en la URL** (`/es/?view=orders&order=…`). Recargar, compartir un enlace y el botón Atrás del navegador funcionan.
+  - **En el iPhone los campos ya no hacen zoom al tocarlos.**
+  - **Pequeños arreglos de accesibilidad y táctil.**
+  - **DESIGN.md describe el sistema actual**, y `npm run shots` fotografía la web en 8 combinaciones de pantalla.
+- Por qué:
+  - **Las cuatro herramientas que investigamos**, y qué se usó de cada una:
+    - **Web Interface Guidelines de Vercel:** una lista de reglas de interfaz que se pasó por el código. Encontró los arreglos de esta entrada.
+    - **Awesome DESIGN.md:** el formato del archivo DESIGN.md. Escribimos el nuestro en vez de copiar el de otra marca, para no parecernos a Linear o a Apple.
+    - **Playwright CLI:** para que un agente maneje un navegador. Aquí se usa Playwright directamente en `shots.mjs`, y en tu Mac puedes instalar el CLI (`npm i -g @playwright/cli`) para que Claude Code pruebe la web solo.
+    - **Taste Skill:** está hecho para webs de empresa (landings), no para pantallas de una herramienta. Se reserva para una futura landing de layercents.
+  - **La URL como estado:** antes la pestaña vivía solo en React, así que al recargar volvías a la calculadora, Atrás te sacaba de la web y no se podía enlazar «Pedidos». Va en parámetros (`?view=`) y no en rutas (`/es/pedidos`) porque GitHub Pages sirve archivos estáticos: `/es/pedidos` daría 404, y `?view=` llega al mismo `index.html`.
+  - **`pushState` en cada cambio y `replaceState` en el primero:** cada pestaña es un paso de Atrás, como una página. Pero corregir un enlace roto al abrir (`?view=report` sin nada seleccionado pasa a Historial) no debe dejar un paso de Atrás hacia la nada.
+  - **Lo que viene de la URL no se cree a ciegas:** una vista desconocida es la calculadora, y un id con caracteres raros se ignora. Un enlace lo escribe otra persona.
+  - **16 px en los campos táctiles:** la web usa letra de 15 px, y Safari en iPhone amplía la página al tocar cualquier campo de menos de 16 px. Pasaba en cada campo de la calculadora. Solo con `pointer: coarse` (pantalla táctil), así el ordenador no cambia.
+  - **`touch-action: manipulation`:** quita los ~300 ms que el móvil espera tras un toque para ver si es un doble toque de zoom. Los botones responden al instante.
+  - **`overscroll-behavior`:** el scroll dentro de una hoja no arrastra la página de detrás, y con ratón la página no rebota al final. En táctil se deja el rebote, que sirve para recargar.
+  - **«Saltar al contenido»:** con el teclado, el primer Tab ofrece saltar las nueve paradas de la barra lateral (WCAG 2.4.1).
+  - **El foco de las notas de las hojas** no se veía al llegar con el teclado.
+  - **`playwright-core` como dependencia de desarrollo:** es Playwright sin navegadores incluidos (pocos MB). Usa el Chrome que ya tienes (`channel: 'chrome'`) y no se publica con la web. Descarté el paquete `playwright` completo, que descarga sus propios navegadores (cientos de MB).
+  - **DESIGN.md reescrito:** el de octubre describía el estilo anterior al rediseño del 3 de noviembre (titulares en Bricolage, otros colores). Una IA que lo leyera volvería al estilo viejo. Se conservan sus partes que siguen valiendo: el papel del PDF y los colores de la barra de costes.
+- Concepto nuevo: **History API**. `history.pushState(estado, '', '/es/?view=orders')` cambia la URL sin recargar la página y añade un paso al botón Atrás. Cuando la persona pulsa Atrás, el navegador lanza el evento `popstate`, y ahí lees la URL y pones la pantalla que toca.
+- De la carrera: Interacción Persona-Ordenador: accesibilidad (WCAG 2.4.1, saltar bloques; foco visible), tamaños mínimos táctiles y la URL como parte de la interfaz. Redes / Sistemas Distribuidos: por qué un servidor estático no puede resolver `/es/pedidos` y sí `?view=`.
+- Cómo probarlo: `npm test` (296 pasan).
+  - **URL:** abre `layercents.com/es/?view=orders`: sale Pedidos. Ve a Calendario y pulsa Atrás: vuelves a Pedidos. Recarga: sigues ahí.
+  - **Teclado:** pulsa Tab nada más cargar: sale «Saltar al contenido».
+  - **iPhone:** toca un campo de la calculadora: ya no hace zoom.
+  - **Capturas (en tu Mac):** `npm install`, `npm run build && npm run shots` y mira la carpeta `shots/`.
+
 ### 2026-11-04, Tests de la base de datos de pedidos, antes que el SQL
 - Archivo y sitio: supabase/tests/orders.test.sql (nuevo, 52 tests pgTAP), scripts/db/order-numbers-race.sh (nuevo), package.json (script `test:db`), docs/PEDIDOS.md (`security invoker`, qué hace `save_order`, lista de tests), docs/MAPA.md, CLAUDE.md.
 - Qué cambió: están los tests que tu migración de Supabase tiene que pasar, escritos antes que el SQL. No hay SQL de producción: ese lo escribes tú.

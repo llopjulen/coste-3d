@@ -680,6 +680,7 @@ export default {
   'cal.goOrders': "Aller aux commandes",
   'neworder.suggest': "Avec votre file d’impression, ce serait prêt le {date}.",
   'neworder.useSuggest': "Utiliser cette date",
+  'a11y.skip': "Aller au contenu",
   // --- SEO: el <head> y el texto de #root de cada idioma. Los lee scripts/prerender.js al construir.
   'seo.title': 'Calculateur de coût d’impression 3D et devis · layercents',
   'seo.description': 'Calculateur gratuit du coût d’impression 3D : matière, électricité, usure de l’imprimante, impressions ratées et votre temps. Obtenez le coût réel, un prix et un devis client. Sans compte.',

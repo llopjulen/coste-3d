@@ -1,287 +1,148 @@
 ---
+version: 1
 name: layercents
-description: Layer by layer, cent by cent. A calm, warm place to work out what a 3D print really costs.
+description: >-
+  Herramienta de trabajo para talleres de impresión 3D, sobria como los
+  Ajustes de iOS: listas agrupadas sobre un fondo un escalón más oscuro,
+  Inter para todo, separadores finos y un único color de marca (oro) que
+  solo marca el precio, la acción principal y dónde estás. Dos temas
+  (oscuro grafito y claro) con los mismos tokens.
+
 colors:
-  night-workshop: "#161619"
-  graphite-panel: "#212125"
-  raised-graphite: "#2A2A30"
-  seam-grey: "#36363D"
-  seam-grey-hover: "#4A4A53"
-  soft-chalk: "#E9E9EC"
-  fog: "#9A9AA4"
-  layer-gold: "#F2B33D"
-  lit-gold: "#F7C96A"
-  on-gold: "#161619"
-  loss-red: "#FF6369"
-  quote-paper: "#FFFFFF"
-  ink: "#1B1B1F"
-  soft-ink: "#5E5E68"
-  paper-rule: "#E3E3E8"
-  paper-track: "#F1F1F4"
-  print-gold: "#B7791F"
-  chart-power: "#12A594"
-  chart-wear: "#3E8FD0"
-  chart-failures: "#6E74C4"
-  chart-labor: "#A3A3B1"
-  chart-packaging: "#6C6C7A"
+  # Oscuro (por defecto). Los nombres son las variables CSS de src/index.css.
+  fondo: "#111113"        # el lienzo
+  panel: "#1C1C1F"        # grupos y bloques
+  panel-alto: "#2A2A2E"   # botones secundarios, fila pulsada
+  hundido: "#26262A"      # un campo mientras se edita
+  borde: "#2C2C30"        # separadores entre filas
+  borde-fuerte: "#48484E"
+  texto: "#F2F2F0"
+  tenue: "#9C9CA2"        # 6,6:1 sobre panel
+  oro: "#E3AE4F"          # la marca
+  oro-texto: "#EDC074"    # oro para letras (en claro: #8A5A00, 5,9:1)
+  rojo: "#FF7B72"         # pérdidas, tarde, borrar
+  claro:
+    fondo: "#F2F2F4"
+    panel: "#FFFFFF"
+    panel-alto: "#EBEBEE"
+    borde: "#E3E3E7"
+    texto: "#1D1D1F"
+    tenue: "#6E6E73"
+    oro-texto: "#8A5A00"
+    rojo: "#C62F2A"
+  papel:              # el presupuesto y el informe impresos (PDF): siempre claros
+    papel: "#FFFFFF"
+    tinta: "#1B1B1F"
+    tinta-suave: "#5E5E68"
+    acento: "elegido por el taller (business.accent); el texto encima, por contraste WCAG (src/quoteStyle.js)"
+  capas-del-coste:    # la barra apilada del coste, en src/App.jsx (LAYERS): tonos apagados
+    material: "#E3AE4F"
+    electricidad: "#7EA89F"
+    amortizacion: "#8A9CB8"
+    fallos: "#B48A9C"
+    mano-de-obra: "#AAA59A"
+    embalaje: "#77756F"
+    otros: "#9AA27A"
+
 typography:
-  display:
-    fontFamily: "Bricolage Grotesque, Inter, system-ui, sans-serif"
-    fontSize: "4.6rem"
-    fontWeight: 700
-    lineHeight: 1
-    letterSpacing: "-0.04em"
-    fontFeature: "tnum"
-  headline:
-    fontFamily: "Bricolage Grotesque, Inter, system-ui, sans-serif"
-    fontSize: "clamp(1.55rem, 4.4vw, 2.2rem)"
-    fontWeight: 700
-    lineHeight: 1.12
-    letterSpacing: "-0.03em"
-  title:
-    fontFamily: "Inter, system-ui, -apple-system, sans-serif"
-    fontSize: "1.12rem"
-    fontWeight: 600
-    lineHeight: 1.3
-    letterSpacing: "-0.015em"
-  body:
-    fontFamily: "Inter, system-ui, -apple-system, sans-serif"
-    fontSize: "15px"
-    fontWeight: 400
-    lineHeight: 1.45
-  label:
-    fontFamily: "Inter, system-ui, -apple-system, sans-serif"
-    fontSize: "0.76rem"
-    fontWeight: 600
-    lineHeight: 1.3
-  label-caps:
-    fontFamily: "Inter, system-ui, -apple-system, sans-serif"
-    fontSize: "0.72rem"
-    fontWeight: 500
-    letterSpacing: "0.04em"
-  mono:
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
-    fontSize: "0.84em"
+  family: "Inter Variable"          # todo
+  brand-family: "Bricolage Grotesque Variable"   # solo la palabra «layercents»
+  body: { size: 15px, lineHeight: 1.47, letterSpacing: -0.006em }
+  input-touch: { size: 16px }       # en pantallas táctiles, para que iOS no haga zoom
+  h1: { size: "clamp(1.9rem, 4.6vw, 2.6rem)", weight: 700, letterSpacing: -0.032em, lineHeight: 1.08 }
+  group-title: { size: 0.84rem, weight: 500, color: tenue }
+  row: { size: 0.95rem }
+  stat: { size: 1.35rem, weight: 500, letterSpacing: -0.025em }
+  price: { family: Inter, weight: 700, color: oro }
+  numbers: "font-variant-numeric: tabular-nums en toda cifra que se compare"
+
 rounded:
-  hairline: "2px"
-  sm: "4px"
-  control: "5px"
-  md: "8px"
-  pill: "999px"
+  group: 14px     # --radio
+  control: 9px    # --radio-campo: botones, campos
+  small: 8px      # pastillas internas, filas pulsables
+  pill: 999px     # estados
+
 spacing:
-  xs: "6px"
-  sm: "8px"
-  md: "12px"
-  inset: "15px"
-  lg: "18px"
-  xl: "22px"
-components:
-  button:
-    backgroundColor: "{colors.raised-graphite}"
-    textColor: "{colors.soft-chalk}"
-    rounded: "{rounded.control}"
-    padding: "6px 13px"
-  button-hover:
-    backgroundColor: "{colors.raised-graphite}"
-    textColor: "{colors.lit-gold}"
-  button-primary:
-    backgroundColor: "{colors.layer-gold}"
-    textColor: "{colors.on-gold}"
-    rounded: "{rounded.control}"
-    padding: "6px 13px"
-  button-primary-hover:
-    backgroundColor: "{colors.lit-gold}"
-    textColor: "{colors.on-gold}"
-  button-row:
-    textColor: "{colors.soft-chalk}"
-    rounded: "{rounded.control}"
-    padding: "3px 9px"
-  input-number:
-    backgroundColor: "{colors.night-workshop}"
-    textColor: "{colors.soft-chalk}"
-    rounded: "{rounded.control}"
-    padding: "6px 11px"
-    width: "92px"
-  input-text:
-    backgroundColor: "{colors.night-workshop}"
-    textColor: "{colors.soft-chalk}"
-    rounded: "{rounded.control}"
-    padding: "6px 9px"
-  tab:
-    textColor: "{colors.fog}"
-    rounded: "{rounded.control}"
-    padding: "5px 11px"
-  tab-active:
-    backgroundColor: "{colors.raised-graphite}"
-    textColor: "{colors.soft-chalk}"
-  panel:
-    backgroundColor: "{colors.graphite-panel}"
-    rounded: "{rounded.md}"
-  panel-heading:
-    backgroundColor: "{colors.raised-graphite}"
-    textColor: "{colors.fog}"
-    typography: "{typography.label}"
-    padding: "10px 15px"
-  chip-badge:
-    backgroundColor: "{colors.raised-graphite}"
-    textColor: "{colors.soft-chalk}"
-    rounded: "{rounded.pill}"
-    padding: "2px 9px"
-  hero-price:
-    textColor: "{colors.lit-gold}"
-    typography: "{typography.display}"
-    padding: "20px 20px 18px"
-  paper-sheet:
-    backgroundColor: "{colors.quote-paper}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.md}"
-    padding: "36px 40px"
+  row-height: 48px     # una fila de lista
+  group-padding-x: 16px
+  page: { max-width: 1080px, padding: "44px 24px 72px", mobile: "24px 16px 64px" }
+  gaps: [6, 8, 12, 16, 22, 28]
+
+breakpoints:
+  phone: 600px      # una columna, barra de precio fija abajo
+  tablet: 860px     # sin barra lateral: pestañas arriba
+  desktop: 1440px
 ---
 
-# Design System: layercents
+# DESIGN.md de layercents
 
-## Overview
+Este archivo dice **cómo tiene que verse** layercents (versión del 2026-11-06; sustituye a la del 16 de octubre, que describía el estilo anterior al rediseño del 3 de noviembre), para que cualquier persona o IA que toque la interfaz la mantenga coherente. El formato es el de [DESIGN.md](https://stitch.withgoogle.com/docs/design-md/overview/): tokens arriba y reglas en prosa abajo. Los valores reales viven en `src/index.css`; si cambias uno allí, cámbialo aquí.
 
-**Creative North Star: "The Quiet Workshop"**
+Antes de dar por bueno un cambio visual: `npm run build && npm run shots`, y mira las capturas de `shots/` a 1440, 1024, 768 y 390 px, en claro y en oscuro.
 
-layercents is the calm corner of a maker's workshop at the end of the day: the printers are humming, the room is dark and warm, and the one thing lit up is the number that matters. The interface should feel peaceful and comfortable to sit with, elegant rather than technical, so that working out money (a task most makers dislike) becomes something people want to come back to. Dark graphite surfaces stack like print layers; gold is the light on the bench, reserved for the answer and the next action.
+## La idea
 
-Density is moderate and desk-first: a two-column calculator beside the slicer, where inputs sit on the left and the answer stays in view on the right. Numbers are always tabular, aligned and unhurried. Paper is the other material: the customer quote and the report are white sheets with ink and a deeper print gold, identical on screen and in the PDF, because they leave the workshop.
+Una herramienta, no un folleto. Quien la abre viene a calcular un precio o a mover un pedido: la pantalla va directa al trabajo, con la información ordenada en listas como los Ajustes de iOS. Lo que hace que se vea profesional no es la decoración, sino:
+- **Jerarquía:** el precio manda; lo demás, en orden.
+- **Alineación:** cifras en columna, con `tabular-nums`.
+- **Consistencia:** una sola forma de hacer cada cosa.
 
-The incumbent components are sober and precise (thin seams, 5px corners, dark buttons that light up gold on hover). The stated direction is **warmer and more tactile**: when components are refined, they should gain physical presence (softer corners, fuller fills, a sense of something you can press) without losing the calm. Treat that as the direction of travel, not a reason to restyle untouched screens.
+## Color
 
-**Key Characteristics:**
-- Dark, warm graphite in three tonal layers; no light theme for the app itself.
-- Gold is light, not decoration: the recommended price, the one primary action, focus and live state.
-- Bricolage Grotesque for the brand voice and the big number; Inter for everything you read and type.
-- Tabular figures everywhere money or time appears.
-- Paper sheets (quote, report) as a second, printable world.
-- Calm motion: values slide, nothing bounces; everything stops under reduced motion.
+- **Oro = marca y atención.** Solo para el precio recomendado, el botón principal de cada pantalla y marcar dónde estás (la pestaña activa). Si hay dos cosas doradas en una pantalla, una sobra.
+- **Grises por capas, no por bordes.** Un grupo se distingue del fondo por ser un escalón más claro (`panel` sobre `fondo`), sin borde alrededor. Dentro del grupo, separadores de 1 px (`borde`).
+- **Rojo** solo para pérdidas, «va tarde» y acciones que borran.
+- Los estados de un pedido llevan un punto de color apagado **y** la palabra: el color nunca es la única pista (WCAG 1.4.1).
+- Contraste mínimo de 4,5:1 para todo texto, medido en los dos temas (los valores están comentados en `index.css`).
 
-## Colors
+- **El papel es otro mundo:** el presupuesto para el cliente y el informe se imprimen siempre en blanco con tinta oscura, aunque la app esté en oscuro (`@media print` fuerza `color-scheme: light`). El color del presupuesto lo elige cada taller.
+- **La barra del coste** usa siete tonos apagados del mismo brillo, para que ninguna capa grite salvo el material, que es oro porque es lo que más mira la gente.
 
-A warm-dark graphite palette lit by a single brand gold, with a white paper set for documents that leave the app.
+## Tipografía
 
-### Primary
-- **Layer Gold** (`layer-gold`): the brand. The logo layers, the one primary button per screen, focus rings, active dots (backup due, agent connected), progress fill, the dropzone when a file hovers over it. Also the Material slice of the cost chart.
-- **Lit Gold** (`lit-gold`): gold that is "on": hover state of gold elements, and highlighted text such as the hero price, gains, success notes and links in the footer.
-- **On Gold** (`on-gold`): text sitting on a gold fill. Always dark; white does not read on this gold.
+- Inter para todo. Bricolage solo en el nombre de la marca.
+- Texto a 15 px. En pantallas táctiles, los campos a 16 px: Safari en iPhone hace zoom al tocar un campo más pequeño.
+- Toda cifra que se compare (importes, porcentajes, horas) va con `tabular-nums`, para que los dígitos tengan el mismo ancho y las columnas cuadren.
+- Títulos con `text-wrap: balance`, para que no se quede una palabra sola en la última línea.
+- Puntos suspensivos de verdad: «Guardando…», no «Guardando...».
 
-### Neutral
-- **Night Workshop** (`night-workshop`): page background, and the recessed well inside inputs, dropzones and printer cards.
-- **Graphite Panel** (`graphite-panel`): panels, top bar, stat tiles, the mobile total bar.
-- **Raised Graphite** (`raised-graphite`): panel headings, default button fill, active tab, help callouts, table row hover.
-- **Seam Grey** (`seam-grey`): every border and divider; **Seam Grey Hover** (`seam-grey-hover`) is the input border on hover.
-- **Soft Chalk** (`soft-chalk`): primary text, never pure white.
-- **Fog** (`fog`): secondary text, labels, units, hints, inactive tabs. Chosen to clear 4.5:1 on every surface it sits on, including Raised Graphite and the gold wash.
+## Componentes
 
-### Semantic
-- **Loss Red** (`loss-red`): real losses and real errors only (a negative margin, a failed import, a failed print, destructive hover on Delete). Light enough to read as text on every graphite step (4.5:1 or more).
+- **Lista agrupada:** un título pequeño y gris fuera del grupo, y dentro filas de 48 px con el nombre a la izquierda y el valor a la derecha, sin caja alrededor del valor. Es la pieza base de toda la app.
+- **Botón principal:** fondo oro, texto `sobre-oro`, uno por pantalla. Los secundarios, en `panel-alto`.
+- **Control segmentado:** para elegir entre 2 y 5 opciones que se ven a la vez (filtros, estado de un pedido). Con `aria-pressed`.
+- **Hoja (`<dialog>` nativo):** para crear o editar algo sin salir de la pantalla. Trampa de foco y Esc los da el navegador.
+- **Pastilla de estado:** un punto y la palabra, 0,74 rem, redondeo completo.
+- **Cifras resumen (`.stat`):** de 2 a 4 en fila arriba de una lista; en el móvil, en dos columnas.
 
-### Paper
-- **Quote Paper** (`quote-paper`), **Ink** (`ink`), **Soft Ink** (`soft-ink`), **Paper Rule** (`paper-rule`), **Paper Track** (`paper-track`): the customer quote and report sheets.
-- **Print Gold** (`print-gold`): the brand gold darkened so it reads on white; bars and logo on paper. The Excel export uses an even darker gold (#9A6514) for the same reason.
+## Interacción
 
-### Cost Chart
-Each cost layer has its own hue, stacked bottom-up in the ¢ symbol like a print: Material in Layer Gold, then **Power Teal** (`chart-power`), **Wear Blue** (`chart-wear`), **Failure Indigo** (`chart-failures`), **Labor Grey** (`chart-labor`), **Packaging Slate** (`chart-packaging`). These hues live only in the chart and its legend.
+- **Foco visible** con el teclado en todo lo pulsable (`:focus-visible`, anillo oro suave). Nunca `outline: none` sin otro indicador.
+- **La pantalla abierta va en la URL** (`?view=orders&order=…`, src/route.js): recargar, compartir un enlace o pulsar Atrás funcionan.
+- **Escritura optimista:** el cambio se ve al momento; si falla al guardar, se avisa y se vuelve a lo guardado.
+- **Borrar pide confirmación;** en los pedidos, se recomienda cancelar en vez de borrar.
+- **Los campos guardan al salir** (blur o Enter), no en cada tecla.
+- Animaciones cortas, solo en `transform` y `opacity`, y desactivadas con `prefers-reduced-motion`.
 
-### Named Rules
-**The Light-on-the-Bench Rule.** Gold marks the answer and the next action. One gold-filled button per screen; everything else is graphite that lights up gold on hover.
+## Sí
 
-**The Calm Warning Rule.** Reminders and "attention" states use a soft gold wash (gold at 7% fill, 42% border), never red. Red means something actually went wrong.
+- Ir directo al trabajo: la primera pantalla es la herramienta.
+- Datos reales en ejemplos y capturas (piezas, precios, clientes plausibles).
+- Una acción principal por pantalla.
+- Probar cada cambio en 390 px antes que en escritorio.
 
-## Typography
+## No
 
-**Display Font:** Bricolage Grotesque 700 (with Inter, system-ui)
-**Body Font:** Inter 400/500/600 (with system-ui, -apple-system)
-**Mono:** ui-monospace stack, only for terminal commands in the Printers tab.
+- Degradados, brillos, neón, sombras grandes o cristal: se leen como plantilla.
+- Tarjetas con borde dentro de tarjetas con borde.
+- El oro en más de una cosa a la vez, o para decorar.
+- Iconos decorativos que no ayudan a encontrar nada.
+- Un titular de landing con subtítulo gris encima de cada herramienta.
+- Emojis en la interfaz.
+- El verde de Bambu Lab, ni los colores o la tipografía de otra marca conocida.
 
-**Character:** Bricolage brings a friendly, slightly crafted personality to the brand name, page titles and the big price; Inter keeps every label, input and table quiet and legible. Tight negative tracking on the display face, none on the body.
+## Responsive
 
-### Hierarchy
-- **Display** (`display`): the recommended price only. Cents drop to 2rem and the currency to 1rem in Fog, so the whole number reads first. 3.6rem on phones.
-- **Headline** (`headline`): page titles (h1) and the brand name in the top bar (at 1.05rem).
-- **Title** (`title`): the verdict sentence and other one-line conclusions; printer and section names sit near it at 0.9 to 0.98rem/600.
-- **Body** (`body`): everything else, at 15px with 1.45 line height. Prose blocks cap at 40 to 46em.
-- **Label** (`label`): panel headings in Fog, sentence case. Field labels are body-size (0.89rem) in Soft Chalk.
-- **Label Caps** (`label-caps`): table column headers only, uppercase with 0.04em tracking.
-- **Mono** (`mono`): terminal commands in the Printers tab only, on a Raised Graphite chip.
-
-### Named Rules
-**The Tabular Money Rule.** Every amount, weight, time and percentage uses `font-variant-numeric: tabular-nums`, right-aligned in tables and inputs.
-
-## Layout
-
-A centered column, max 1060px, with 18px side gutters and 26px top padding. The calculator splits into two equal columns (18px gap); the result column is sticky at the top while the viewport is taller than 880px, and becomes static below that so the save form stays reachable. Under 860px the columns stack and a fixed bottom bar shows cost and price, sliding away once the result panel is on screen. Under 520px the top bar wraps into two rows (brand and currency, then tabs).
-
-Rhythm inside panels: 15px horizontal inset, fields separated by 1px seams with 7px vertical padding. Grids of stat tiles run 4 across, 2 under 700px. Tables drop low-priority columns under 600px rather than scrolling sideways; the hidden facts move into a sub-line under the row name.
-
-Paper sheets are max 900px, A4 with 14mm margins in print, and drop all chrome (`.no-print`).
-
-## Elevation & Depth
-
-Flat by design. Depth comes from tonal layering, not shadows: Night Workshop (the floor and recessed wells) below Graphite Panel (surfaces) below Raised Graphite (headings, active and hovered things). Every surface edge is a 1px Seam Grey line. The only box-shadow in the system is the focus halo on inputs (`0 0 0 2px` gold at 22%).
-
-### Named Rules
-**The Layered-Not-Lifted Rule.** A surface reads as higher by being one graphite step lighter, not by casting a shadow. If tactile depth is introduced in a refinement, it should come from fill and edge, and stay subtle.
-
-## Shapes
-
-Gently rounded and consistent. Surfaces (panels, stat tiles, cards, dropzone, paper on screen) use 8px. Controls (buttons, inputs, selects, tabs) use 5px. Pills (filament chips, status badges, Beta tag, tab counters) are fully rounded. Dots are circles (7 to 8px). Callouts (help text, import errors, restore confirmation) have a 2px colored left edge with the left corners square and the right corners at 5px. Chart bars round only their free end (4px).
-
-## Components
-
-### Buttons
-Calm and quiet at rest, lit when touched.
-- **Shape:** gently rounded (5px), 1px Seam Grey border.
-- **Default:** Raised Graphite fill, Soft Chalk text, 0.86rem/500, 6px 13px padding.
-- **Hover:** border turns Layer Gold and text Lit Gold; the fill stays.
-- **Primary:** Layer Gold fill with On Gold text; hover moves to Lit Gold. One per screen (Save quote, Print / Save as PDF, Download backup).
-- **Row buttons:** transparent, 0.78rem, 3px 9px; Delete turns red on hover.
-- **Focus:** 2px Layer Gold outline, 2px offset, keyboard only (`:focus-visible`).
-- **Disabled:** 50% opacity, wait cursor while busy.
-
-### Inputs / Fields
-- **Style:** recessed into Night Workshop, 1px Seam Grey border, 5px corners. Number inputs are 92px wide, right-aligned, tabular, with no spinner arrows (arrow keys still work); a unit in Fog sits after them.
-- **Hover:** border Seam Grey Hover.
-- **Focus:** border Layer Gold plus a 2px gold halo at 22%; no outline.
-- **Help:** each label can carry a round (i) button that opens a callout with a gold left edge.
-- **Error:** inline text in Loss Red at 0.8rem.
-
-### Navigation
-Top bar on Graphite Panel with a bottom seam: logo and wordmark, then text tabs (Fog, 0.84rem; hover Soft Chalk; active on Raised Graphite), then the currency select pushed right. Tabs can carry a count pill or a gold dot (backup due).
-
-### Cards / Containers
-- **Panel:** Graphite Panel, 1px seam, 8px corners, overflow hidden. Its h2 is a Raised Graphite band with a Fog label; a figure can sit on the right of the heading.
-- **Stat tile:** same surface, label in Fog above a 1.25rem/600 value.
-- **Recessed card:** printer cards and the dropzone sit in Night Workshop inside a panel.
-
-### Chips
-Fully rounded. Filament chips are outlined (seam border); status badges are filled tints: gold at 15% for busy, Raised Graphite for idle, red at 14% for errors, always with a text label so color is never the only signal.
-
-### Hero Price (signature)
-The answer to the whole calculator: a panel with a faint gold border (35%), a Fog label, the price in Lit Gold Bricolage at 4.6rem with smaller cents and currency, and a Fog line underneath with what you keep.
-
-### Cost Symbol Chart (signature)
-The layercents ¢ logo drawn as a stacked chart, filling bottom-up like a print, one hue per cost. Boundaries slide (0.35s ease) when a number changes; an empty track in Raised Graphite keeps the shape readable at zero. 176px, 118px on phones, with a legend of names in Fog and tabular values.
-
-### Paper Sheet (signature)
-White sheet with an Ink rule under the header, Print Gold for logo and bars, uppercase small headings in Soft Ink, and tables with ink header rules. What you see is what prints.
-
-## Do's and Don'ts
-
-### Do:
-- **Do** keep every color as a variable in `src/index.css` and reference it; never hard-code a hex in a component.
-- **Do** keep one gold-filled button per screen and let everything else light up gold on hover.
-- **Do** use tabular numerals for every amount, and right-align them.
-- **Do** show state with text plus color (badges, verdicts), never color alone.
-- **Do** keep motion short and easing-based (0.15 to 0.4s), and disable it under `prefers-reduced-motion`.
-- **Do** move toward warmer, more tactile components when refining: softer, fuller, pressable, still calm.
-
-### Don't:
-- **Don't** use Bambu Lab green anywhere.
-- **Don't** use pure white text on the dark app or put white text on gold.
-- **Don't** use Loss Red for reminders or neutral attention; that is the soft gold wash.
-- **Don't** add shadows to show elevation; step the graphite instead.
-- **Don't** put the cost-chart hues outside the chart and its legend.
-- **Don't** make the quote or report depend on dark styles; they must print on white.
+- **Menos de 860 px:** la barra lateral pasa a pestañas arriba, que se desplazan en horizontal.
+- **Menos de 600 px:** todo a una columna. La calculadora lleva una barra fija abajo con el precio y el coste (con `safe-area-inset-bottom` para el iPhone). Las tablas pasan a listas de dos líneas.
+- **Objetivos táctiles** de al menos 44 px de alto en el móvil.
