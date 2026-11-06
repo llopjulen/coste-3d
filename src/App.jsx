@@ -143,44 +143,30 @@ const LAYERS = [
 /* ==================================================================
    3) UI PIECES
 ================================================================== */
-function Field({ id, label, unit, help, value, onChange, open, onHelp }) {
-  const { t } = useI18n()
+function Field({ id, label, unit, help, value, onChange }) {
+  /* Redesign 2026-11-06: no "i" button next to every label. A circle after
+     each of ~20 labels was the noisiest pattern on the screen. The help now
+     appears under the row while the field has focus (CSS :focus-within), as
+     iOS shows a footer under a setting. It is always in the DOM and tied to
+     the input with aria-describedby, so a screen reader reads it on focus
+     without anything to open. */
   return (
     <div className="field">
       <div className="row">
-        <div className="label-group">
-          <label htmlFor={id}>{label}</label>
-          {/* aria-expanded tells screen readers whether the text is
-              open; aria-controls links it to the help block. A field with
-              no help text (the extra filaments' own) gets no button. */}
-          {help && (
-            <button
-              type="button"
-              className="info"
-              aria-label={t('field.whatIs', { label })}
-              aria-expanded={open}
-              aria-controls={`help-${id}`}
-              onClick={onHelp}
-            >
-              i
-            </button>
-          )}
-        </div>
+        <label htmlFor={id}>{label}</label>
         <input
           id={id}
           type="number"
           inputMode="decimal"
           value={value}
+          aria-describedby={help ? `help-${id}` : undefined}
           /* The input doesn't hold its own value: it receives it from
              above and reports changes upward (controlled component). */
           onChange={e => onChange(e.target.value === '' ? 0 : Number(e.target.value))}
         />
         <span className="unit">{unit}</span>
       </div>
-
-      {/* Conditional rendering: when not open, this chunk simply
-          doesn't exist on the page. */}
-      {open && help && <p className="help" id={`help-${id}`}>{help}</p>}
+      {help && <p className="help" id={`help-${id}`}>{help}</p>}
     </div>
   )
 }
@@ -506,6 +492,26 @@ export default function App({ agentOptIn = false }) {
   // The quotes ticked in History for a customer quote.
   const [quoteParts, setQuoteParts] = useState([])
 
+  /* Phone tabs scroll sideways. A fade marks the side where tabs are hidden
+     (classes more-left / more-right), worked out from the real scroll: with
+     a fixed fade, the last tab looked cut even when every tab fitted. The
+     open tab is also scrolled into view, so "Calendario" isn't hidden when
+     you arrive at it from a link. */
+  const tabsRef = useRef(null)
+  useEffect(() => {
+    const el = tabsRef.current
+    if (!el) return undefined
+    const update = () => {
+      el.classList.toggle('more-left', el.scrollLeft > 4)
+      el.classList.toggle('more-right', el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
+    }
+    el.querySelector('.tab.active')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    update()
+    el.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    return () => { el.removeEventListener('scroll', update); window.removeEventListener('resize', update) }
+  }, [view])
+
   /* Screen -> URL. Every change of tab or order page becomes a history entry
      (pushState), so Back steps through them like pages. The first sync only
      REPLACES the entry: correcting "?view=report" opened cold to History must
@@ -603,7 +609,6 @@ export default function App({ agentOptIn = false }) {
 
   // Only one help panel open at a time: store the key of the open
   // field, or null if none is open.
-  const [openHelp, setOpenHelp] = useState(null)
 
   // Build a NEW object instead of mutating the old one: React detects
   // changes by comparing references, not contents.
@@ -650,8 +655,6 @@ export default function App({ agentOptIn = false }) {
       help={t(`field.${field.key}.help`)}
       value={d[field.key]}
       onChange={set(field.key)}
-      open={openHelp === field.key}
-      onHelp={() => setOpenHelp(k => (k === field.key ? null : field.key))}
     />
   )
 
@@ -713,7 +716,7 @@ export default function App({ agentOptIn = false }) {
       <a className="skip-link no-print" href="#contenido">{t('a11y.skip')}</a>
       <header className="topbar no-print">
         <strong className="brand"><Logo size={20} small /> <span className="brand-name">layercents</span></strong>
-        <nav className="tabs">
+        <nav className="tabs" ref={tabsRef}>
           <button
             type="button"
             className={`tab ${view === 'calculator' ? 'active' : ''}`}

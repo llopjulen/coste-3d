@@ -33,7 +33,6 @@ export default {
   'setup.reset': 'Restablecer valores por defecto',
   'setup.resetConfirm': '¿Restablecer tu configuración a los valores por defecto?',
 
-  'field.whatIs': 'Qué es {label}',
   'unit.pcs': 'uds',
   'field.spoolPrice.label': 'Precio de la bobina',
   'field.spoolPrice.help': 'Lo que pagaste por la bobina entera, con el envío incluido.',
@@ -208,8 +207,8 @@ export default {
 
   'import.title': 'Importar desde tu laminador',
   'import.dropActive': 'Suéltalo para rellenar el formulario',
-  'import.drop': 'Suelta tu archivo laminado en cualquier parte de esta página',
-  'import.hint': '.gcode, .bgcode o .gcode.3mf de Bambu Studio, OrcaSlicer, PrusaSlicer o Cura. El tiempo y los gramos se rellenan solos. El archivo nunca sale de tu navegador.',
+  'import.drop': "Suelta un archivo laminado en cualquier parte",
+  'import.hint': ".gcode, .bgcode o .3mf de cualquier laminador. Rellena tiempo y gramos; el archivo no sale de tu navegador.",
   'import.choose': 'Elegir archivo',
   'import.reading': 'Leyendo el archivo…',
   'import.plate': 'Bandeja',

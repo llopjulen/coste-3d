@@ -32,6 +32,30 @@ Registro de cambios del proyecto. La entrada más nueva va arriba.
 - De la carrera: Bases de datos: la partición vertical (dividir una tabla por columnas según quién las usa) y las claves foráneas con `on delete restrict / cascade / set null`. Seguridad / Sistemas: control de acceso basado en roles y mínimo privilegio, y por qué `security definer` es una escalada de privilegios que hay que acotar (`search_path`). Concurrencia: el `select … for update` que serializa las aceptaciones de invitación para no pasarse de asientos.
 - Cómo probarlo: no hay código. Lee docs/TALLER.md y comprueba contra la tabla de roles que cada acción tiene su sitio; comprueba que cada tabla de «Esquema propuesto» (docs/PEDIDOS.md) cae en un solo grupo (producción o finanzas). `npm test` y `npm run build` no cambian. **Ojo:** `npm run test:db` deja de ser válido para pedidos hasta el PR de tests nuevo.
 
+### 2026-11-06, Rediseño sereno: menos plantilla, más herramienta
+- Archivo y sitio: src/App.jsx (`Field` sin botón «i», sin el estado `openHelp`; `tabsRef` y su `useEffect` junto a la sincronización con la URL); src/index.css (`h1`, `.subtitle`, `.help`, `.dropzone`, `.drop-title`, `.drop-hint`, `.extra-add .controls`, fundidos `.tabs.more-left` y `.tabs.more-right`, y siete usos del oro pasados a color de texto); src/i18n/{en,es,fr}.js (`import.drop` e `import.hint` más cortos; fuera `field.whatIs`); scripts/shots.mjs (fechas de ejemplo de 2026); DESIGN.md.
+- Qué cambió: la calculadora y el resto de pantallas pierden los rasgos de plantilla.
+  - **Título a escala de app.**
+  - **Sin «ⓘ» en cada campo:** la ayuda sale al tocar el campo.
+  - **Importar es una fila de la lista**, no una caja discontinua.
+  - **El oro solo** en el precio, el botón principal y dónde estás.
+  - **Las pestañas del móvil** marcan con un fundido que hay más.
+- Por qué:
+  - **Lo que hacía que pareciera «hecha por IA»**, mirando las capturas:
+    - un titular de landing de 2,6 rem con subtítulo encima de cada herramienta;
+    - un círculo «i» tras cada una de las ~20 etiquetas;
+    - una caja de borde discontinuo para soltar archivos;
+    - el oro repartido por enlaces, avisos e iconos, así que dejaba de señalar lo importante.
+    Son los patrones por defecto de las plantillas. Las herramientas buenas (Ajustes de iOS, Linear) van directas al trabajo y usan un único color de acento con disciplina.
+  - **Ayuda al enfocar** y no con un botón: la explicación aparece justo cuando la necesitas (al escribir en ese campo) y desaparece después. Sigue en la página y unida al campo con `aria-describedby`, así que un lector de pantalla la lee al entrar en él. Se pierde el poder leerla sin tocar el campo, a cambio de quitar 20 botones de la pantalla.
+  - **El h1 cambia de tamaño pero no de texto:** Google lo lee en el HTML prerenderizado, y el texto es lo que cuenta para el SEO.
+  - **Fundido según el scroll real:** con un fundido fijo, a 768 px «Planes» parecía cortado aunque cabían todas, y a 390 px abriendo Calendario se cortaba «Calculadora» por la izquierda sin aviso. Ahora se mira `scrollLeft` y `scrollWidth`, y además la pestaña abierta se desplaza a la vista.
+  - **Texto de importar más corto:** de tres líneas a dos. Plain copy, una de las reglas de Taste Skill: decir lo que hace en las menos palabras posibles.
+  - El sistema queda escrito en DESIGN.md (ayuda de campo, h1, importar, usos del oro), para que no vuelva.
+- Concepto nuevo: **`:focus-within`**. Es un selector CSS que se cumple cuando el elemento o cualquiera de sus hijos tiene el foco. Ejemplo: `.field:focus-within .help{display:block}` enseña la ayuda mientras escribes en el input de dentro, sin una línea de JavaScript.
+- De la carrera: Interacción Persona-Ordenador: jerarquía visual, carga cognitiva (20 botones menos) y divulgación progresiva (la ayuda solo cuando hace falta).
+- Cómo probarlo: `npm run build && npm run shots` y compara con las capturas de antes. En la calculadora, toca «Peso de la pieza»: sale su explicación debajo. En el móvil, abre `/es/?view=calendar`: «Calendario» está a la vista y hay un fundido a cada lado.
+
 ### 2026-11-06, Auditoría de la interfaz, la pantalla en la URL, DESIGN.md y capturas automáticas
 - Archivo y sitio: src/route.js y src/route.test.js (nuevos); src/App.jsx (estado inicial de `view` y `ordersOpen` leído de la URL, dos `useEffect` junto a `quoteParts` que sincronizan URL y pantalla, enlace «Saltar al contenido» antes de la barra y su destino `#contenido` después); src/index.css (bloque «Auditoría» al final); src/i18n/{en,es,fr}.js (`a11y.skip`); scripts/shots.mjs (nuevo); package.json (script `shots` y `playwright-core` en devDependencies); .gitignore (`shots/`); DESIGN.md (reescrito); docs/MAPA.md; CLAUDE.md.
 - Qué cambió:

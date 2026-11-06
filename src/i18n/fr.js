@@ -34,7 +34,6 @@ export default {
   'setup.reset': 'Rétablir les valeurs par défaut',
   'setup.resetConfirm': 'Rétablir votre configuration aux valeurs par défaut ?',
 
-  'field.whatIs': 'Qu’est-ce que {label}',
   'unit.pcs': 'pcs',
   'field.spoolPrice.label': 'Prix de la bobine',
   'field.spoolPrice.help': 'Ce que vous avez payé pour la bobine entière, livraison comprise.',
@@ -209,8 +208,8 @@ export default {
 
   'import.title': 'Importer depuis votre slicer',
   'import.dropActive': 'Déposez-le pour remplir le formulaire',
-  'import.drop': 'Déposez votre fichier tranché n’importe où sur cette page',
-  'import.hint': '.gcode, .bgcode ou .gcode.3mf de Bambu Studio, OrcaSlicer, PrusaSlicer ou Cura. Le temps et les grammes se remplissent tout seuls. Le fichier ne quitte jamais votre navigateur.',
+  'import.drop': "Déposez un fichier tranché n’importe où",
+  'import.hint': ".gcode, .bgcode ou .3mf de n’importe quel trancheur. Remplit le temps et les grammes ; le fichier reste dans votre navigateur.",
   'import.choose': 'Choisir un fichier',
   'import.reading': 'Lecture du fichier…',
   'import.plate': 'Plateau',

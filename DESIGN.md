@@ -89,7 +89,7 @@ Una herramienta, no un folleto. Quien la abre viene a calcular un precio o a mov
 
 ## Color
 
-- **Oro = marca y atención.** Solo para el precio recomendado, el botón principal de cada pantalla y marcar dónde estás (la pestaña activa). Si hay dos cosas doradas en una pantalla, una sobra.
+- **Oro = marca y atención.** Solo para el precio recomendado, el botón principal de cada pantalla y marcar dónde estás (la pestaña activa, el día de hoy). Si hay dos cosas doradas en una pantalla, una sobra. Los enlaces, las acciones de «+ Añadir…» y los mensajes de «Guardado» van en color de texto.
 - **Grises por capas, no por bordes.** Un grupo se distingue del fondo por ser un escalón más claro (`panel` sobre `fondo`), sin borde alrededor. Dentro del grupo, separadores de 1 px (`borde`).
 - **Rojo** solo para pérdidas, «va tarde» y acciones que borran.
 - Los estados de un pedido llevan un punto de color apagado **y** la palabra: el color nunca es la única pista (WCAG 1.4.1).
@@ -109,6 +109,9 @@ Una herramienta, no un folleto. Quien la abre viene a calcular un precio o a mov
 ## Componentes
 
 - **Lista agrupada:** un título pequeño y gris fuera del grupo, y dentro filas de 48 px con el nombre a la izquierda y el valor a la derecha, sin caja alrededor del valor. Es la pieza base de toda la app.
+- **Ayuda de un campo:** sale debajo de la fila mientras el campo tiene el foco, en texto pequeño y gris, sin caja. Nada de iconos «ⓘ» tras cada etiqueta. Va unida al campo con `aria-describedby`.
+- **Título de pantalla (h1):** 1,75 rem, peso 650, una línea de subtítulo gris. Escala de app, no de landing.
+- **Importar archivo:** una fila más de la lista (título y pista a la izquierda, botón a la derecha). Nada de cajas de borde discontinuo.
 - **Botón principal:** fondo oro, texto `sobre-oro`, uno por pantalla. Los secundarios, en `panel-alto`.
 - **Control segmentado:** para elegir entre 2 y 5 opciones que se ven a la vez (filtros, estado de un pedido). Con `aria-pressed`.
 - **Hoja (`<dialog>` nativo):** para crear o editar algo sin salir de la pantalla. Trampa de foco y Esc los da el navegador.
@@ -143,6 +146,6 @@ Una herramienta, no un folleto. Quien la abre viene a calcular un precio o a mov
 
 ## Responsive
 
-- **Menos de 860 px:** la barra lateral pasa a pestañas arriba, que se desplazan en horizontal.
+- **Menos de 860 px:** la barra lateral pasa a pestañas arriba, que se desplazan en horizontal. Un fundido marca el lado donde quedan pestañas fuera (solo si de verdad quedan), y la pestaña abierta siempre está a la vista.
 - **Menos de 600 px:** todo a una columna. La calculadora lleva una barra fija abajo con el precio y el coste (con `safe-area-inset-bottom` para el iPhone). Las tablas pasan a listas de dos líneas.
 - **Objetivos táctiles** de al menos 44 px de alto en el móvil.
