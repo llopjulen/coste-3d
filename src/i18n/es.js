@@ -32,6 +32,10 @@ export default {
   'setup.noteSaving': 'Se guarda en este dispositivo mientras escribes, así solo la introduces una vez.',
   'setup.reset': 'Restablecer valores por defecto',
   'setup.resetConfirm': '¿Restablecer tu configuración a los valores por defecto?',
+  'preset.label': 'Modelo',
+  'preset.other': 'Otra / no está en la lista',
+  'preset.note': '{watts} W es la potencia media de la {name} imprimiendo PLA, según publica Bambu Lab. Cámbiala si la tuya gasta otra cosa.',
+  'preset.source': 'Fuente',
 
   'unit.pcs': 'uds',
   'field.spoolPrice.label': 'Precio de la bobina',

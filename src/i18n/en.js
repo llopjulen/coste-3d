@@ -37,6 +37,10 @@ export default {
   'setup.noteSaving': 'Saved on this device as you type, so you only enter it once.',
   'setup.reset': 'Reset to defaults',
   'setup.resetConfirm': 'Reset your setup to the default numbers?',
+  'preset.label': 'Model',
+  'preset.other': 'Other / not listed',
+  'preset.note': '{watts} W is {name}’s average power printing PLA, as Bambu Lab publishes it. Change it if yours differs.',
+  'preset.source': 'Source',
 
   // --- Campos
   'unit.pcs': 'pcs',

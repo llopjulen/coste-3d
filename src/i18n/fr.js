@@ -33,6 +33,10 @@ export default {
   'setup.noteSaving': 'Enregistrée sur cet appareil au fur et à mesure, vous ne la saisissez qu’une fois.',
   'setup.reset': 'Rétablir les valeurs par défaut',
   'setup.resetConfirm': 'Rétablir votre configuration aux valeurs par défaut ?',
+  'preset.label': 'Modèle',
+  'preset.other': 'Autre / pas dans la liste',
+  'preset.note': '{watts} W est la puissance moyenne de la {name} en impression PLA, selon Bambu Lab. Modifiez-la si la vôtre diffère.',
+  'preset.source': 'Source',
 
   'unit.pcs': 'pcs',
   'field.spoolPrice.label': 'Prix de la bobine',
