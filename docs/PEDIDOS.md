@@ -145,27 +145,43 @@ Al fusionar (Merge):
 - Un pedido nuevo cuyo número ya existe recibe uno libre por encima de todos (`mergeOrders`).
 - El contador se queda con el mayor.
 
-## Tests (hechos el 2026-11-04, antes que el SQL)
+## Tests (modo taller, reescritos el 2026-11-06, antes que el SQL)
 
-> **Pendiente de adaptar (2026-11-05).** Los tests de abajo se escribieron con el modelo de `user_id`: usan `user_id`, `save_order(jsonb)`, `next_order_number()` y no distinguen roles. Se reescriben al modelo de taller en un PR aparte (Claude), junto con `scripts/db/order-numbers-race.sh` (que también llama a `next_order_number()` sin taller): `workspace_id`, las firmas nuevas, las tablas de finanzas y **pruebas de rol** (el operario no ve dinero ni la ficha del cliente; el encargado sí; solo el jefe invita; un operario de otro taller no puede usar `set_order_status`). Hasta entonces, `npm run test:db` fallará en la parte de pedidos y no sirve para validar la migración.
+Escritos antes que la implementación, para que fijen el contrato (TDD). Sustituyen a los del 2026-11-04, que eran del modelo `user_id`. Se ejecutan con `npm run test:db` (`supabase start` en marcha), junto con los del núcleo del taller (`supabase/tests/workspaces.test.sql`).
 
-Están escritos antes que la implementación, para que definan el contrato (TDD). Se ejecutan con `npm run test:db` (`supabase start` en marcha):
+- **`supabase/tests/orders.test.sql`** (pgTAP, 89 tests), con las mismas personas que los del taller (A jefe, M encargado y O operario del Taller 1; B jefe del Taller 2):
+  - **Estructura:** RLS en las 8 tablas de pedidos; existen `next_order_number(uuid)`, `save_order(uuid, jsonb)` y `set_order_status(uuid, text)`; `save_order` es `invoker`, y `set_order_status` es `definer` con `search_path` vacío.
+  - **Contador por taller:** A saca 1 y 2, M (mismo taller) sigue por el 3, B (otro taller) empieza en 1. El operario no puede sacar números.
+  - **`save_order`:**
+    - Guarda el JSON del front repartido entre producción y finanzas.
+    - El taller es el del parámetro, aunque el JSON traiga otro `workspaceId`.
+    - `created_by` y `actor_id` los pone el servidor.
+    - Es todo o nada.
+    - Guardar otra vez reemplaza líneas, precios y pagos, sin duplicar ni borrar historial.
+    - No se puede guardar en un taller ajeno ni sobrescribir un pedido ajeno.
+  - **El operario:**
+    - Ve el pedido, las líneas, las horas y para quién es, y los eventos de producción.
+    - **No** ve finanzas, precios, pagos, fichas de cliente, contador ni el evento de pago.
+    - No tiene `update` ni `save_order`.
+    - Sí puede usar `set_order_status`: cambia el estado, pone `delivered_at` y escribe el evento con su `actor_id`. Un estado inventado se rechaza.
+  - **B (otro taller) y `anon`:** no ven nada; no cuelgan líneas en un pedido ajeno; no lo sobrescriben ni le cambian el estado.
+  - **Ciclo de vida:** borrar un cliente deja el nombre (set null); borrar un pedido se lleva líneas, precios, finanzas, pagos y eventos (cascade).
+- **`scripts/db/order-numbers-race.sh`:** 40 conexiones de dos personas del mismo taller piden número a la vez; tienen que salir 1..40. Crea su taller de prueba y lo borra al acabar.
 
-- **`supabase/tests/orders.test.sql`** (pgTAP, 52 tests):
-  - RLS activado en las 6 tablas; existen `next_order_number()` y `save_order(jsonb)`.
-  - Contador por usuario.
-  - `save_order` guarda el JSON del front: líneas en orden, decimales, fechas y `user_id` del servidor. Guardar otra vez reemplaza líneas y pagos sin duplicar el historial.
-  - Todo o nada: una línea inválida no deja ni el pedido ni las otras líneas.
-  - Restricciones: número repetido, estado inventado, pago o envío negativos, cliente sin nombre.
-  - B no ve, no edita y no borra nada de A, no cuelga líneas de un pedido de A y no lo sobrescribe con `save_order`. `anon` no ve nada.
-  - Borrar un cliente deja el nombre en el pedido (set null); borrar un pedido se lleva sus hijos (cascade).
-- **`scripts/db/order-numbers-race.sh`**: 40 conexiones piden número a la vez. Tienen que salir 1..40 sin repetidos.
+Comprobados contra una implementación de referencia privada (no está en el repositorio: la de verdad la escribe Julen). Cada uno de estos fallos hace fallar al menos un test:
+- eventos de pago visibles al operario;
+- precios visibles a cualquier miembro;
+- operario con `update` en `orders`;
+- `set_order_status` sin comprobar el taller del pedido;
+- `set_order_status` sin `search_path`;
+- `save_order` con `definer`;
+- `save_order` que borra y reescribe el historial;
+- líneas sin comprobar el pedido padre;
+- contador global en vez de por taller;
+- `save_order` que se fía del `workspaceId` del JSON;
+- contador en dos pasos (40 peticiones dieron 3 números).
 
-Los tests se comprobaron contra una implementación de referencia privada (no está en el repositorio: la de verdad la escribe Julen). También se comprobó que **fallan** ante los fallos típicos:
-- línea sin comprobar el pedido padre;
-- `security definer`;
-- eventos duplicados;
-- RLS olvidado en una tabla;
-- `qty` sin `check`;
-- `cascade` en vez de `set null`;
-- contador en dos pasos (40 peticiones dieron solo 3 números distintos).
+### Dos detalles que fijan los tests (salieron al escribir la referencia)
+
+- **No duplicar el historial sin borrarlo.** El front manda siempre su historial entero, pero `set_order_status` escribe eventos en el servidor que ese JSON aún no tiene (el front no ha recargado). Si `save_order` borrara y reescribiera, perdería los eventos del operario; si insertara todo, duplicaría. La regla que funciona: **insertar solo los eventos del JSON que no existen ya**, comparando por `(order_id, at, type)`. Y sin política de `delete` en `order_events`: así, ni un fallo en `save_order` puede borrar historial.
+- **`on conflict (id) do update` no puede mover un pedido de taller.** Si B llama a `save_order` desde su taller con el id de un pedido de A, el `update` del conflicto tiene que fallar. RLS ya lo impide (la fila de A no pasa la política de `update` de B), pero conviene además no tocar nunca `workspace_id` en el `do update`.
