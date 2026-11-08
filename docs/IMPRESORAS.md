@@ -223,6 +223,18 @@ Creality por el 9999, Elegoo, Anycubic, Flashforge y OctoPrint: cuando alguien q
 
 `npm run agent -- demo` arranca el agente real con dos impresoras simuladas (una P1S y una Voron) que preparan, imprimen, terminan y a veces fallan, más tres semanas de trabajos de ejemplo. Sirve para ver la pestaña Impresoras, el historial y «Usar datos reales» funcionando, y para capturas o vídeos. No sustituye a la prueba con la P1S: los protocolos (MQTT con TLS, Moonraker) solo se prueban de verdad contra una impresora real; en el código los cubren tests contra impresoras falsas (`fakeBroker.js`, `fakeMoonraker.js`).
 
+## Resultado de la prueba en la P1S de Julen (2026-11-08)
+
+Firmware **01.10.00.00**, modo normal (nube; «Modo solo LAN» en Off, sin Developer Mode):
+
+| Prueba | Resultado |
+| --- | --- |
+| `npm run agent -- add` (MQTT sobre TLS, puerto 8883) | Conecta a la primera; la impresora contesta `IDLE` y se guarda la huella del certificado. |
+| Pestaña Printers con `?agent` | Estado en vivo: Idle → Printing en segundos, capa X de 38, temperaturas y «28 min left», que cuadra con los 28 min 38 s del laminador. |
+| `npm run agent -- probe-ftps` (puerto 990) | **Funciona en modo normal.** El paso 5 (gramos reales del 3MF por FTPS) se puede construir sin Developer Mode. |
+| Nombre del trabajo | La impresora manda en `subtask_name` el nombre de la placa («0.2mm layer, 2 walls, 15% infill»), no el del archivo. Mejora pendiente: enseñar el nombre de `gcode_file` cuando venga. |
+| Registro de trabajos (`/jobs`), Bambu Handy a la vez, cancelar a medias | Pendiente de apuntar al acabar la impresión. |
+
 ## Qué probar en la P1S de Julen (antes del paso 4)
 
 Todo con la impresora en **modo normal** (nube), sin LAN only ni Developer Mode:
