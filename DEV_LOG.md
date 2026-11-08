@@ -2,6 +2,12 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-08, Resultados de la prueba con la P1S de Julen
+- Archivo y sitio: docs/IMPRESORAS.md, nueva sección «Resultado de la prueba en la P1S de Julen», antes de la checklist; CLAUDE.md, pasos 3 y 5 de «Conexión con impresoras».
+- Qué cambió: queda apuntado que el agente conecta por MQTT con TLS y enseña el estado en vivo con el firmware 01.10.00.00 en modo normal, y que FTPS en el puerto 990 también funciona sin Developer Mode.
+- Por qué: el paso 5 dependía de esta prueba. Varias fuentes decían que los firmwares nuevos cierran el FTP en modo normal, y con este resultado se descarta el plan B (arrastrar el 3MF). También se apunta que `subtask_name` trae el nombre de la placa y no el del archivo, para usar `gcode_file` en el historial.
+- Cómo probarlo: leer la tabla de docs/IMPRESORAS.md. Las filas «pendiente» se rellenan cuando Julen mande el historial y `/jobs`.
+
 ### 2026-11-06, CLAUDE.md al día con los perfiles de impresora
 - Archivo y sitio: CLAUDE.md, «Pendiente, por orden», punto 2.
 - Qué cambió: dice que los perfiles de Bambu Lab están hechos (PR #71) y qué falta: otras marcas y los materiales.

@@ -82,9 +82,9 @@ Siguiente: la migración y el adaptador de Supabase de Julen (contrato en docs/P
 Investigación por marca, protocolos, puertos y orden en docs/IMPRESORAS.md: léelo antes de tocar el agente, y corrígelo si un firmware cambia algo. Empieza por Bambu, con la P1S de Julen. Él prueba cada PR con su impresora; Claude no puede verla.
 1. Servidor del agente (hecho, ver arriba).
 2. La web detecta el agente, solo cuando la persona lo activa: un sondeo automático a 127.0.0.1 le saltaría un aviso de permisos de Chrome a todo el mundo (hecho, ver arriba).
-3. Bambu: estado en vivo por MQTT en el agente y en la pestaña Printers (hecho en #19 y #20, falta que Julen lo pruebe con su P1S con la checklist de docs/IMPRESORAS.md). Solo lectura, que el firmware permite en modo normal (sin LAN only ni Developer Mode).
+3. Bambu: estado en vivo por MQTT en el agente y en la pestaña Printers (hecho en #19 y #20; probado por Julen en su P1S el 2026-11-08 con firmware 01.10.00.00 en modo normal: estado en vivo correcto. Resultados en docs/IMPRESORAS.md). Solo lectura, que el firmware permite en modo normal (sin LAN only ni Developer Mode).
 4. Registro de trabajos de Bambu (inicio, fin, fallo) en un JSON en disco: la impresora no guarda historial. (Hecho en el PR `feature/agent-job-log`: agent/jobs.js, `GET /jobs`, `PROTOCOL` 3. Falta probarlo con la P1S: checklist en docs/IMPRESORAS.md.)
-5. Gramos reales de Bambu: el 3MF por FTPS, leído con `parseSliceInfo` de src/slicerFile.js. Antes, probar en la P1S si FTPS funciona sin Developer Mode; si no, plan B: arrastrar el 3MF.
+5. Gramos reales de Bambu: el 3MF por FTPS, leído con `parseSliceInfo` de src/slicerFile.js. Probado el 2026-11-08: FTPS funciona en la P1S en modo normal (sin Developer Mode), así que se construye por FTPS.
 6. Driver Moonraker (Klipper): estado e historial, que ya trae (Creality K2/K1 con Moonraker, Elegoo Neptune 4, Qidi, Sovol, Voron). Hecho en el PR `feature/agent-moonraker` (`PROTOCOL` 4); falta probarlo en una impresora real: alguien con una Klipper, checklist en docs/IMPRESORAS.md.
 7. Driver PrusaLink.
 8. Pestaña Printers: historial, tasa de fallos y tiempo medio. (Hecho en el PR `feature/printers-history`: src/jobStats.js y el panel «Print history». Con datos de la Bambu y de Klipper cuando se prueben.)
