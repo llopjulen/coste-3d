@@ -2,6 +2,20 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-09, Costes al mes (licencia comercial, suscripciones)
+- Archivo y sitio: src/calculate.js, bloque «Other costs» (`COST_PER`, `WEEKS_PER_MONTH`, `goodHoursPerMonth`, `monthlyCostPerHour`, `extraCostsPerPart`); src/App.jsx, componente `ExtraCosts` y donde se monta, bajo «Packaging»; src/index.css, reglas de `.cost-per` en el móvil; claves `cost.extra.per.month`, `cost.extra.month.note` y `cost.extra.month.missing` en los tres diccionarios, y nuevo texto de ayuda de `field.printHoursPerWeek`; docs/MAPA.md (modelo de `inputs` y fórmula de `extras`).
+- Qué cambió: un coste extra puede pagarse «Al mes», además de «Por pieza» y «Por pedido». Sirve para la membresía comercial de MakerWorld, el plan de un laminador o la cuota de una tienda. Se reparte por horas de impresión: cada pieza paga `horas de la pieza × cuota / horas buenas del mes`. Debajo se ve entre cuántas horas se reparte, o un aviso si faltan las horas por semana.
+- Por qué:
+  - **Por hora y no por pieza.** Una cuota mensual no depende de ningún pedido. La paga todo lo que imprimes ese mes, y una pieza de 10 h ocupa la máquina diez veces más que un llavero de 1 h. Es el mismo criterio que la amortización (`printerPrice / lifespan`). Descartado: dividir por «piezas al mes», porque supone que solo imprimes esa pieza todo el mes.
+  - **Horas buenas (× (1 − failRate)).** Una impresión fallida también gasta tiempo de licencia, pero no se vende, así que lo pagan las que sí se venden. Por eso no hace falta meterlo en `failures`. El techo de 0,95 es el mismo de `calculate` y `capacity`.
+  - **52/12 semanas por mes (4,33) y no 4.** Con 4 cada mes tendría 28 días y el coste por hora saldría un 8 % más alto.
+  - **Sin horas por semana suma 0 y lo dice.** No hay forma honesta de repartir sin ese dato, y un 0 € callado parecería un fallo. `goodHoursPerMonth` se exporta para que la nota enseñe el mismo número que usa el precio.
+  - **Sin subir `BACKUP_SCHEMA_VERSION`.** `per: 'month'` es un valor nuevo de un campo que ya existe. Una copia vieja de la app que lea un archivo nuevo lo convierte en `'part'` (`normalizeExtraCosts`) y el archivo se restaura igual. Los presupuestos guardados conservan su coste y su desglose ya calculados.
+  - **CSS.** Con tres opciones, el control segmentado se salía 5 px a 360 px de ancho. Ahora puede encogerse (`min-width:0`) y, por debajo de 400 px, los botones tienen menos relleno lateral. Comprobado sin scroll horizontal a 360 px.
+- Concepto nuevo: `min-width:0` en un hijo de flexbox. Por defecto un elemento flex no se encoge por debajo del ancho de su contenido (`min-width:auto`). Con `min-width:0` sí puede, y su `overflow` decide qué pasa con lo que sobra. Ejemplo: `.fila{display:flex} .fila > .control{min-width:0}`.
+- De la carrera: Contabilidad de costes en Organización y Gestión de Empresas. Es el reparto de costes indirectos con una base de reparto (aquí, las horas máquina), igual que en un sistema de costes por actividad.
+- Cómo probarlo: `npm test` (4 tests nuevos en src/calculate.test.js). En la web: «Añadir un coste», importe 10 € y «Al mes». Con 60 h por semana y 8 % de fallos, la nota dice 239 horas y una pieza de 3,5 h suma unos 0,15 € en «Otros costes». Si pones las horas por semana a 0, sale el aviso y el coste no suma. En el móvil (360 px) los tres botones caben.
+
 ### 2026-11-08, Resultados de la prueba con la P1S de Julen
 - Archivo y sitio: docs/IMPRESORAS.md, nueva sección «Resultado de la prueba en la P1S de Julen», antes de la checklist; CLAUDE.md, pasos 3 y 5 de «Conexión con impresoras».
 - Qué cambió: queda apuntado que el agente conecta por MQTT con TLS y enseña el estado en vivo con el firmware 01.10.00.00 en modo normal, y que FTPS en el puerto 990 también funciona sin Developer Mode.
