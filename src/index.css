@@ -1087,10 +1087,16 @@ textarea.text-input{resize:vertical;min-height:58px;line-height:1.4}
 .extra-filament .cost-per{border-top:none}
 .cost-per > span{white-space:nowrap}
 /* En el móvil el control segmentado ocupa todo el ancho (regla de History);
-   aquí comparte fila con su etiqueta, así que se queda a su tamaño. */
+   aquí comparte fila con su etiqueta, así que se queda a su tamaño. Con tres
+   opciones (pieza, pedido, mes) no cabía a 360 px: el control puede encogerse
+   (min-width:0) y por debajo de 400 px los botones pierden relleno lateral. */
 @media (max-width:600px){
-  .cost-per .segmented{width:auto;flex:none}
+  .cost-per .segmented{width:auto;flex:0 1 auto;min-width:0}
   .cost-per .segmented button{flex:none;padding:6px 12px}
+}
+@media (max-width:400px){
+  .cost-per{gap:8px}
+  .cost-per .segmented button{padding:6px 8px}
 }
 
 /* ------------------------------ Pedidos ------------------------------

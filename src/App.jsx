@@ -21,7 +21,7 @@ import NavIcon from './NavIcons.jsx'
 import SubNav from './SubNav.jsx'
 import { applyTheme, readTheme, saveTheme } from './theme.js'
 import { isAgentEnabled, setAgentEnabled } from './agent.js'
-import { MAX_EXTRA_COSTS, MAX_EXTRA_FILAMENTS, calculate, capacity, normalizeExtraCosts, normalizeExtras } from './calculate.js'
+import { COST_PER, MAX_EXTRA_COSTS, MAX_EXTRA_FILAMENTS, calculate, goodHoursPerMonth, capacity, normalizeExtraCosts, normalizeExtras } from './calculate.js'
 import { useI18n } from './i18n/context.js'
 import { LANGS, LANG_NAMES, selectorVisible } from './i18n/index.js'
 import { fmtNumber } from './i18n/format.js'
@@ -212,8 +212,8 @@ function ExtraFilaments({ list, onChange }) {
 /* The part's other costs: one row per cost, with a name, the amount and
    whether it is paid per part or once per order. Same row layout as the
    extra filaments above, so the form reads as one list. */
-function ExtraCosts({ list, onChange }) {
-  const { t } = useI18n()
+function ExtraCosts({ list, onChange, monthHours }) {
+  const { t, locale } = useI18n()
   const update = (id, patch) => onChange(list.map(c => (c.id === id ? { ...c, ...patch } : c)))
   const remove = id => onChange(list.filter(c => c.id !== id))
   return (
@@ -241,11 +241,11 @@ function ExtraCosts({ list, onChange }) {
               value={c.amount}
               onChange={v => update(c.id, { amount: v === '' ? 0 : Number(v) })}
             />
-            {/* Two options, so a segmented control instead of a <select>: both are visible at once. */}
+            {/* Three short options, so a segmented control instead of a <select>: all are visible at once. */}
             <div className="field cost-per">
               <span id={`cost-${c.id}-per`}>{t('cost.extra.per')}</span>
               <div className="segmented segmented-inline" role="group" aria-labelledby={`cost-${c.id}-per`}>
-                {['part', 'order'].map(per => (
+                {COST_PER.map(per => (
                   <button
                     key={per}
                     type="button"
@@ -258,6 +258,16 @@ function ExtraCosts({ list, onChange }) {
                 ))}
               </div>
             </div>
+            {/* A monthly fee is spread over the printing hours (calculate.js,
+                monthlyCostPerHour), so say over how many, or that the number
+                it needs is missing: a silent 0 € would look like a bug. */}
+            {c.per === 'month' && (
+              <p className="preset-note">
+                {monthHours > 0
+                  ? t('cost.extra.month.note', { hours: fmtNumber(locale, monthHours, 0) })
+                  : t('cost.extra.month.missing')}
+              </p>
+            )}
           </div>
         )
       })}
@@ -942,7 +952,7 @@ export default function App({ agentOptIn = false }) {
                   {/* Right under "Packaging": the other things that go into a part or an order. */}
                   {section.id === 'sec-this-print' && (
                     <>
-                      <ExtraCosts list={d.extraCosts} onChange={set('extraCosts')} />
+                      <ExtraCosts list={d.extraCosts} onChange={set('extraCosts')} monthHours={goodHoursPerMonth(d)} />
                       <div className="extra-add">
                         <button type="button" className="controls" onClick={addCost} disabled={d.extraCosts.length >= MAX_EXTRA_COSTS}>
                           + {t('cost.extra.add')}
