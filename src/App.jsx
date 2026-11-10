@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from 'react'
 import History from './History.jsx'
 import Report from './Report.jsx'
 import ImportFile from './ImportFile.jsx'
@@ -128,6 +128,10 @@ const pickSetup = saved =>
    page. Same lightness band, different hues, so the parts are still told
    apart; each row also carries its amount and share, so nothing depends on
    colour alone. */
+// The 3D cost object. lazy(): three.js is downloaded after the calculator
+// is already on screen, in its own chunk (the one PrintPreview uses).
+const CostPrint = lazy(() => import('./CostPrint.jsx'))
+
 const LAYERS = [
   { key: 'material',      nameKey: 'layer.material',      color: '#E3AE4F' },
   { key: 'power',         nameKey: 'layer.power',         color: '#7EA89F' },
@@ -624,6 +628,8 @@ export default function App({ agentOptIn = false }) {
   /* Printer model picked in "Your setup". Only for this visit: what is
      remembered is the power it filled in (the `watts` setup field, saved by
      `set`), so no new localStorage key and nothing new in the backup. */
+  // Which cost part is lit in the 3D object (a row of the list is pointed at).
+  const [activeLayer, setActiveLayer] = useState(null)
   const [presetId, setPresetId] = useState('')
   const preset = presetById(presetId)
   const pickPreset = id => {
@@ -1069,6 +1075,13 @@ export default function App({ agentOptIn = false }) {
                   The order is fixed (material first, as in LAYERS) so nothing
                   jumps around while typing; the percentages say what is big. */}
               <div className="cost-breakdown">
+                {/* The cost as a printed object (CostPrint.jsx). The box keeps
+                    its height while the chunk loads, so nothing jumps. */}
+                <div className="cost-print">
+                  <Suspense fallback={null}>
+                    <CostPrint layers={LAYERS} parts={r.parts} active={activeLayer} />
+                  </Suspense>
+                </div>
                 <div
                   className="cost-bar"
                   role="img"
@@ -1083,7 +1096,14 @@ export default function App({ agentOptIn = false }) {
                 </div>
                 <ul className="cost-rows">
                   {LAYERS.filter(layer => layer.key !== 'extras' || r.parts.extras > 0).map(layer => (
-                    <li className="cost-row" key={layer.key}>
+                    <li
+                      className="cost-row" key={layer.key}
+                      // Pointing at a row lights up its band in the 3D object;
+                      // on a phone, a tap does it and a second tap undoes it.
+                      onPointerEnter={e => e.pointerType === 'mouse' && setActiveLayer(layer.key)}
+                      onPointerLeave={e => e.pointerType === 'mouse' && setActiveLayer(null)}
+                      onClick={() => setActiveLayer(a => (a === layer.key ? null : layer.key))}
+                    >
                       <i className="swatch" style={{ backgroundColor: layer.color }} />
                       <span className="name">{t(layer.nameKey)}</span>
                       <span className="share">{r.cost > 0 ? `${Math.round((r.parts[layer.key] / r.cost) * 100)} %` : '—'}</span>

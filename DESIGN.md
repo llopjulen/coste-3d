@@ -118,6 +118,10 @@ Una herramienta, no un folleto. Quien la abre viene a calcular un precio o a mov
 - **Pastilla de estado:** un punto y la palabra, 0,74 rem, redondeo completo.
 - **Cifras resumen (`.stat`):** de 2 a 4 en fila arriba de una lista; en el móvil, en dos columnas.
 
+## El objeto 3D del coste
+
+Encima de la barra de costes, un jarrón impreso capa a capa (src/CostPrint.jsx). Es la única pieza 3D de la interfaz y cumple las mismas reglas: plástico mate, sin brillos ni sombras proyectadas, fondo transparente sobre el panel, y solo los colores de las capas de coste. Gira despacio; con «reducir movimiento» sale quieto. No añadir más objetos 3D decorativos: este funciona porque es el dato.
+
 ## Interacción
 
 - **Foco visible** con el teclado en todo lo pulsable (`:focus-visible`, anillo oro suave). Nunca `outline: none` sin otro indicador.
