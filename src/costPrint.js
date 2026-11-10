@@ -32,3 +32,16 @@ export function layerBands(layers, parts, n) {
   while (left < 0) { counts[counts.indexOf(Math.max(...counts))]--; left++ }
   return counts.flatMap((c, i) => Array(c).fill(i))
 }
+
+/* Where each part's band ends on the dropped part, as a fraction of its
+   height: cumulative shares, bottom to top. { a: 1, b: 3 } -> [0.25, 1].
+   A part with no cost ends where the one before ended (a band of zero
+   height). [] when there is no cost. Unlike layerBands this is not
+   rounded to whole layers: the shader paints any height. */
+export function bandStops(layers, parts) {
+  const amounts = layers.map(l => Math.max(Number(parts?.[l.key]) || 0, 0))
+  const total = amounts.reduce((s, v) => s + v, 0)
+  if (!(total > 0)) return []
+  let sum = 0
+  return amounts.map(v => (sum += v) / total)
+}

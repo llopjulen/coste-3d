@@ -120,7 +120,7 @@ Una herramienta, no un folleto. Quien la abre viene a calcular un precio o a mov
 
 ## El objeto 3D del coste
 
-Encima de la barra de costes, un jarrón impreso capa a capa (src/CostPrint.jsx). Es la única pieza 3D de la interfaz y cumple las mismas reglas: plástico mate, sin brillos ni sombras proyectadas, fondo transparente sobre el panel, y solo los colores de las capas de coste. Gira despacio; con «reducir movimiento» sale quieto. No añadir más objetos 3D decorativos: este funciona porque es el dato.
+Encima de la barra de costes, un jarrón impreso capa a capa (src/CostPrint.jsx). Es la única pieza 3D de la interfaz y cumple las mismas reglas: plástico mate, sin brillos ni sombras proyectadas, fondo transparente sobre el panel, y solo los colores de las capas de coste. Si la persona suelta un archivo, el jarrón pasa a ser su pieza, con las mismas franjas. Gira despacio; con «reducir movimiento» sale quieto. No añadir más objetos 3D decorativos: este funciona porque es el dato.
 
 ## Interacción
 

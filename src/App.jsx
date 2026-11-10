@@ -630,6 +630,8 @@ export default function App({ agentOptIn = false }) {
      `set`), so no new localStorage key and nothing new in the backup. */
   // Which cost part is lit in the 3D object (a row of the list is pointed at).
   const [activeLayer, setActiveLayer] = useState(null)
+  // The file loaded in Import, so the 3D cost object can be that very part.
+  const [imported, setImported] = useState(null)
   const [presetId, setPresetId] = useState('')
   const preset = presetById(presetId)
   const pickPreset = id => {
@@ -927,7 +929,7 @@ export default function App({ agentOptIn = false }) {
           {/* --- Form: drawn by looping over SECTIONS. "form-col" gives it the
                grouped-list look (titles outside, rows inside; index.css). --- */}
           <div className="form-col">
-            <div id="sec-import"><ImportFile onApply={applyImport} onUndo={undoImport} /></div>
+            <div id="sec-import"><ImportFile onApply={applyImport} onUndo={undoImport} onFile={(file, plate) => setImported(file ? { file, plate } : null)} /></div>
             {/* The numbers that change with every part */}
             {SECTIONS.filter(section => !section.setup).map(section => (
               <section className="panel" key={section.id} id={section.id}>
@@ -1079,7 +1081,7 @@ export default function App({ agentOptIn = false }) {
                     its height while the chunk loads, so nothing jumps. */}
                 <div className="cost-print">
                   <Suspense fallback={null}>
-                    <CostPrint layers={LAYERS} parts={r.parts} active={activeLayer} />
+                    <CostPrint layers={LAYERS} parts={r.parts} active={activeLayer} file={imported?.file ?? null} plate={imported?.plate ?? null} />
                   </Suspense>
                 </div>
                 <div
