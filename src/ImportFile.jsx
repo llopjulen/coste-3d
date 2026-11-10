@@ -26,7 +26,7 @@ const safeColor = (c) => (/^#[0-9a-f]{3,8}$/i.test(c) ? c : 'var(--tenue)')
    onApply(values, isNewFile): puts hours / partGrams / purgeGrams
    into the form. onUndo(): puts back what was there before.
 ================================================================== */
-export default function ImportFile({ onApply, onUndo }) {
+export default function ImportFile({ onApply, onUndo, onFile }) {
   const { t, locale } = useI18n()
   const formatGrams = g => fmtGrams(locale, g)
   const inputRef = useRef(null)
@@ -39,6 +39,14 @@ export default function ImportFile({ onApply, onUndo }) {
   // The last file dropped, kept for the 3D preview, and whether it is open.
   const [file, setFile] = useState(null)
   const [previewOpen, setPreviewOpen] = useState(false)
+
+  // Tells App which file (and plate) is loaded, so the 3D cost object can
+  // show that part. null when it is undone or could not be read.
+  useEffect(() => {
+    const drawable = file && (status === 'done' || (status === 'error' && /\.stl$/i.test(file.name)))
+    onFile?.(drawable ? file : null, plate === 'all' ? null : plate)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- onFile is a new function on every render of App
+  }, [file, plate, status])
 
   const partsCount = (text) => Math.max(1, Math.floor(Number(text)) || 1)
 

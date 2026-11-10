@@ -1,7 +1,7 @@
 /* Tests for costPrint.js. Run: npm test */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { layerBands } from './costPrint.js'
+import { bandStops, layerBands } from './costPrint.js'
 
 const L = [{ key: 'a' }, { key: 'b' }, { key: 'c' }]
 const count = (bands, i) => bands.filter(b => b === i).length
@@ -27,4 +27,10 @@ test('no cost, or nonsense, is an empty object instead of a crash', () => {
   assert.deepEqual(layerBands(L, { a: 0 }, 10), [])
   assert.deepEqual(layerBands(L, null, 10), [])
   assert.deepEqual(layerBands(L, { a: -5, b: NaN }, 10), [])
+})
+
+test('band stops are the cumulative shares; a part with no cost has zero height', () => {
+  assert.deepEqual(bandStops(L, { a: 1, b: 3 }), [0.25, 1, 1])
+  assert.deepEqual(bandStops(L, { a: 0, b: 2, c: 2 }), [0, 0.5, 1])
+  assert.deepEqual(bandStops(L, {}), [])
 })
