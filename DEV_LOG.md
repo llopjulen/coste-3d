@@ -2,6 +2,14 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-10, Diseño del inventario de filamento
+- Archivo y sitio: docs/INVENTARIO.md (nuevo); CLAUDE.md, sección nueva «Inventario de filamento» y fuera de «Ideas futuras»; docs/MAPA.md, tabla de archivos.
+- Qué cambió: queda escrito el modelo antes de escribir código. Recoge las bobinas, los movimientos que solo crecen, las reservas y la previsión derivadas de los pedidos, el contrato del adaptador local, el esquema para Supabase separado en producción y finanzas, lo que necesitan las etiquetas de Julen y un plan de 6 PRs.
+- Por qué: CLAUDE.md pide acordar los cambios de modelo en un documento antes de tocar el esquema, como se hizo con docs/PEDIDOS.md. El stock no se guarda, se calcula sumando movimientos (`netWeight + Σ grams`), para que nunca contradiga su historial. Descartado: un campo `remaining` que se va restando, que se desincroniza en cuanto falla una escritura a medias. Las reservas tampoco se guardan: salen de los pedidos abiertos, así que cancelar un pedido las libera sin borrar nada. El precio de la bobina va en una tabla de finanzas aparte porque RLS filtra filas y no columnas (docs/TALLER.md).
+- Concepto nuevo: libro de movimientos (ledger). En vez de guardar el saldo, se guardan las entradas y salidas y el saldo es su suma. Un error se corrige con un movimiento contrario, nunca editando el viejo. Ejemplo: `[+1000 alta, −45 pedido #12, +45 anulado]` da 1000 g y deja ver por qué.
+- De la carrera: Bases de datos. Por la 3FN no se guarda un atributo derivable (el stock), y el append-only de `spool_movements` es el mismo principio que un log de transacciones. Se ve en las secciones «Por qué así» y «Esquema para Supabase» de docs/INVENTARIO.md.
+- Cómo probarlo: leer docs/INVENTARIO.md, sobre todo «Abierto» y «Etiquetas», y corregir lo que no encaje antes del PR 2. No hay código.
+
 ### 2026-11-08, Resultados de la prueba con la P1S de Julen
 - Archivo y sitio: docs/IMPRESORAS.md, nueva sección «Resultado de la prueba en la P1S de Julen», antes de la checklist; CLAUDE.md, pasos 3 y 5 de «Conexión con impresoras».
 - Qué cambió: queda apuntado que el agente conecta por MQTT con TLS y enseña el estado en vivo con el firmware 01.10.00.00 en modo normal, y que FTPS en el puerto 990 también funciona sin Developer Mode.
