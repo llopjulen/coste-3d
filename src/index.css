@@ -1460,3 +1460,53 @@ html{-webkit-tap-highlight-color:transparent}
   .fleet-table tbody tr:first-child td,.jobs-table tbody tr:first-child td{border-top:1px solid var(--borde)}
 }
 .printers-subtitle{margin-top:20px}
+
+/* ------------------------------------------------------------------
+   Auditoría pantalla a pantalla (2026-11-11), 6: presupuesto del cliente.
+------------------------------------------------------------------ */
+/* El editor a la izquierda y la hoja a la derecha, que es lo que se va a
+   enviar. En pantallas estrechas, una columna: editor y debajo la hoja. */
+.quote-screen{max-width:1240px}
+@media(min-width:1100px){
+  .quote-layout{display:grid;grid-template-columns:380px minmax(0,1fr);gap:24px;align-items:start}
+  .quote-layout > .report{position:sticky;top:20px}
+}
+.quote-editor{grid-template-columns:1fr;gap:22px;margin-bottom:22px}
+@media(min-width:700px) and (max-width:1099px){.quote-editor{grid-template-columns:1fr 1fr}}
+
+/* El editor con el mismo lenguaje que el resto de la app: título pequeño y
+   gris fuera del grupo, y dentro filas con la etiqueta a la izquierda y el
+   valor a la derecha sin caja. Era el único sitio con una caja gris por campo. */
+.quote-editor .panel{background:none;overflow:visible}
+.quote-editor .panel > h2{padding:0 16px 7px;border-bottom:0;font-size:.84rem;font-weight:500;color:var(--tenue)}
+.quote-editor .form-grid{gap:0;padding:2px 16px;background:var(--panel);border-radius:var(--radio)}
+.quote-editor .form-pair{display:contents}
+.quote-editor .form-row{flex-direction:row;align-items:center;justify-content:space-between;gap:12px;min-height:48px;border-top:1px solid var(--borde)}
+.quote-editor .form-grid > .form-row:first-child,.quote-editor .form-grid > .form-pair:first-child > .form-row:first-child{border-top:0}
+.quote-editor .form-row label,.quote-editor .form-label{font-size:.95rem;color:var(--texto);flex:none}
+.quote-editor .form-row .text-input{flex:1 1 auto;width:auto;min-width:0;max-width:62%;padding:7px 8px;border-color:transparent;background:none;text-align:right}
+.quote-editor .form-row .text-input:hover{background:var(--velo)}
+.quote-editor .form-row .text-input:focus-visible{background:var(--hundido)}
+/* Los dos textos largos: etiqueta arriba y el texto a todo el ancho. */
+.quote-editor .form-row:has(textarea){flex-direction:column;align-items:stretch;gap:2px;padding:11px 0 8px}
+.quote-editor .form-row textarea.text-input{max-width:none;text-align:left;padding:4px 0;min-height:44px;resize:none;field-sizing:content}
+.quote-editor .form-row textarea.text-input:hover,.quote-editor .form-row textarea.text-input:focus-visible{background:none;box-shadow:none;border-color:transparent}
+.quote-editor .form-row:has(.swatches),.quote-editor .form-row:has(.segmented){flex-wrap:wrap;padding:8px 0}
+.quote-editor .form-row .segmented{margin:0}
+.quote-editor .form-hint,.quote-editor .form-error{padding:10px 0 12px;border-top:1px solid var(--borde)}
+/* Las líneas del presupuesto: filas, no cajas. */
+.quote-editor .line-edit{padding:5px 0;border-top:1px solid var(--borde);grid-template-columns:minmax(0,1fr) 52px 84px 28px}
+.quote-editor .line-edit .text-input{padding:7px 8px;border-color:transparent;background:none}
+.quote-editor .line-edit .text-input:first-child{padding-left:0}
+.quote-editor .line-edit .text-input:hover{background:var(--velo)}
+.quote-editor .line-edit .text-input:focus-visible{background:var(--hundido)}
+.quote-editor .line-head{margin:0;padding:10px 0 6px;font-size:.76rem}
+.quote-editor .line-head span:nth-child(2),.quote-editor .line-head span:nth-child(3){text-align:right;padding-right:8px}
+/* «Otro color»: un círculo con un +, sin degradado. */
+.swatch-custom{background:var(--panel-alto);color:var(--tenue);display:grid;place-items:center;font-size:1.05rem;line-height:1}
+.swatch-custom[data-on]{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--texto)}
+.swatches{gap:9px}
+.swatch-btn{width:26px;height:26px}
+/* En papel no hay dos columnas: solo la hoja. */
+@media print{.quote-layout{display:block}.quote-layout > .report{position:static}}
+.quote-editor .logo-row .controls{padding:7px 12px;font-size:.88rem}
