@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useI18n } from './i18n/context.js'
-import { fmtDay, fmtLongDay, fmtMonthYear, fmtNumber } from './i18n/format.js'
+import { fmtDay, fmtDayMonth, fmtLongDay, fmtMonthYear, fmtNumber } from './i18n/format.js'
 import { dayKey, dayStart, eventsByDay, planOrders } from './schedule.js'
 import { readEvents, removeEvent, upsertEvent, writeEvents } from './calendarEvents.js'
 import EventDialog from './EventDialog.jsx'
@@ -64,6 +64,10 @@ export default function Calendar({ orders, weekHours, formatMoney, onOpenOrder, 
   const move = n => setMonth(m => new Date(m.getFullYear(), m.getMonth() + n, 1))
   const dayEvents = (events[selected] ?? []).slice().sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind])
   const late = plan.filter(p => p.late).length
+  // The kinds of dot drawn in the days on screen, in their fixed order.
+  const monthKinds = [...new Set(cells.flatMap(d => (events[dayKey(d)] ?? []).map(e => e.kind)))].sort((a, b) => KIND_ORDER[a] - KIND_ORDER[b])
+  // In a list of this year's dates the year is noise; next year's keep it.
+  const shortDay = dt => (dt.getFullYear() === new Date().getFullYear() ? fmtDayMonth(locale, dt) : fmtDay(locale, dt))
 
   return (
     <main className="wrap">
@@ -102,12 +106,13 @@ export default function Calendar({ orders, weekHours, formatMoney, onOpenOrder, 
               )
             })}
           </div>
-          <div className="cal-legend" aria-hidden="true">
-            <span><i className="dot dot-due" />{t('cal.kind.due')}</span>
-            <span><i className="dot dot-ready" />{t('cal.kind.ready')}</span>
-            <span><i className="dot dot-paid" />{t('cal.kind.paid')}</span>
-            <span><i className="dot dot-own" />{t('cal.kind.own')}</span>
-          </div>
+          {/* The legend explains only the dots that are on screen this month;
+              an empty month has none. It used to list all four, always. */}
+          {monthKinds.length > 0 && (
+            <div className="cal-legend" aria-hidden="true">
+              {monthKinds.map(k => <span key={k}><i className={`dot dot-${k}`} />{t(`cal.kind.${k}`)}</span>)}
+            </div>
+          )}
 
           <div className="cal-daylist">
             <div className="cal-daylist-head">
@@ -172,16 +177,18 @@ export default function Calendar({ orders, weekHours, formatMoney, onOpenOrder, 
                   <button type="button" className="queue-main queue-open" onClick={() => onOpenOrder(p.order.id)}>
                     <span className="name">{orderLabel(p.order, t)}</span>
                     <span className="muted">
-                      {[t(`order.status.${p.order.status}`), p.hours !== null && t('cal.hours', { h: fmtNumber(locale, p.hours, 1) })].filter(Boolean).join(' · ')}
+                      {[t(`order.status.${p.order.status}`), p.hours !== null && `${fmtNumber(locale, p.hours, p.hours < 10 ? 1 : 0)} h`].filter(Boolean).join(' · ')}
                     </span>
                   </button>
+                  {/* On time, one fact is enough: when it will be ready. The
+                      delivery date only matters next to it when they clash. */}
                   <div className="queue-dates">
-                    <span>{p.readyAt ? t('cal.readyOn', { date: fmtDay(locale, p.readyAt) }) : t('cal.noEstimate')}</span>
-                    <span className="muted">{p.dueAt ? t('cal.dueOn', { date: fmtDay(locale, p.dueAt) }) : t('cal.noDue')}</span>
+                    <span>{p.readyAt ? t('cal.readyOn', { date: shortDay(p.readyAt) }) : t('cal.noEstimate')}</span>
+                    {p.late && <span className="muted">{t('cal.dueOn', { date: shortDay(p.dueAt) })}</span>}
+                    {!p.dueAt && <span className="muted">{t('cal.noDue')}</span>}
+                    {p.dueAt && p.readyAt && !p.late && <span className="muted">{t('cal.onTime')}</span>}
                   </div>
-                  {p.dueAt && p.readyAt && (
-                    <span className={`queue-state ${p.late ? 'late' : 'ok'}`}>{p.late ? t('cal.late') : t('cal.onTime')}</span>
-                  )}
+                  {p.late && <span className="queue-state late">{t('cal.late')}</span>}
                 </li>
               ))}
             </ul>
