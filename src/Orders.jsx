@@ -91,17 +91,21 @@ export default function Orders({ api, quotes, formatMoney, currency, rate, open,
       </div>
       {errorBanner}
 
-      <div className="segmented orders-switch" role="group" aria-label={t('orders.title')}>
-        {['orders', 'customers'].map(s => (
-          <button key={s} type="button" aria-pressed={section === s} className={section === s ? 'on' : undefined} onClick={() => setSection(s)}>
-            {t(`orders.section.${s}`)}
-            <span className="seg-count">{s === 'orders' ? api.orders.length : api.customers.length}</span>
-          </button>
-        ))}
-      </div>
+      {/* Nothing to switch between until there is an order or a customer:
+          on an empty screen "Orders 0 · Customers 0" was only furniture. */}
+      {(api.orders.length > 0 || api.customers.length > 0) && (
+        <div className="segmented orders-switch" role="group" aria-label={t('orders.title')}>
+          {['orders', 'customers'].map(s => (
+            <button key={s} type="button" aria-pressed={section === s} className={section === s ? 'on' : undefined} onClick={() => setSection(s)}>
+              {t(`orders.section.${s}`)}
+              <Count n={s === 'orders' ? api.orders.length : api.customers.length} />
+            </button>
+          ))}
+        </div>
+      )}
 
       {section === 'orders'
-        ? <OrderList orders={api.orders} formatMoney={formatMoney} onOpen={id => onOpen({ kind: 'order', id })} onNew={() => setCreating(true)} />
+        ? <OrderList orders={api.orders} formatMoney={formatMoney} onOpen={id => onOpen({ kind: 'order', id })} />
         : <CustomerList customers={api.customers} orders={api.orders} formatMoney={formatMoney} onOpen={id => onOpen({ kind: 'customer', id })} />}
 
       {showNew && (
@@ -124,8 +128,11 @@ export default function Orders({ api, quotes, formatMoney, currency, rate, open,
   )
 }
 
-function OrderList({ orders, formatMoney, onOpen, onNew }) {
-  const { t, locale } = useI18n()
+// The number on a filter; a zero is not written.
+const Count = ({ n }) => (n > 0 ? <span className="seg-count">{n}</span> : null)
+
+function OrderList({ orders, formatMoney, onOpen }) {
+  const { t, tp, locale } = useI18n()
   const [filter, setFilter] = useState('open')
   const [query, setQuery] = useState('')
   const summary = useMemo(() => ordersSummary(orders), [orders])
@@ -152,32 +159,35 @@ function OrderList({ orders, formatMoney, onOpen, onNew }) {
       <div className="panel empty">
         <h2>{t('orders.empty.title')}</h2>
         <p className="muted">{t('orders.empty.text')}</p>
-        <button type="button" className="controls primary" onClick={onNew}>+ {t('orders.new')}</button>
       </div>
     )
   }
 
   return (
     <>
-      <div className="stats">
-        <div className="stat"><span className="label">{t('orders.stat.open')}</span>
-          <span className="value">{summary.open}{summary.late > 0 && <small className="late-note"> · {t('orders.stat.late', { n: summary.late })}</small>}</span></div>
-        <div className="stat"><span className="label">{t('orders.stat.toCollect')}</span><span className="value">{formatMoney(summary.toCollect)}</span></div>
-        <div className="stat"><span className="label">{t('orders.stat.collected')}</span><span className="value">{formatMoney(summary.collected)}</span></div>
-        <div className="stat"><span className="label">{t('orders.stat.profit')}</span>
-          <span className={`value${summary.profit < 0 ? ' loss' : ''}`}>{formatMoney(summary.profit)}</span></div>
-      </div>
+      {/* One line, and only the figures that have something behind them:
+          four boxes reading "0,00 €" said nothing (2026-11-11). */}
+      <p className="history-summary">
+        {tp('orders.sum.open', summary.open)}
+        {summary.late > 0 && <> · <span className="loss">{t('orders.stat.late', { n: summary.late })}</span></>}
+        {summary.toCollect > 0 && <> · {t('orders.sum.toCollect', { amount: formatMoney(summary.toCollect) })}</>}
+        {summary.collected > 0 && <> · {t('orders.sum.collected', { amount: formatMoney(summary.collected) })}</>}
+        {summary.profit !== 0 && <> · <span className={summary.profit < 0 ? 'loss' : undefined}>{t('orders.sum.profit', { amount: formatMoney(summary.profit) })}</span></>}
+      </p>
 
-      <div className="history-tools">
-        <input className="text-input" type="search" placeholder={t('orders.search')} aria-label={t('orders.search')}
-          value={query} onChange={e => setQuery(e.target.value)} />
-      </div>
-      <div className="segmented" role="group" aria-label={t('orders.filter')}>
-        {FILTERS.map(f => (
-          <button key={f} type="button" aria-pressed={filter === f} className={filter === f ? 'on' : undefined} onClick={() => setFilter(f)}>
-            {t(`orders.filter.${f}`)}<span className="seg-count">{counts[f]}</span>
-          </button>
-        ))}
+      <div className="orders-tools">
+        <div className="segmented" role="group" aria-label={t('orders.filter')}>
+          {FILTERS.map(f => (
+            <button key={f} type="button" aria-pressed={filter === f} className={filter === f ? 'on' : undefined} onClick={() => setFilter(f)}>
+              {t(`orders.filter.${f}`)}<Count n={counts[f]} />
+            </button>
+          ))}
+        </div>
+        {/* A search box is for a list you cannot take in at a glance. */}
+        {orders.length > 5 && (
+          <input className="text-input" type="search" placeholder={t('orders.search')} aria-label={t('orders.search')}
+            value={query} onChange={e => setQuery(e.target.value)} />
+        )}
       </div>
 
       {sorted.length === 0

@@ -2,6 +2,21 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-11, Auditoría 4 de 8: Pedidos y el detalle de un pedido
+- Archivo y sitio: src/Orders.jsx (cabecera de `Orders`, `OrderList` y el nuevo `Count`); src/OrderDetail.jsx (cabecera, fila «Cliente», unidades de moneda, final de la columna derecha y `PaymentDialog`); src/i18n/format.js (`currencySymbol`); src/index.css (bloque «Auditoría pantalla a pantalla, 4»); src/i18n/{en,es,fr}.js.
+- Qué cambió:
+  - **Vacío:** un solo botón dorado (había dos «+ Nuevo pedido» a 200 px) y sin el conmutador «Pedidos 0 · Clientes 0».
+  - **Lista:** las cuatro tarjetas pasan a una línea («1 abierto · 92,98 € por cobrar»), y cobrado y beneficio solo salen cuando no son cero. Los filtros no escriben «0». El buscador aparece a partir de 6 pedidos.
+  - **Detalle:** el estado se dice una vez (el control segmentado) y el pago otra (en «Pagos»); antes las dos pastillas se repetían arriba. «Abrir ficha del cliente» es el chevron de la fila Cliente. «Cancelar» y «Borrar» van juntos al final, y solo borrar es rojo. Las unidades de los campos son «€», no «EUR». «21,2 h de impresión» pasa a «21 h».
+- Por qué:
+  - **Decir cada cosa una vez:** repetir el estado en pastilla, control y título es el patrón de «rellenar la cabecera»; quita jerarquía porque todo pesa igual. Queda en la cabecera solo «Tarde», que no se dice en ningún otro sitio.
+  - **El rojo es para lo que borra (DESIGN.md):** cancelar no destruye nada (el pedido sigue en el historial y se puede reabrir), así que deja de ser rojo y deja de estar pegado al control de estado, donde se pulsaba por error.
+  - **Cifras a cero fuera:** «Cobrado 0,00 €» y «Beneficio 0,00 €» en un taller que acaba de crear su primer pedido son ruido; aparecen cuando hay algo que contar.
+  - **Buscador a partir de 6:** una caja de búsqueda encima de una lista de un elemento es mobiliario. El umbral es una constante en el JSX, fácil de cambiar.
+  - **`currencySymbol` con `formatToParts`:** el símbolo sale de la misma fuente (Intl) que `fmtMoney`, sin tabla propia.
+- De la carrera: Interacción Persona-Ordenador (prevención de errores: separar la acción destructiva del control de uso frecuente; divulgación progresiva).
+- Cómo probarlo: `npm test` (305 pasan). Con el navegador limpio abre Pedidos: un solo botón dorado. Crea un pedido desde el Historial: en el detalle el estado solo está en el control; pulsa el «›» junto al cliente y abre su ficha; «Cancelar pedido» está abajo, en gris, y al cancelar aparece «Reabrir». En la lista, la línea de cifras solo enseña lo que no es cero.
+
 ### 2026-11-11, Auditoría 3 de 8: Planes como tabla comparativa
 - Archivo y sitio: src/Plans.jsx (constante `ROWS` y todo el componente `Plans`); src/index.css (bloque «Planes», sustituye a `.plans` / `.plan`); src/i18n/{en,es,fr}.js (claves `plans.row.*`, fuera `plans.free.f*` y `plans.shop.f*`).
 - Qué cambió: las dos tarjetas de precios (lista de checks, pastilla «Próximamente», borde dorado) son ahora UNA tabla: cada cosa en una fila y la respuesta de Gratis y de Taller al lado. El precio es un dato en la cabecera de su columna. «Me interesa» queda debajo, con una frase que dice que Taller aún no se vende y qué se mide.

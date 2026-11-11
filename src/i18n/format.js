@@ -86,6 +86,10 @@ export function moneyParts(locale, amount, currency) {
   return out
 }
 
+// "€", "$", "zł": the unit shown next to a field where money is typed.
+export const currencySymbol = (locale, currency) =>
+  moneyFormat(locale, currency).formatToParts(0).find(p => p.type === 'currency')?.value ?? currency
+
 /* A number as text for a form field, in the language's notation ("0,8"), and
    back. parseNumber takes a comma or a point whatever the language: people
    paste "0.8" from a slicer into a Spanish page. Not valid -> null. */

@@ -1396,3 +1396,21 @@ html{-webkit-tap-highlight-color:transparent}
 
 /* Estado vacío: el botón principal es ir a calcular. */
 .empty{padding:36px 18px}
+
+/* ------------------------------------------------------------------
+   Auditoría pantalla a pantalla (2026-11-11), 4: Pedidos y su detalle.
+------------------------------------------------------------------ */
+.orders .history-summary{margin-top:6px}
+.orders-tools{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;margin:14px 0 12px}
+.orders-tools .segmented{margin:0}
+.orders-tools .text-input{flex:1 1 220px}
+.orders-switch + .history-summary{margin-top:14px}
+.orders .empty h2{font-size:1rem;font-weight:600}
+/* Cliente: el desplegable y, a su lado, el chevron que abre su ficha. */
+.lrow-pair{display:flex;align-items:center;gap:2px;min-width:0;max-width:64%}
+.lrow-pair .lrow-select{max-width:100%}
+.row-btn.chevron{font-size:1.15rem;line-height:1;padding:6px 8px;color:var(--tenue)}
+/* Las dos salidas, juntas y al final: cancelar (texto) y borrar (rojo). */
+.order-exits{display:flex;flex-wrap:wrap;gap:8px 22px;margin:24px 16px 0;font-size:.9rem}
+.order-exits .link:not(.danger-link){color:var(--tenue)}
+.order-flow{margin-bottom:28px}
