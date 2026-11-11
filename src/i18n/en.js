@@ -305,7 +305,6 @@ export default {
   'printers.col.print': 'Print',
   'printers.col.result': 'Result',
   'printers.col.time': 'Time',
-  'printers.col.slicerSaid': 'Slicer said',
   'printers.result.finished': 'Finished',
   'printers.result.failed': 'Failed',
   'printers.result.cancelled': 'Cancelled',
@@ -313,8 +312,6 @@ export default {
   'printers.result.running': 'Printing',
   'printers.agent.title': 'layercents agent',
   'printers.agent.checking': 'Looking for the agent on this computer…',
-  'printers.agent.connected': 'Agent connected',
-  'printers.agent.version': 'Version {version} · running since {date}',
   'printers.agent.outdated': 'Your agent speaks protocol version {found}, and this page needs version {needed}. Update the agent (in the project folder: {cmd}) and start it again.',
   'printers.agent.wrong': 'Another program is answering on port 31415 (HTTP {status}). Stop that program, then start the agent.',
   'printers.agent.offline': 'The agent isn’t running on this computer.',
@@ -322,6 +319,7 @@ export default {
   'printers.agent.offline.step2': 'Press “Check again”.',
   'printers.agent.offline.hint': 'If your browser asks to let this site access apps or devices on your computer, allow it: that’s how the page reaches the agent.',
   'printers.agent.check': 'Check again',
+  'printers.agent.line': "Agent {version} connected, running since {date}.",
   'printers.agent.hide': 'Hide this tab',
 
   // Documents: shared bits, customer quote, report, Excel

@@ -292,7 +292,6 @@ export default {
   'printers.col.print': 'Impression',
   'printers.col.result': 'Résultat',
   'printers.col.time': 'Durée',
-  'printers.col.slicerSaid': 'Annoncé par le trancheur',
   'printers.result.finished': 'Terminée',
   'printers.result.failed': 'Échouée',
   'printers.result.cancelled': 'Annulée',
@@ -300,8 +299,6 @@ export default {
   'printers.result.running': 'En cours',
   'printers.agent.title': 'Agent layercents',
   'printers.agent.checking': 'Recherche de l’agent sur cet ordinateur…',
-  'printers.agent.connected': 'Agent connecté',
-  'printers.agent.version': 'Version {version} · en marche depuis le {date}',
   'printers.agent.outdated': 'Votre agent parle la version {found} du protocole et cette page a besoin de la version {needed}. Mettez l’agent à jour (dans le dossier du projet : {cmd}) puis relancez-le.',
   'printers.agent.wrong': 'Un autre programme répond sur le port 31415 (HTTP {status}). Arrêtez ce programme, puis lancez l’agent.',
   'printers.agent.offline': 'L’agent ne tourne pas sur cet ordinateur.',
@@ -309,6 +306,7 @@ export default {
   'printers.agent.offline.step2': 'Appuyez sur « Vérifier à nouveau ».',
   'printers.agent.offline.hint': 'Si votre navigateur demande d’autoriser ce site à accéder aux applications ou appareils de votre ordinateur, acceptez : c’est ainsi que la page joint l’agent.',
   'printers.agent.check': 'Vérifier à nouveau',
+  'printers.agent.line': "Agent {version} connecté, en marche depuis le {date}.",
   'printers.agent.hide': 'Masquer cet onglet',
 
   // Documents: shared bits, customer quote, report, Excel

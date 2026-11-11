@@ -291,7 +291,6 @@ export default {
   'printers.col.print': 'Impresión',
   'printers.col.result': 'Resultado',
   'printers.col.time': 'Tiempo',
-  'printers.col.slicerSaid': 'Decía el laminador',
   'printers.result.finished': 'Terminada',
   'printers.result.failed': 'Fallida',
   'printers.result.cancelled': 'Cancelada',
@@ -299,8 +298,6 @@ export default {
   'printers.result.running': 'Imprimiendo',
   'printers.agent.title': 'Agente de layercents',
   'printers.agent.checking': 'Buscando el agente en este ordenador…',
-  'printers.agent.connected': 'Agente conectado',
-  'printers.agent.version': 'Versión {version} · en marcha desde {date}',
   'printers.agent.outdated': 'Tu agente habla la versión {found} del protocolo y esta página necesita la {needed}. Actualiza el agente (en la carpeta del proyecto: {cmd}) y vuelve a arrancarlo.',
   'printers.agent.wrong': 'Otro programa está respondiendo en el puerto 31415 (HTTP {status}). Cierra ese programa y arranca el agente.',
   'printers.agent.offline': 'El agente no está en marcha en este ordenador.',
@@ -308,6 +305,7 @@ export default {
   'printers.agent.offline.step2': 'Pulsa «Comprobar de nuevo».',
   'printers.agent.offline.hint': 'Si tu navegador pide permiso para que este sitio acceda a aplicaciones o dispositivos de tu ordenador, permítelo: así es como la página llega al agente.',
   'printers.agent.check': 'Comprobar de nuevo',
+  'printers.agent.line': "Agente {version} conectado, en marcha desde el {date}.",
   'printers.agent.hide': 'Ocultar esta pestaña',
 
   // Documents: shared bits, customer quote, report, Excel

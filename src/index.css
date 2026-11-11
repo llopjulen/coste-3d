@@ -1414,3 +1414,49 @@ html{-webkit-tap-highlight-color:transparent}
 .order-exits{display:flex;flex-wrap:wrap;gap:8px 22px;margin:24px 16px 0;font-size:.9rem}
 .order-exits .link:not(.danger-link){color:var(--tenue)}
 .order-flow{margin-bottom:28px}
+
+/* ------------------------------------------------------------------
+   Auditoría pantalla a pantalla (2026-11-11), 5: Impresoras.
+------------------------------------------------------------------ */
+/* Un solo oro: la barra de progreso. «Beta», «Imprimiendo» y el estado del
+   agente pasan a gris; antes había cuatro cosas doradas a la vez. */
+.beta{background:var(--panel-alto);color:var(--tenue);font-weight:500}
+.printer-badge.busy{background:var(--panel-alto);color:var(--texto)}
+/* Las impresoras son filas de una lista, no tarjetas con borde dentro de un
+   panel (DESIGN.md: nada de tarjetas dentro de tarjetas). */
+.printers-body{gap:0;padding-top:4px;padding-bottom:4px}
+.printer-card{border:0;border-radius:0;background:none;padding:14px 0}
+.printer-card + .printer-card{border-top:1px solid var(--borde)}
+.printers-body > p:first-child{padding-top:10px}
+/* La diferencia con el laminador, pequeña y gris junto al tiempo real. */
+.slicer-diff{margin-left:8px;font-size:.8rem}
+/* El agente, cuando todo va bien: una línea al pie. */
+.agent-line{margin:18px 16px 0;font-size:.82rem}
+.agent-line .link{color:var(--texto)}
+
+/* Móvil. Estas dos tablas heredaban la rejilla del Historial (casilla,
+   pieza, total, estado, acciones), que no es la suya: el resultado se
+   pintaba ENCIMA del nombre del archivo y las cifras por impresora salían
+   sin etiqueta («8 2 / 20 %»). Cada una lleva ahora su propia rejilla. */
+@media(max-width:600px){
+  .jobs-table tr{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"part time" "part result";column-gap:12px;padding:10px 4px}
+  .jobs-table td.part{grid-area:part}
+  .jobs-table td.time-cell{grid-area:time;text-align:right}
+  .jobs-table td.result-cell{grid-area:result;text-align:right;font-size:.76rem;color:var(--tenue)}
+  .jobs-table .slicer-diff{display:none}
+  .fleet-table tr{display:flex;flex-wrap:wrap;gap:2px 14px;padding:10px 4px}
+  .fleet-table td:first-child{flex:1 0 100%}
+  .fleet-table td[data-label]{font-size:.8rem;color:var(--tenue);text-align:left}
+  .fleet-table td[data-label]::before{content:attr(data-label) " "}
+}
+/* Las tablas de Impresoras sí enseñan su cabecera (son cifras que sin
+   etiqueta no se entienden) y reparten el ancho según el contenido: las
+   reglas de cabecera oculta y ancho fijo de la auditoría 2 son solo para
+   la tabla de presupuestos del Historial. */
+.fleet-table thead,.jobs-table thead{position:static;width:auto;height:auto;overflow:visible;clip-path:none}
+@media(min-width:601px){
+  .fleet-table,.jobs-table{table-layout:auto}
+  .fleet-table td,.jobs-table td{overflow:visible}
+  .fleet-table tbody tr:first-child td,.jobs-table tbody tr:first-child td{border-top:1px solid var(--borde)}
+}
+.printers-subtitle{margin-top:20px}
