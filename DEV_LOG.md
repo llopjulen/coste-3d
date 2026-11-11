@@ -2,6 +2,23 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-11, Auditoría 5 de 8: Impresoras
+- Archivo y sitio: src/Printers.jsx (`PrintHistory`: las dos tablas; `slicerDiff`, nuevo, encima de `Printers`; el final de `Printers`, estado del agente); src/index.css (bloque «Auditoría pantalla a pantalla, 5»); src/i18n/{en,es,fr}.js (`printers.agent.line`; fuera `printers.agent.version`, `printers.agent.connected`, `printers.col.slicerSaid`).
+- Qué cambió:
+  - **Arreglo en el móvil:** en «Últimas impresiones» el resultado («Terminada») se pintaba ENCIMA del nombre del archivo, y la tabla por impresora salía como «8 2 / 20 %» sin etiquetas. Cada tabla tiene ahora su propia rejilla a menos de 600 px.
+  - **Un solo oro:** la barra de progreso. «Beta», «Imprimiendo» y «Agente conectado» pasan a gris (había cuatro cosas doradas).
+  - **Las impresoras son filas de una lista**, no tarjetas con borde dentro de un panel.
+  - **«Tiempo» y «Decía el laminador» son una columna:** «1 h 59 min +9 min».
+  - **El agente conectado es una línea al pie**; el panel completo solo sale cuando algo va mal (apagado, versión vieja).
+- Por qué:
+  - **La causa del solapamiento:** las dos tablas reutilizaban la clase `.history-table`, cuya versión móvil es una rejilla CSS con áreas con nombre pensadas para el Historial (`check`, `part`, `total`, `status`, `actions`). Las celdas de Impresoras no tienen esas clases, así que caían todas en la primera celda de la rejilla, unas sobre otras. Arreglo: clases propias (`jobs-table`, `fleet-table`) con su `grid-template-areas`. Las cifras por impresora llevan `data-label` y el CSS lo pinta con `td::before { content: attr(data-label) }`, porque en el móvil la fila de cabeceras está oculta.
+  - **`slicerDiff` solo para impresiones terminadas:** una fallida se paró antes, así que «−49 min» no significaría que el laminador se equivocó. Función pura fuera del componente.
+  - **Conectado es lo normal, y lo normal no se anuncia:** un panel entero con título, punto dorado y dos líneas para decir «todo bien» pesaba lo mismo que el historial. El panel con instrucciones sigue saliendo cuando el agente no responde, que es cuando hace falta.
+  - Las reglas de «cabecera oculta» y `table-layout: fixed` de la auditoría 2 se limitan a la tabla de presupuestos: aquí las cifras sin cabecera no se entienden.
+- Concepto nuevo: **`attr()` en CSS**. `content: attr(data-label)` pinta dentro de un pseudo-elemento el valor de un atributo HTML del propio elemento. Ejemplo: `<td data-label="Fallidas">2</td>` con `td::before{content:attr(data-label) " "}` se ve «Fallidas 2» sin duplicar el texto en el JSX.
+- De la carrera: Interacción Persona-Ordenador (diseño adaptable de tablas de datos). Diseño web: CSS Grid con áreas con nombre, y por qué reutilizar una clase arrastra su layout.
+- Cómo probarlo: `npm run agent -- demo` y abre `/?agent` (o `npm run build && npm run shots -- printers`). A 390 px: el resultado va bajo el tiempo, a la derecha, y no pisa el nombre. Para el agente: sale el panel con los pasos; arráncalo y «Comprobar de nuevo»: vuelve la línea gris.
+
 ### 2026-11-11, Auditoría 4 de 8: Pedidos y el detalle de un pedido
 - Archivo y sitio: src/Orders.jsx (cabecera de `Orders`, `OrderList` y el nuevo `Count`); src/OrderDetail.jsx (cabecera, fila «Cliente», unidades de moneda, final de la columna derecha y `PaymentDialog`); src/i18n/format.js (`currencySymbol`); src/index.css (bloque «Auditoría pantalla a pantalla, 4»); src/i18n/{en,es,fr}.js.
 - Qué cambió:

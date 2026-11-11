@@ -116,16 +116,18 @@ function PrintHistory({ jobs }) {
 
           {perPrinter.length > 1 && (
             <div className="table-scroll">
-              <table className="history-table">
+              <table className="history-table fleet-table">
                 <caption className="sr-only">{t('printers.history.caption', { days: WINDOW_DAYS })}</caption>
                 <thead><tr><th>{t('printers.col.printer')}</th><th className="num">{t('printers.col.finished')}</th><th className="num">{t('printers.col.failed')}</th><th className="num">{t('printers.col.failureRate')}</th><th className="num wide">{t('printers.col.hours')}</th></tr></thead>
                 <tbody>
                   {perPrinter.map(p => (
                     <tr key={p.printerId}>
                       <td className="strong">{p.printerName}</td>
-                      <td className="num">{p.finished}</td>
-                      <td className="num">{p.failed}</td>
-                      <td className="num">{fmtRate(p.failureRate)}</td>
+                      {/* data-label: on a phone the header row is hidden, so each
+                          figure carries its own label (index.css, td::before). */}
+                      <td className="num" data-label={t('printers.col.finished')}>{p.finished}</td>
+                      <td className="num" data-label={t('printers.col.failed')}>{p.failed}</td>
+                      <td className="num" data-label={t('printers.col.failureRate')}>{fmtRate(p.failureRate)}</td>
                       <td className="num wide">{fmtNumber(locale, p.hoursPrinted, 1)}</td>
                     </tr>
                   ))}
@@ -136,8 +138,8 @@ function PrintHistory({ jobs }) {
 
           <h3 className="printers-subtitle">{t('printers.history.latest')}</h3>
           <div className="table-scroll">
-            <table className="history-table">
-              <thead><tr><th className="wide">{t('printers.col.started')}</th><th className="wide">{t('printers.col.printer')}</th><th>{t('printers.col.print')}</th><th>{t('printers.col.result')}</th><th className="num">{t('printers.col.time')}</th><th className="num wide">{t('printers.col.slicerSaid')}</th></tr></thead>
+            <table className="history-table jobs-table">
+              <thead><tr><th className="wide">{t('printers.col.started')}</th><th className="wide">{t('printers.col.printer')}</th><th>{t('printers.col.print')}</th><th>{t('printers.col.result')}</th><th className="num">{t('printers.col.time')}</th></tr></thead>
               <tbody>
                 {jobs.slice(0, 10).map(job => (
                   <tr key={`${job.printerId}-${job.id}`}>
@@ -148,10 +150,14 @@ function PrintHistory({ jobs }) {
                       {job.name ?? '—'}
                       <span className="row-sub">{job.printerName} · {fmtShort(locale, new Date(job.startedAt))}</span>
                     </td>
-                    <td>{job.outcome === null ? t('printers.result.running') : Object.hasOwn(RESULT_KEYS, job.outcome) ? t(RESULT_KEYS[job.outcome]) : job.outcome}</td>
+                    <td className="result-cell">{job.outcome === null ? t('printers.result.running') : Object.hasOwn(RESULT_KEYS, job.outcome) ? t(RESULT_KEYS[job.outcome]) : job.outcome}</td>
                     {/* A time worked out from progress is marked "~": it's an estimate, not a measurement. */}
-                    <td className="num">{job.realMinutes !== null ? fmtMinutes(job.realMinutes, t) : job.startedApprox && job.outcome ? '~' : '—'}</td>
-                    <td className="num wide">{fmtMinutes(job.estimatedMinutes, t) ?? '—'}</td>
+                    <td className="num time-cell">
+                      {job.realMinutes !== null ? fmtMinutes(job.realMinutes, t) : job.startedApprox && job.outcome ? '~' : '—'}
+                      {/* What the slicer got wrong, next to the real time: "+9 min".
+                          It was a column of its own that had to be subtracted by eye. */}
+                      {slicerDiff(job, t) && <span className="muted slicer-diff">{slicerDiff(job, t)}</span>}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -162,6 +168,15 @@ function PrintHistory({ jobs }) {
       </div>
     </section>
   )
+}
+
+/* "+9 min" / "−4 min": real time minus the slicer's estimate, only for a print
+   that finished (a failed one stopped early: the difference means nothing). */
+function slicerDiff(job, t) {
+  if (job.outcome !== 'finished' || job.realMinutes == null || job.estimatedMinutes == null) return null
+  const diff = Math.round(job.realMinutes - job.estimatedMinutes)
+  if (diff === 0) return null
+  return `${diff > 0 ? '+' : '−'}${fmtMinutes(Math.abs(diff), t)}`
 }
 
 export default function Printers({ onTurnOff }) {
@@ -271,46 +286,50 @@ export default function Printers({ onTurnOff }) {
 
       {connected && jobs !== null && <PrintHistory jobs={jobs} />}
 
-      <section className="panel" aria-labelledby="agent-title">
-        <h2 id="agent-title">{t('printers.agent.title')}</h2>
-        {/* role="status": screen readers announce each change of the agent's
-            state. The printer cards above are deliberately not a live region:
-            their numbers change every few seconds and would never stop talking. */}
-        <div className="agent-body" role="status">
-          {status === 'checking' && <p className="muted">{t('printers.agent.checking')}</p>}
+      {connected ? (
+        /* Connected is the normal state: one grey line at the foot of the
+           screen. It was a whole panel with a gold "Agent connected". The
+           panel stays for when something is wrong, which is when it helps. */
+        <p className="agent-line muted" role="status">
+          {t('printers.agent.line', { version: info.version, date: fmtDateTime(locale, new Date(info.startedAt)) })}{' '}
+          <button type="button" className="link" onClick={check}>{t('printers.agent.check')}</button>{' · '}
+          <button type="button" className="link" onClick={onTurnOff}>{t('printers.agent.hide')}</button>
+        </p>
+      ) : (
+        <section className="panel" aria-labelledby="agent-title">
+          <h2 id="agent-title">{t('printers.agent.title')}</h2>
+          {/* role="status": screen readers announce each change of the agent's
+              state. The printer cards above are deliberately not a live region:
+              their numbers change every few seconds and would never stop talking. */}
+          <div className="agent-body" role="status">
+            {status === 'checking' && <p className="muted">{t('printers.agent.checking')}</p>}
 
-          {status === 'connected' && (
-            <>
-              <p className="agent-ok"><span className="agent-dot" aria-hidden="true" />{t('printers.agent.connected')}</p>
-              <p className="muted">{t('printers.agent.version', { version: info.version, date: fmtDateTime(locale, new Date(info.startedAt)) })}</p>
-            </>
-          )}
+            {status === 'outdated' && (
+              <p>{tr('printers.agent.outdated', { found: String(info.protocol), needed: AGENT_PROTOCOL }, { cmd: <code>git pull</code> })}</p>
+            )}
 
-          {status === 'outdated' && (
-            <p>{tr('printers.agent.outdated', { found: String(info.protocol), needed: AGENT_PROTOCOL }, { cmd: <code>git pull</code> })}</p>
-          )}
+            {status === 'wrong' && (
+              <p>{t('printers.agent.wrong', { status: String(agent.httpStatus) })}</p>
+            )}
 
-          {status === 'wrong' && (
-            <p>{t('printers.agent.wrong', { status: String(agent.httpStatus) })}</p>
-          )}
+            {status === 'offline' && (
+              <>
+                <p>{t('printers.agent.offline')}</p>
+                <ol className="agent-steps">
+                  <li>{tr('printers.agent.offline.step1', {}, { cmd: <code>npm run agent</code> })}</li>
+                  <li>{t('printers.agent.offline.step2')}</li>
+                </ol>
+                <p className="muted">{t('printers.agent.offline.hint')}</p>
+              </>
+            )}
 
-          {status === 'offline' && (
-            <>
-              <p>{t('printers.agent.offline')}</p>
-              <ol className="agent-steps">
-                <li>{tr('printers.agent.offline.step1', {}, { cmd: <code>npm run agent</code> })}</li>
-                <li>{t('printers.agent.offline.step2')}</li>
-              </ol>
-              <p className="muted">{t('printers.agent.offline.hint')}</p>
-            </>
-          )}
-
-          <div className="agent-actions">
-            <button type="button" className="controls" onClick={check} disabled={status === 'checking'}>{t('printers.agent.check')}</button>
-            <button type="button" className="link" onClick={onTurnOff}>{t('printers.agent.hide')}</button>
+            <div className="agent-actions">
+              <button type="button" className="controls" onClick={check} disabled={status === 'checking'}>{t('printers.agent.check')}</button>
+              <button type="button" className="link" onClick={onTurnOff}>{t('printers.agent.hide')}</button>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   )
 }
