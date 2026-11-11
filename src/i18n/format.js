@@ -9,6 +9,9 @@
 export const fmtDay = (locale, dt) =>
   dt.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })
 
+// "12 Oct" / "12 oct": a day of this year in a list, where the year is noise.
+export const fmtDayMonth = (locale, dt) => dt.toLocaleDateString(locale, { day: 'numeric', month: 'short' })
+
 // "22 Oct 2026, 07:15"
 export const fmtDateTime = (locale, dt) =>
   dt.toLocaleString(locale, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })

@@ -2,6 +2,20 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-11, Auditoría 8 de 8: Calendario (y CLAUDE.md al día)
+- Archivo y sitio: src/Calendar.jsx (`monthKinds` y `shortDay` junto a `late`; la leyenda bajo la rejilla; las filas de la cola de impresión); src/i18n/format.js (`fmtDayMonth`); src/i18n/{en,es,fr}.js (`cal.note`, `cal.empty`, `cal.onTime`; fuera `cal.hours`); CLAUDE.md («Estado actual»).
+- Qué cambió:
+  - **La leyenda solo enseña los puntos que hay ese mes** (antes los cuatro tipos, siempre, aunque el mes estuviera vacío).
+  - **Cola de impresión: un dato cuando va bien** («Listo el 14 nov · a tiempo»). La fecha de entrega y la pastilla roja «Va tarde» solo salen cuando chocan. Antes cada fila decía «Listo el…», «Entrega el…» y una pastilla «A tiempo».
+  - **Fechas sin año** en la cola cuando son de este año; «21,2 h de impresión» pasa a «21 h».
+  - **Textos:** «Calculado con 60 h de impresión a la semana.» y «Sin pedidos abiertos, la cola está vacía.»
+- Por qué:
+  - **Gestión por excepción:** en una lista de trabajo lo normal no necesita etiqueta; lo que hay que ver es lo que va mal. Una pastilla «A tiempo» en cada fila hace que la roja de «Va tarde» destaque menos.
+  - **`monthKinds` se calcula de las mismas 42 celdas que se pintan**, así la leyenda no puede desincronizarse de la rejilla. Es un `Set` (cada tipo una vez) ordenado con `KIND_ORDER`, el mismo orden de los puntos.
+  - **El año solo cuando desambigua:** `shortDay` lo quita si la fecha es de este año y lo deja si no (un pedido para enero de 2027 sí lo necesita).
+- De la carrera: Interacción Persona-Ordenador (relación señal/ruido; gestión por excepción en paneles de estado).
+- Cómo probarlo: `npm test` (305 pasan). Calendario sin pedidos: no hay leyenda. Crea un pedido con fecha de entrega holgada: la cola dice «Listo el … · a tiempo» y la leyenda solo enseña los puntos que aparecen. Ponle fecha de entrega para mañana con muchas horas: sale «Entrega el…» y «Va tarde» en rojo.
+
 ### 2026-11-11, Auditoría 7 de 8: el informe
 - Archivo y sitio: src/Report.jsx (constante `MIN_COLUMNS`; el bloque de cifras, la gráfica por mes y el desglose dentro de `Report`); src/index.css (bloque «Auditoría pantalla a pantalla, 7»); src/i18n/{en,es,fr}.js; scripts/shots.mjs (`SAMPLE_QUOTES` con `parts` e `inputs.fee`).
 - Qué cambió:
