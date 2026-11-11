@@ -2,6 +2,24 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-11, Auditoría 6 de 8: el presupuesto para el cliente
+- Archivo y sitio: src/CustomerQuote.jsx (`asText` y `symbol` junto a `toEur`; la barra de acciones; el nuevo `<div className="quote-layout">` que envuelve editor y hoja; los campos de precio y envío; la muestra «otro color»; fuera el texto de relleno de la hoja); src/index.css (bloque «Auditoría pantalla a pantalla, 6»); src/i18n/{en,es,fr}.js.
+- Qué cambió:
+  - **La hoja está a la vista mientras editas:** editor a la izquierda (380 px) y documento a la derecha, fijo al hacer scroll. Antes la hoja quedaba debajo de tres paneles, fuera de la primera pantalla, y con un hueco bajo «Tu negocio».
+  - **El editor usa las filas del resto de la app** (etiqueta a la izquierda, valor a la derecha sin caja). Era el único sitio con una caja gris por campo.
+  - **«Otro color» es un círculo con «+»**, no un degradado arcoíris (el único degradado de la app); cuando eliges un color propio, el círculo lo enseña.
+  - **Fuera «Aquí van tu logo y el nombre de tu negocio»** escrito dentro del documento.
+  - **Precios con la coma del idioma** («14,60») y «(€)» en vez de «(EUR)». El aviso de «Guardar como PDF» solo sale hasta que haces el primer presupuesto.
+- Por qué:
+  - **Lo que se envía es el documento:** que quede a la vista es lo que convierte el formulario en una herramienta (escribes el cliente y lo ves en la hoja). `position: sticky` lo mantiene mientras recorres el editor; por debajo de 1100 px vuelve a una columna porque la hoja no cabe legible al lado.
+  - **Casi todo es CSS:** el JSX del formulario no cambia de estructura (mismos `label`/`input`, mismos `id`), así que no se toca la lógica de guardado ni la accesibilidad. `display: contents` en `.form-pair` deshace las parejas de dos columnas; `:has(textarea)` da a los dos textos largos su fila de etiqueta arriba.
+  - **`type="text"` + `inputMode="decimal"`** en precio y envío, como en la calculadora (auditoría 1): `toEur` ya aceptaba coma, pero el campo enseñaba «14.60».
+  - **El aviso del PDF sin clave nueva de localStorage:** se usa el contador de presupuestos que ya existe (`quoteCounter` sigue en 1 hasta el primer «Guardar como PDF»). Una clave nueva obligaría a tocar backup.js para un detalle.
+  - **En papel, una columna** (`@media print`): el PDF sale igual que antes.
+- Concepto nuevo: **`:has()`**, el «selector padre» de CSS. `.form-row:has(textarea)` selecciona la fila que CONTIENE un textarea; hasta 2023 CSS solo podía seleccionar hacia abajo (hijos), no hacia arriba. Y **`field-sizing: content`**: el textarea crece con su texto sin JavaScript (en navegadores que no lo soportan se queda con su altura mínima).
+- De la carrera: Interacción Persona-Ordenador (manipulación directa: ver el resultado junto a lo que editas; consistencia entre pantallas).
+- Cómo probarlo: `npm test` (305 pasan). Historial → marca piezas → «Presupuesto para el cliente». En escritorio la hoja está a la derecha y se actualiza al escribir el cliente; cambia un precio escribiendo «3,5»; elige «+» y un color; «Guardar como PDF»: en la vista previa de impresión solo sale la hoja, sin el editor. A 390 px: editor y debajo la hoja.
+
 ### 2026-11-11, Auditoría 5 de 8: Impresoras
 - Archivo y sitio: src/Printers.jsx (`PrintHistory`: las dos tablas; `slicerDiff`, nuevo, encima de `Printers`; el final de `Printers`, estado del agente); src/index.css (bloque «Auditoría pantalla a pantalla, 5»); src/i18n/{en,es,fr}.js (`printers.agent.line`; fuera `printers.agent.version`, `printers.agent.connected`, `printers.col.slicerSaid`).
 - Qué cambió:
