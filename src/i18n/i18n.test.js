@@ -136,7 +136,7 @@ test('plurals follow each language\'s rules', () => {
   assert.equal(translatePlural(DICTS, 'es', 'count.quotes', 5), '5 presupuestos')
   // French: zero counts as singular
   assert.equal(translatePlural(DICTS, 'fr', 'backup.reminder.none', 1).startsWith('Aucune sauvegarde'), true)
-  assert.equal(translatePlural(DICTS, 'en', 'backup.reminder.none', 3), 'No backup yet. Your 3 quotes are stored only in this browser: clearing its data or switching computer would lose them.')
+  assert.equal(translatePlural(DICTS, 'en', 'backup.reminder.none', 3), 'No backup: 3 quotes, only in this browser.')
   // A category the language has but the file doesn't write (es "many", for millions) falls back to other
   assert.equal(translatePlural(DICTS, 'es', 'count.quotes', 1_000_000), '1000000 presupuestos')
 })

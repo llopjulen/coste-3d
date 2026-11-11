@@ -2,6 +2,24 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-11, Auditoría 2 de 8: Historial
+- Archivo y sitio: src/History.jsx (estado vacío, el bloque sobre la tabla y el `<colgroup>` de cada tabla); src/BackupPanel.jsx (`BackupReminder` y los botones de `BackupPanel`); src/index.css (bloque «Auditoría pantalla a pantalla, 2»); src/i18n/{en,es,fr}.js; scripts/shots.mjs (selector del botón de pedido).
+- Qué cambió:
+  - **El aviso de copia es una línea gris con enlace**, no una caja con botón dorado; «Aún no hay copia» se decía tres veces y ahora una.
+  - **Las cuatro tarjetas de cifras son una línea:** «3 presupuestos · 25,04 € · media 8,35 € por pieza»; «aceptados» solo sale cuando hay alguno.
+  - **Las acciones sobre piezas marcadas aparecen al marcar** («2 marcadas · Presupuesto para el cliente · Crear pedido · Marcar todas»). Antes había dos botones apagados con «(0)» y una frase explicándolos.
+  - **Sin fila de cabeceras repetida en cada mes** y columnas alineadas entre meses.
+  - **Vacío:** el botón dorado es «Ir a la calculadora»; restaurar una copia es secundario.
+- Por qué:
+  - **Un solo oro por pantalla (DESIGN.md):** el dorado era «Descargar copia», que no es a lo que viene nadie al Historial. Ahora el dorado solo aparece al marcar piezas, sobre «Presupuesto para el cliente», que es la acción de esta pantalla.
+  - **Cifras sin dato no se enseñan:** «Aceptados 0 %» con tres presupuestos no informa (principio 2 de PRODUCT.md: ninguna estadística sin datos detrás).
+  - **Cabecera oculta, no borrada:** el `<thead>` sigue en el DOM con `clip-path` para que un lector de pantalla anuncie «Cliente: Bar Pepe»; a la vista, una fecha, un nombre y un importe se entienden solos. La cantidad pasa a «25 uds» porque un «25» suelto sí era ambiguo.
+  - **`table-layout: fixed` + `<colgroup>`:** cada mes es una `<table>` distinta y con el algoritmo automático cada una reparte anchos según su contenido, así que las columnas bailaban de un mes a otro. Con anchos fijos declarados en `<col>`, todas las tablas usan la misma rejilla. Descartado: una única tabla con filas de mes intercaladas, que rompía el diseño de «un grupo por mes».
+  - **`aria-live="polite"`** en la barra de acciones: como aparece y desaparece, un lector de pantalla la anuncia cuando llega.
+- Concepto nuevo: **`table-layout: fixed`**. Con el valor por defecto (`auto`) el navegador mide TODO el contenido de la tabla para decidir el ancho de cada columna; con `fixed` usa solo los anchos declarados (en `<col>` o en la primera fila) y reparte el resto. Es más rápido y, sobre todo, predecible: dos tablas con el mismo `<colgroup>` quedan alineadas.
+- De la carrera: Interacción Persona-Ordenador (divulgación progresiva: las acciones aparecen cuando tienen sentido; jerarquía con un único acento). Accesibilidad web (regiones vivas ARIA, contenido solo para lectores de pantalla).
+- Cómo probarlo: `npm test` (305 pasan). En Historial con piezas: no hay botones apagados; marca una pieza y aparece la barra con el botón dorado; «Marcar todas» y «Quitar marcas» funcionan. Con el navegador limpio: el botón dorado lleva a la calculadora. `npm run shots -- history empty-history`.
+
 ### 2026-11-11, Auditoría 1 de 8: la calculadora y lo común (moneda, decimales, pie)
 - Archivo y sitio: src/i18n/format.js (`fmtMoney` reescrita; nuevas `moneyParts`, `numberToText`, `parseNumber`, con tests en i18n.test.js); src/App.jsx (`Field`, `SiteFooter`, `formatMoney` y `moneyParts` junto a `rates`, y el bloque `.result` de la calculadora); src/CostPrint.jsx (posición de la cámara en `createScene`); src/index.css (bloque «Auditoría pantalla a pantalla, 1» al final); src/i18n/{en,es,fr}.js; src/Orders.jsx, src/Plans.jsx, src/Calendar.jsx (fuera el subtítulo); scripts/shots.mjs (reescrito); DESIGN.md, PRODUCT.md, docs/MAPA.md.
 - Qué cambió:
