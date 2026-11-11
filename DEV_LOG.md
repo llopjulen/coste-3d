@@ -2,6 +2,21 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-11, Auditoría 7 de 8: el informe
+- Archivo y sitio: src/Report.jsx (constante `MIN_COLUMNS`; el bloque de cifras, la gráfica por mes y el desglose dentro de `Report`); src/index.css (bloque «Auditoría pantalla a pantalla, 7»); src/i18n/{en,es,fr}.js; scripts/shots.mjs (`SAMPLE_QUOTES` con `parts` e `inputs.fee`).
+- Qué cambió:
+  - **Las cinco tarjetas con borde son una fila de cifras** separadas por líneas finas, todas a la misma altura (antes «Beneficio medio / pieza» partía en dos líneas y su caja era más alta).
+  - **Con menos de 4 meses, la gráfica por mes son barras horizontales.** Dos columnas pegadas a la izquierda de un eje de 800 px parecían un fallo.
+  - **Títulos de sección en minúscula**, como en el resto de la app (eran MAYÚSCULAS con tracking, que no se usa en ningún otro sitio).
+  - **Lo que no se puede calcular no se pinta:** sin presupuestos con desglose no sale esa gráfica (y los clientes ocupan el ancho), y sin datos de comisión no sale «Beneficio medio». Antes salían «—» y una frase disculpándose.
+- Por qué:
+  - **Elegir la forma según los datos:** las columnas sirven para ver una tendencia en el tiempo y necesitan varios puntos; con dos o tres valores lo que se hace es compararlos, y para comparar magnitudes una barra horizontal con su etiqueta al lado se lee mejor. El umbral está en `MIN_COLUMNS`.
+  - **`<dl>` para las cifras** (lista de pares término/valor): es lo que son, y un lector de pantalla las anuncia como «Precio medio: 8,35 €».
+  - **Sobre la barra, la cifra sin céntimos ni símbolo** (`fmtNumber`): «1 250» cabe donde «1 250,00 €» se montaba con la barra de al lado; el título de la hoja ya dice la moneda. (Además el `replace(' EUR')` que quitaba el código dejó de hacer nada tras la auditoría 1.)
+  - **Datos de ejemplo completos en `shots.mjs`:** las capturas de antes enseñaban «0,00» y «versión antigua» porque los presupuestos de ejemplo no llevaban `parts` ni la comisión; no era un fallo de la app, pero escondía cómo se ve el informe de verdad.
+- De la carrera: Interacción Persona-Ordenador / Visualización de datos (elección de la codificación visual según la tarea: tendencia frente a comparación; relación datos-tinta).
+- Cómo probarlo: `npm test` (305 pasan). Historial → «Informe en PDF». Con presupuestos de 1 a 3 meses salen barras horizontales; con 4 o más, columnas. «Guardar como PDF»: la fila de cifras cabe en una línea en A4. Cambia «Idioma del documento»: importes y títulos cambian.
+
 ### 2026-11-11, Auditoría 6 de 8: el presupuesto para el cliente
 - Archivo y sitio: src/CustomerQuote.jsx (`asText` y `symbol` junto a `toEur`; la barra de acciones; el nuevo `<div className="quote-layout">` que envuelve editor y hoja; los campos de precio y envío; la muestra «otro color»; fuera el texto de relleno de la hoja); src/index.css (bloque «Auditoría pantalla a pantalla, 6»); src/i18n/{en,es,fr}.js.
 - Qué cambió:

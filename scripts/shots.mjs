@@ -39,10 +39,12 @@ const OUT = process.env.SHOTS_DIR || 'shots'
 const BASE = `http://localhost:${PORT}/es/`
 // Datos de ejemplo, para que Historial y Pedidos no salgan vacíos. El id es
 // la fecha en milisegundos (History la usa como fecha): noviembre de 2026.
+// `parts` e `inputs.fee` como los guarda la calculadora: sin ellos el informe
+// no puede dibujar el desglose ni el beneficio medio.
 const SAMPLE_QUOTES = [
-  { id: 1793613600001, name: 'Llavero logo', client: 'Bar Pepe', price: 2.5, cost: 1.2, units: 25, date: '2026-11-02T10:00:00Z', inputs: { hours: 0.5, failRate: 8 } },
-  { id: 1793700000002, name: 'Soporte de móvil', client: 'Laura G.', price: 7.94, cost: 5.22, units: 2, date: '2026-11-03T10:00:00Z', inputs: { hours: 3.5, failRate: 8 } },
-  { id: 1793180000003, name: 'Maceta autorriego', client: '', price: 14.6, cost: 8.9, units: 1, date: '2026-10-28T10:00:00Z', inputs: { hours: 6, failRate: 8 } },
+  { id: 1793613600001, name: 'Llavero logo', client: 'Bar Pepe', price: 2.5, cost: 1.2, units: 25, orderTotal: 62.5, date: '2026-11-02T10:00:00Z', inputs: { hours: 0.5, failRate: 8, fee: 8 }, parts: { material: 0.2, power: 0.01, depreciation: 0.12, failures: 0.03, labor: 0.64, packaging: 0.2, extras: 0 } },
+  { id: 1793700000002, name: 'Soporte de móvil', client: 'Laura G.', price: 7.94, cost: 5.22, units: 2, orderTotal: 15.88, date: '2026-11-03T10:00:00Z', inputs: { hours: 3.5, failRate: 8, fee: 8 }, parts: { material: 0.9, power: 0.06, depreciation: 0.82, failures: 0.14, labor: 2.5, packaging: 0.8, extras: 0 } },
+  { id: 1793180000003, name: 'Maceta autorriego', client: '', price: 14.6, cost: 8.9, units: 1, date: '2026-10-28T10:00:00Z', inputs: { hours: 6, failRate: 8, fee: 0 }, parts: { material: 2.6, power: 0.1, depreciation: 1.4, failures: 0.4, labor: 3.6, packaging: 0.8, extras: 0 } },
 ]
 
 const tab = name => async page => { await page.goto(BASE); await page.waitForTimeout(400); await page.locator('.tab', { hasText: name }).first().click() }

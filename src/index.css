@@ -1510,3 +1510,26 @@ html{-webkit-tap-highlight-color:transparent}
 /* En papel no hay dos columnas: solo la hoja. */
 @media print{.quote-layout{display:block}.quote-layout > .report{position:static}}
 .quote-editor .logo-row .controls{padding:7px 12px;font-size:.88rem}
+
+/* ------------------------------------------------------------------
+   Auditoría pantalla a pantalla (2026-11-11), 7: el informe.
+------------------------------------------------------------------ */
+/* Títulos de sección como los del resto de la app: sin mayúsculas ni tracking. */
+.report h2{font-size:.84rem;font-weight:600;text-transform:none;letter-spacing:0;color:var(--tinta);margin-bottom:12px}
+/* Las cifras: una fila separada por líneas finas, sin cajas. */
+.report-kpis{display:flex;flex-wrap:wrap;gap:0;margin:22px 0 4px;border-bottom:1px solid var(--linea-papel)}
+.kpi{flex:1 1 0;min-width:120px;padding:2px 16px 16px;border:0;border-radius:0;border-left:1px solid var(--linea-papel)}
+.kpi:first-child{padding-left:0;border-left:0}
+.kpi dt{font-size:.74rem;color:var(--tinta-suave)}
+.kpi dd{margin-top:3px;font-size:1.2rem;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.kpi dd.loss{color:var(--rojo)}
+@media(max-width:700px){
+  .report-kpis{display:grid;grid-template-columns:1fr 1fr;gap:14px 0}
+  .kpi{padding:0 12px 0;border-left:0}
+  .kpi:nth-child(odd){padding-left:0}
+  .report-kpis{padding-bottom:16px}
+}
+/* Sin desglose, los clientes ocupan todo el ancho. */
+.report-two.one{grid-template-columns:1fr}
+.report .bar-row{grid-template-columns:minmax(72px,120px) 1fr auto}
+.report .bar-track,.report .bar-fill{height:10px;border-radius:5px}
