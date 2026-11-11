@@ -1,5 +1,5 @@
 import { useI18n } from './i18n/context.js'
-import { fmtNumber } from './i18n/format.js'
+import { fmtMoney } from './i18n/format.js'
 
 /* ==================================================================
    PLANS — what is free and what the "Workshop" plan will add.
@@ -24,8 +24,24 @@ import { fmtNumber } from './i18n/format.js'
 export const SHOP_MONTH = 8.99
 export const SHOP_YEAR = 89
 
-const FREE = ['plans.free.f1', 'plans.free.f2', 'plans.free.f3', 'plans.free.f4', 'plans.free.f5']
-const SHOP = ['plans.shop.f1', 'plans.shop.f2', 'plans.shop.f3', 'plans.shop.f4', 'plans.shop.f5']
+/* One comparison table, not two pricing cards (2026-11-11). Two cards with
+   a tick list each, a "Coming soon" pill and a gold border are the stock
+   pricing-page template; and to compare the plans the person had to read
+   two lists and work out the difference. A table puts each thing on one
+   row with both answers side by side.
+
+   A cell is true (included), false (not included) or the key of a text. */
+const ROWS = [
+  { key: 'plans.row.cost', free: true, shop: true },
+  { key: 'plans.row.import', free: true, shop: true },
+  { key: 'plans.row.history', free: true, shop: true },
+  { key: 'plans.row.quote', free: true, shop: true },
+  { key: 'plans.row.noFooter', free: false, shop: true },
+  { key: 'plans.row.printers', free: 'plans.printers.single', shop: 'plans.printers.several' },
+  { key: 'plans.row.jobs', free: false, shop: true },
+  { key: 'plans.row.sync', free: false, shop: true },
+  { key: 'plans.row.account', free: 'plans.account.none', shop: 'plans.yes' },
+]
 
 function Check() {
   return (
@@ -37,37 +53,52 @@ function Check() {
 
 export default function Plans() {
   const { t, lang, locale } = useI18n()
-  // "8,99 €" in Spanish and French, "8.99 €" in English: the decimal mark follows the language.
-  const eur = n => `${fmtNumber(locale, n, 2)} €`
+  // Always EUR, whatever the currency selector says: it is what will be charged.
+  // A round price loses its empty cents: "89 €", not "89,00 €".
+  const eur = n => fmtMoney(locale, n, 'EUR').replace(/[.,]00(?!\d)/, '')
+  // The tick and the dash are drawings: the word next to them (hidden on
+  // screen) is what a screen reader says.
+  const cell = value =>
+    value === true ? <><Check /><span className="sr-only">{t('plans.yes')}</span></>
+      : value === false ? <><span aria-hidden="true" className="muted">—</span><span className="sr-only">{t('plans.no')}</span></>
+        : t(value)
   return (
     <main className="wrap">
       <h1>{t('plans.title')}</h1>
 
-      <div className="plans">
-        <section className="plan" aria-labelledby="plan-free">
-          <h2 id="plan-free">{t('plans.free.name')}</h2>
-          <p className="plan-price"><span className="amount">0 €</span></p>
-          <p className="plan-for">{t('plans.free.for')}</p>
-          <ul className="plan-list">
-            {FREE.map(key => <li key={key}><Check />{t(key)}</li>)}
-          </ul>
-          <p className="plan-foot muted">{t('plans.free.foot')}</p>
-        </section>
+      <div className="panel plans-panel">
+        <table className="plans-table">
+          <thead>
+            <tr>
+              <th scope="col"><span className="sr-only">{t('plans.col.feature')}</span></th>
+              <th scope="col">
+                <span className="plan-name">{t('plans.free.name')}</span>
+                <span className="plan-amount">{eur(0)}</span>
+              </th>
+              <th scope="col">
+                <span className="plan-name">{t('plans.shop.name')}</span>
+                <span className="plan-amount">{eur(SHOP_MONTH)}<span className="per"> {t('plans.perMonth')}</span></span>
+                <span className="plan-sub">{t('plans.shop.year', { price: eur(SHOP_YEAR) })}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {ROWS.map(row => (
+              <tr key={row.key}>
+                <th scope="row">{t(row.key)}</th>
+                <td>{cell(row.free)}</td>
+                <td>{cell(row.shop)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-        <section className="plan plan-shop" aria-labelledby="plan-shop">
-          <h2 id="plan-shop">{t('plans.shop.name')} <span className="soon">{t('plans.soon')}</span></h2>
-          <p className="plan-price">
-            <span className="amount">{eur(SHOP_MONTH)}</span><span className="per">{t('plans.perMonth')}</span>
-          </p>
-          <p className="plan-for">{t('plans.shop.year', { price: eur(SHOP_YEAR) })}</p>
-          <ul className="plan-list">
-            {SHOP.map(key => <li key={key}><Check />{t(key)}</li>)}
-          </ul>
-          {/* A real link (not a button with JavaScript): the visit to /taller/
-              is the measurement, and it also works with JavaScript off. */}
-          <a className="controls primary plan-cta" href={`/taller/?lang=${lang}`}>{t('plans.interested')}</a>
-          <p className="plan-foot muted">{t('plans.interestedNote')}</p>
-        </section>
+      <div className="plans-cta">
+        <p className="muted">{t('plans.cta.note')}</p>
+        {/* A real link (not a button with JavaScript): the visit to /taller/
+            is the measurement, and it also works with JavaScript off. */}
+        <a className="controls primary" href={`/taller/?lang=${lang}`}>{t('plans.interested')}</a>
       </div>
     </main>
   )
