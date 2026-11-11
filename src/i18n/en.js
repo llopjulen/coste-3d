@@ -22,7 +22,6 @@ export default {
 
   // --- Calculadora: cabecera
   'calc.title': 'What a printed part actually costs you',
-  'calc.subtitle': 'Material, power, printer depreciation, failed prints and your own time.',
 
   // --- Calculadora: bloques del formulario
   'section.material': 'Material',
@@ -33,8 +32,8 @@ export default {
   'setup.title': 'Your setup',
   'setup.hide': 'Hide',
   'setup.edit': 'Edit',
-  'setup.noteSaved': 'Saved on this device. It comes back every time you open layercents.',
-  'setup.noteSaving': 'Saved on this device as you type, so you only enter it once.',
+  'setup.noteSaved': 'Saved on this device.',
+  'setup.noteSaving': 'Saved on this device.',
   'setup.reset': 'Reset to defaults',
   'setup.resetConfirm': 'Reset your setup to the default numbers?',
   'preset.label': 'Model',
@@ -83,10 +82,12 @@ export default {
 
   // --- Resultado
   'hero.label': 'Recommended price',
-  'hero.keep': 'You keep {amount} per part after fees.',
-  'hero.orderTotal': 'Order total ({units} pcs): {amount}',
-  'hero.perWeek': 'At {hours} h of printing a week you make about {amount} good parts.',
-  'hero.orderDays': 'This order of {units} takes about {days} days.',
+  'hero.perHour': 'Per printer hour, at yours',
+  'hero.atYours': 'Profit at yours, {price}',
+  'hero.atRecommended': 'Profit at this price',
+  'hero.orderTotal': 'Order total, {units} pcs',
+  'hero.perWeek': 'At {hours} h of printing a week, about {amount} parts.',
+  'hero.orderDays': 'This order of {units}, about {days} days.',
   'cost.title': 'Cost to make it',
   'cost.chartLabel': 'Cost breakdown: {list}',
   'layer.material': 'Material',
@@ -106,16 +107,11 @@ export default {
   'cost.extra.per': "Paid",
   'cost.extra.per.part': "Per part",
   'cost.extra.per.order': "Per order",
-  'verdict.context': 'At your current selling price',
-  'verdict.lose': 'You lose {amount} per part',
-  'verdict.make': 'You make {amount} per part',
-  'verdict.note': 'After fees you keep {net} out of {price}.',
-  'verdict.perHour': 'Profit per printer hour',
 
   // --- Guardar presupuesto
   'save.title': 'Save this quote',
   'save.partLabel': 'Part name',
-  'save.partPlaceholder': 'Part name, e.g. Phone stand',
+  'save.partPlaceholder': 'Part name',
   'save.clientLabel': 'Client',
   'save.clientPlaceholder': 'Client (optional)',
   'save.button': 'Save quote',
@@ -127,10 +123,9 @@ export default {
   'mobile.price': 'Recommended price',
   'mobile.cost': 'Cost',
   'mobile.seeDetails': 'See details',
-  'footer.tagline': 'Free 3D print cost calculator. Nothing you type or drop leaves your browser.',
-  'footer.feedback': 'Ideas or bugs? Tell me on GitHub',
+  'footer.tagline': 'Your data never leaves this browser.',
+  'footer.feedback': 'Ideas or bugs, on GitHub',
   'history.title': 'Quote history',
-  'history.subtitle': 'Every quote you saved on this device, newest first.',
   'error.backup': 'Could not create the backup file. Please try again.',
   'error.excel': 'Could not create the Excel file. Please try again.',
 
@@ -224,8 +219,8 @@ export default {
   // --- Import from the slicer
   'import.title': 'Import from your slicer',
   'import.dropActive': 'Drop it to fill in the form',
-  'import.drop': "Drop a sliced file anywhere on the page",
-  'import.hint': ".gcode, .bgcode or .3mf from any slicer. Fills in time and grams; the file stays in your browser.",
+  'import.drop': 'Drop your sliced file',
+  'import.hint': '.gcode, .bgcode or .3mf. Fills in time and grams and draws your part. It never leaves your browser.',
   'import.choose': 'Choose file',
   'import.reading': 'Reading file…',
   'import.plate': 'Plate',
@@ -411,7 +406,6 @@ export default {
 
   // Several filaments per part
   'filament.add': 'Add another filament',
-  'filament.hint': 'Printing in more than one colour or material? Add each filament with its own spool price.',
   'filament.extra.title': 'Filament {n}',
   'filament.extra.name': 'Name of filament {n} (optional)',
   'filament.remove': 'Remove {name}',
@@ -480,7 +474,6 @@ export default {
   'sale.err.date': 'Pick the date of the sale.',
   'nav.plans': 'Plans',
   'plans.title': 'Plans',
-  'plans.lead': 'Everything layercents does today is free and will stay free. The Workshop plan is for businesses with several printers.',
   'plans.free.name': 'Free',
   'plans.free.for': 'For anyone pricing and selling prints.',
   'plans.free.f1': 'Cost breakdown and recommended price',
@@ -512,7 +505,6 @@ export default {
   'quote.look.font.serif': 'Classic',
   'nav.calendar': 'Calendar',
   'cal.title': 'Calendar',
-  'cal.lead': "Deliveries, the print queue, payments and anything you add, day by day. Print days come from your open orders and your printing hours a week.",
   'cal.prev': 'Previous month',
   'cal.next': 'Next month',
   'cal.today': 'Today',
@@ -559,7 +551,6 @@ export default {
   'order.dueShort': 'Delivery {date}',
   'nav.orders': "Orders",
   'orders.title': "Orders",
-  'orders.lead': "Every order from yes to delivered and paid: parts, client, delivery date, payments and what happened.",
   'orders.loading': "Loading orders…",
   'orders.new': "New order",
   'orders.section.orders': "Orders",
