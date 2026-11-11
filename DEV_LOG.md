@@ -2,6 +2,19 @@
 
 Registro de cambios del proyecto. La entrada más nueva va arriba.
 
+### 2026-11-11, Auditoría 3 de 8: Planes como tabla comparativa
+- Archivo y sitio: src/Plans.jsx (constante `ROWS` y todo el componente `Plans`); src/index.css (bloque «Planes», sustituye a `.plans` / `.plan`); src/i18n/{en,es,fr}.js (claves `plans.row.*`, fuera `plans.free.f*` y `plans.shop.f*`).
+- Qué cambió: las dos tarjetas de precios (lista de checks, pastilla «Próximamente», borde dorado) son ahora UNA tabla: cada cosa en una fila y la respuesta de Gratis y de Taller al lado. El precio es un dato en la cabecera de su columna. «Me interesa» queda debajo, con una frase que dice que Taller aún no se vende y qué se mide.
+- Por qué:
+  - **Era la plantilla de precios de cualquier SaaS**, la pantalla que más delataba. Y comparaba mal: había que leer dos listas y deducir la diferencia. En una tabla la diferencia es una fila («Impresoras conectadas en vivo: 1 / Varias»).
+  - **Mismos hechos, nada nuevo:** las filas salen de las listas que ya había (plan privado aprobado el 2026-11-04). Solo se añade «Cuenta: no hace falta / sí», que es el principio 3 de PRODUCT.md dicho como dato.
+  - **`<table>` de verdad con `<th scope="col">` y `<th scope="row">`:** un lector de pantalla dice «Taller, Impresoras conectadas en vivo: Varias». El check y el guion son dibujos (`aria-hidden`) con «Sí» / «No» ocultos al lado: el color o el icono nunca son la única pista.
+  - **«Próximamente» deja de ser una pastilla dorada** y pasa a una frase junto al botón: el único oro de la pantalla es «Me interesa».
+  - **El precio con `fmtMoney(…, 'EUR')`** aunque el selector diga otra moneda: es lo que cobrará la página de pago. Se quitan los céntimos vacíos («89 €», no «89,00 €»).
+  - Un test confundía `plans.one` / `plans.many` con formas de plural (`.one`, `.other`, `.many` son sufijos reservados del diccionario): las claves son `plans.printers.single` / `plans.printers.several`.
+- De la carrera: Interacción Persona-Ordenador (tablas de datos accesibles: cabeceras de fila y de columna; comparación lado a lado frente a listas paralelas).
+- Cómo probarlo: `npm test` (305 pasan). Abre Planes en los tres idiomas y a 390 px: la tabla cabe sin scroll horizontal. «Me interesa» sigue llevando a `/taller/?lang=…`.
+
 ### 2026-11-11, Auditoría 2 de 8: Historial
 - Archivo y sitio: src/History.jsx (estado vacío, el bloque sobre la tabla y el `<colgroup>` de cada tabla); src/BackupPanel.jsx (`BackupReminder` y los botones de `BackupPanel`); src/index.css (bloque «Auditoría pantalla a pantalla, 2»); src/i18n/{en,es,fr}.js; scripts/shots.mjs (selector del botón de pedido).
 - Qué cambió:
