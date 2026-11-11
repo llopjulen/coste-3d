@@ -61,7 +61,7 @@ const VIEWS = {
   // Va después de las demás: crea un pedido, que se queda guardado en este contexto.
   order: { go: async page => {
     await tickAll(page)
-    await page.getByRole('button', { name: /^Pedido con|Crear pedido \(/ }).first().click()
+    await page.locator('.quote-tools .controls').nth(1).click()
     await page.waitForTimeout(400)
     await page.locator('dialog[open] button.primary, dialog[open] button[type="submit"]').last().click()
   } },

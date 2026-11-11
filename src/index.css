@@ -1340,3 +1340,48 @@ html{-webkit-tap-highlight-color:transparent}
   .result > .hero{order:2}
   .result > .cost-panel{order:3}
 }
+
+/* ------------------------------------------------------------------
+   Auditoría pantalla a pantalla (2026-11-11), 2: Historial.
+------------------------------------------------------------------ */
+/* Aviso de copia: una línea gris con enlace, no una caja con botón dorado. */
+.backup-reminder{margin-top:10px;padding:0 0 0 16px;background:none;border-radius:0;font-size:.86rem;color:var(--tenue)}
+.backup-reminder::before{left:0;top:.58em;width:7px;height:7px}
+.backup-reminder p{flex:1 1 auto;max-width:none}
+.backup-reminder .link{color:var(--texto)}
+
+/* Las cifras del historial: una línea, no cuatro cajas. */
+.history-summary{font-size:.95rem;color:var(--tenue);font-variant-numeric:tabular-nums;text-wrap:pretty}
+.wrap > h1 + .history-summary{margin-top:6px}
+.wrap > h1 + .backup-reminder{margin-top:8px}
+.wrap > .backup-reminder + .history-summary{margin-top:4px}
+
+/* La barra de acciones sobre lo marcado solo ocupa sitio cuando existe. */
+.quote-tools{margin:0 0 14px}
+.quote-tools:empty{display:none}
+.quote-tools .picked{font-weight:600;font-variant-numeric:tabular-nums;margin-right:4px}
+.quote-tools .link{color:var(--texto)}
+
+/* Sin fila de cabeceras a la vista: sigue en el DOM para los lectores de
+   pantalla. `table-layout:fixed` con anchos en un <colgroup> hace que las
+   columnas caigan en el mismo sitio en todos los meses (cada mes es una
+   tabla distinta, y con el reparto automático cada una iba a su aire). */
+.history-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+@media(min-width:601px){
+  .history-table{table-layout:fixed}
+  .history-table td{padding:11px 12px;overflow:hidden;text-overflow:ellipsis}
+  .history-table tbody tr:first-child td{border-top:0}
+  .history-table td.check{padding-left:18px}
+  .history-table td.actions{padding-right:14px;overflow:visible;text-overflow:clip}
+  .history-table .c-check{width:46px}
+  .history-table .c-date{width:112px}
+  .history-table .c-client{width:18%}
+  .history-table .c-qty{width:84px}
+  .history-table .c-total{width:112px}
+  .history-table .c-order{width:176px}
+  .history-table .c-actions{width:128px}
+}
+.panel > h2.month-head{border-bottom:1px solid var(--borde)}
+
+/* Estado vacío: el botón principal es ir a calcular. */
+.empty{padding:36px 18px}
