@@ -84,7 +84,6 @@ export default function Orders({ api, quotes, formatMoney, currency, rate, open,
       <div className="orders-head">
         <div>
           <h1>{t('orders.title')}</h1>
-          <p className="subtitle">{t('orders.lead')}</p>
         </div>
         {section === 'orders'
           ? <button type="button" className="controls primary" onClick={() => setCreating(true)}>+ {t('orders.new')}</button>

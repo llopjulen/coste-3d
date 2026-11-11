@@ -42,15 +42,15 @@ What competitors (MakerQuote, 3DPCC, CraftersQuote) cannot truthfully claim all 
 - React + Vite single-page app, static on GitHub Pages at https://layercents.com. All code and interface copy in English.
 - Data lives in `localStorage` (`savedQuotes`, `business`, `quoteCounter`, `setup`, `agentEnabled`, `lastBackupAt`). Clearing browser data deletes it; backup/restore is the safety net.
 - Money on customer quotes is computed in cents so totals add up.
-- No backend beyond what is agreed: the local agent (listens only on 127.0.0.1) and the Supabase + Lemon Squeezy plan in `docs/NUBE.md`, built in steps.
+- No backend beyond what is agreed: the local agent (listens only on 127.0.0.1) and the Supabase + Polar plan in `docs/NUBE.md`, built in steps.
 - The agent never uploads a printer's access code, serial number, IP or certificate fingerprint.
-- Undecided / private: what is paid and at what price lives in a private document, not in this public repository. Do not state pricing or plan contents in the product. Excel and PDF cannot be protected as "Pro" client-side.
+- Pricing: the Workshop plan is public in the Plans tab (8.99 €/month or 89 €/year, decided 2026-11-04) and marked "coming soon". The reasoning behind what is paid lives in a private document, not in this public repository. Excel and PDF cannot be protected as "Pro" client-side.
 - Printer support beyond Bambu and Klipper (PrusaLink, Creality, Elegoo, Anycubic, Flashforge, OctoPrint) is planned only when someone can test it.
 
 ## Brand Commitments
 
 - Name: **layercents**, always lowercase. Tagline: "Layer by layer, cent by cent."
-- Logo in `src/Logo.jsx`; icons and share image in `public/`. The cost chart uses the ¢ symbol (`src/CostSymbol.jsx`, `src/symbolChart.js`).
+- Logo in `src/Logo.jsx`; icons and share image in `public/`. The cost is drawn as a stacked bar and as a 3D printed object (`src/CostPrint.jsx`).
 - Existing identity is dark with the brand gold (`--oro`), colors as variables in `src/index.css`. Never use Bambu Lab green.
 - Voice: plain, short sentences, second person, concrete numbers over adjectives ("Drop your sliced file, get the real cost and a customer quote in seconds. Free, no account.").
 - A customer quote never shows the seller's costs or margins.

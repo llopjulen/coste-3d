@@ -42,7 +42,6 @@ export default function Plans() {
   return (
     <main className="wrap">
       <h1>{t('plans.title')}</h1>
-      <p className="subtitle">{t('plans.lead')}</p>
 
       <div className="plans">
         <section className="plan" aria-labelledby="plan-free">

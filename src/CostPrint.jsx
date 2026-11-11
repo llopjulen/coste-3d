@@ -73,7 +73,9 @@ function createScene(canvas, reduced) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
   const scene = new Scene()
   const camera = new PerspectiveCamera(30, 1, 0.1, 50)
-  camera.position.set(0, 2.5, 6.6)
+  // Close enough for the object to fill its box (2026-11-11; it was at z 6.6
+  // and the vase took barely half of it).
+  camera.position.set(0, 2.45, 6.05)
   camera.lookAt(0, 1.12, 0)
 
   // Soft light from the sky plus one lamp: matte plastic, no shine (DESIGN.md).

@@ -1289,3 +1289,54 @@ html{-webkit-tap-highlight-color:transparent}
 .tabs.more-right{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent)}
 .tabs.more-left{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 36px),transparent)}
 .tabs.more-left.more-right{-webkit-mask-image:linear-gradient(to right,transparent,#000 36px,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to right,transparent,#000 36px,#000 calc(100% - 36px),transparent)}
+
+/* ------------------------------------------------------------------
+   Auditoría pantalla a pantalla (2026-11-11), 1: calculadora y común.
+------------------------------------------------------------------ */
+/* Sin subtítulo bajo el título, lo que venía detrás necesita su aire. */
+.wrap > h1 + *{margin-top:24px}
+.calc-page > .columns{margin-top:0}
+
+/* El símbolo de la moneda va con los céntimos, no como etiqueta gris aparte. */
+.hero-price .hero-cents:first-child{margin-right:2px}
+
+/* Lo que queda por pieza: al precio recomendado y al de la persona, una fila
+   debajo de otra con la cifra en columna para compararlas de un vistazo. */
+.hero-rows{margin-top:16px;border-top:1px solid var(--borde)}
+.hero-rows > div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 0;border-bottom:1px solid var(--borde)}
+.hero-rows dt{font-size:.88rem;color:var(--tenue)}
+.hero-rows dd{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hero-rows dd.loss{color:var(--rojo)}
+.hero-rows + .hero-sub{margin-top:12px}
+.hero{padding-bottom:18px}
+
+/* El consejo: una frase, sin título ni viñeta. */
+.panel.advice{padding:14px 18px;display:grid;gap:8px;font-size:.88rem;line-height:1.5;color:var(--tenue)}
+.panel.advice p{text-wrap:pretty}
+
+/* El objeto 3D llena su caja (la cámara se acercó en CostPrint.jsx). */
+.cost-print{height:250px}
+@media (max-width:560px){.cost-print{height:210px}}
+
+/* Pie: una línea, sin repetir el logo que ya está arriba. */
+.site-foot{margin-top:56px;padding-top:0;border-top:0;font-size:.8rem;gap:4px 10px}
+.site-foot a{color:var(--tenue)}
+.site-foot a:hover{color:var(--texto)}
+
+/* En una columna (móvil y tableta) el orden cambia: importar, el precio y
+   el coste con la pieza 3D, y DESPUÉS los campos. Antes el precio quedaba a
+   ~1.900 px de scroll y la primera pantalla era solo un formulario.
+   `display:contents` hace que las dos columnas «desaparezcan» como cajas y
+   sus hijos pasen a ser hijos directos de .columns, que los ordena con
+   `order`. El orden del DOM (y del teclado) no cambia: los campos siguen
+   yendo antes que el resultado al tabular. */
+@media(max-width:860px){
+  .columns{display:flex;flex-direction:column;gap:20px}
+  .form-col,.result{display:contents}
+  .form-col > *{order:4;margin-bottom:0}
+  .form-col .panel,.form-col .dropzone{margin-bottom:0}
+  .form-col > #sec-import{order:1}
+  .result > *{order:5}
+  .result > .hero{order:2}
+  .result > .cost-panel{order:3}
+}

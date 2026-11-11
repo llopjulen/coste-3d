@@ -68,7 +68,6 @@ export default function Calendar({ orders, weekHours, formatMoney, onOpenOrder, 
   return (
     <main className="wrap">
       <h1>{t('cal.title')}</h1>
-      <p className="subtitle">{t('cal.lead')}</p>
 
       <div className="cal-layout">
         <section className="panel cal" aria-labelledby="cal-month">
