@@ -110,13 +110,20 @@ Una herramienta, no un folleto. Quien la abre viene a calcular un precio o a mov
 
 - **Lista agrupada:** un título pequeño y gris fuera del grupo, y dentro filas de 48 px con el nombre a la izquierda y el valor a la derecha, sin caja alrededor del valor. Es la pieza base de toda la app.
 - **Ayuda de un campo:** sale debajo de la fila mientras el campo tiene el foco, en texto pequeño y gris, sin caja. Nada de iconos «ⓘ» tras cada etiqueta. Va unida al campo con `aria-describedby`.
-- **Título de pantalla (h1):** 1,75 rem, peso 650, una línea de subtítulo gris. Escala de app, no de landing.
+- **Título de pantalla (h1):** 1,75 rem, peso 650, SIN subtítulo debajo (2026-11-11): si la pantalla necesita una frase que la explique, el fallo está en la pantalla. En la calculadora el h1 existe para Google y lectores de pantalla (`.sr-only`) pero no se pinta: la pantalla empieza por la herramienta.
+- **Dinero:** siempre con `fmtMoney` (src/i18n/format.js): «7,94 €» / «€7.94», nunca el código «EUR» tras la cifra.
+- **Campos numéricos:** `type="text"` con `inputMode="decimal"` y el separador del idioma de la página; aceptan coma o punto.
+- **Pie:** una línea gris, sin logo.
 - **Importar archivo:** una fila más de la lista (título y pista a la izquierda, botón a la derecha). Nada de cajas de borde discontinuo.
 - **Botón principal:** fondo oro, texto `sobre-oro`, uno por pantalla. Los secundarios, en `panel-alto`.
 - **Control segmentado:** para elegir entre 2 y 5 opciones que se ven a la vez (filtros, estado de un pedido). Con `aria-pressed`.
 - **Hoja (`<dialog>` nativo):** para crear o editar algo sin salir de la pantalla. Trampa de foco y Esc los da el navegador.
 - **Pastilla de estado:** un punto y la palabra, 0,74 rem, redondeo completo.
 - **Cifras resumen (`.stat`):** de 2 a 4 en fila arriba de una lista; en el móvil, en dos columnas.
+
+## El objeto 3D del coste
+
+Encima de la barra de costes, un jarrón impreso capa a capa (src/CostPrint.jsx). Es la única pieza 3D de la interfaz y cumple las mismas reglas: plástico mate, sin brillos ni sombras proyectadas, fondo transparente sobre el panel, y solo los colores de las capas de coste. Si la persona suelta un archivo, el jarrón pasa a ser su pieza, con las mismas franjas. Gira despacio; con «reducir movimiento» sale quieto. No añadir más objetos 3D decorativos: este funciona porque es el dato.
 
 ## Interacción
 
@@ -147,5 +154,6 @@ Una herramienta, no un folleto. Quien la abre viene a calcular un precio o a mov
 ## Responsive
 
 - **Menos de 860 px:** la barra lateral pasa a pestañas arriba, que se desplazan en horizontal. Un fundido marca el lado donde quedan pestañas fuera (solo si de verdad quedan), y la pestaña abierta siempre está a la vista.
+- **Menos de 860 px, calculadora:** el orden visual es importar → precio → coste con la pieza 3D → campos (`display: contents` + `order`; el DOM no cambia).
 - **Menos de 600 px:** todo a una columna. La calculadora lleva una barra fija abajo con el precio y el coste (con `safe-area-inset-bottom` para el iPhone). Las tablas pasan a listas de dos líneas.
 - **Objetivos táctiles** de al menos 44 px de alto en el móvil.

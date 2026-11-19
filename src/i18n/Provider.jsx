@@ -42,7 +42,7 @@ export default function I18nProvider({ children }) {
   const tp = useCallback((key, n, vars) => translatePlural(DICTS, lang, key, n, vars), [lang])
 
   // Como t, pero algunos huecos se rellenan con elementos de React:
-  //   tr('hero.keep', { amount: '' }, { amount: <strong>12,00 EUR</strong> })
+  //   tr('hero.perWeek', { hours: 60 }, { amount: <strong>15</strong> })
   // Cada idioma decide DONDE va el hueco (en frances, "Il vous reste X par
   // pièce"), por eso no se puede montar el JSX a mano alrededor de t().
   const tr = useCallback((key, vars, slots) => {
