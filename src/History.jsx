@@ -44,7 +44,7 @@ export default function History({ quotes, orders, formatMoney, onLoad, onDelete,
       <div className="panel empty">
         <p>{t('history.empty.title')}</p>
         <p className="muted">{t('history.empty.hint', { button: t('save.button') })}</p>
-        <button type="button" className="controls" onClick={onGoToCalculator}>{t('history.goCalc')}</button>
+        <button type="button" className="controls primary" onClick={onGoToCalculator}>{t('history.goCalc')}</button>
       </div>
     )
   }
@@ -74,7 +74,7 @@ export default function History({ quotes, orders, formatMoney, onLoad, onDelete,
   const totalValue = visible.reduce((sum, item) => sum + orderTotal(item), 0)
   const avgPrice = visible.length ? visible.reduce((sum, item) => sum + item.price, 0) / visible.length : 0
   // Share of quotes that became an order (not counting cancelled ones): the "win rate".
-  const won = visible.length ? visible.filter(item => { const o = orderOf.get(item.id); return o && o.status !== 'cancelled' }).length / visible.length : null
+  const wonCount = visible.filter(item => { const o = orderOf.get(item.id); return o && o.status !== 'cancelled' }).length
 
   // Ticking works on a copy of the Set: React only redraws on a new object.
   const toggle = id => setSelected(prev => {
@@ -101,16 +101,15 @@ export default function History({ quotes, orders, formatMoney, onLoad, onDelete,
     }
   }
 
-  const pct = n => (n === null ? '—' : `${Math.round(n * 100)} %`)
-
   return (
     <>
-      <div className="stats">
-        <div className="stat"><span className="label">{t('history.stat.quotes')}</span><span className="value">{visible.length}</span></div>
-        <div className="stat"><span className="label">{t('history.stat.total')}</span><span className="value">{formatMoney(totalValue)}</span></div>
-        <div className="stat"><span className="label">{t('history.stat.avg')}</span><span className="value">{formatMoney(avgPrice)}</span></div>
-        <div className="stat"><span className="label">{t('sales.stat.won')}</span><span className="value">{pct(won)}</span></div>
-      </div>
+      {/* One line of figures instead of four boxes (2026-11-11): with three
+          quotes, a card saying "Accepted 0 %" was noise. A figure with
+          nothing behind it (no accepted quote yet) is simply not shown. */}
+      <p className="history-summary">
+        {tp('count.quotes', visible.length)} · {formatMoney(totalValue)} · {t('history.summary.avg', { amount: formatMoney(avgPrice) })}
+        {wonCount > 0 && <> · {t('history.summary.won', { n: wonCount, total: visible.length })}</>}
+      </p>
 
       <div className="history-tools">
         <input
@@ -122,26 +121,27 @@ export default function History({ quotes, orders, formatMoney, onLoad, onDelete,
           onChange={e => setQuery(e.target.value)}
         />
         <button type="button" className="controls" onClick={() => onExport(visible)} disabled={exporting || visible.length === 0}>
-          {exporting ? t('history.exporting') : t('history.exportExcel', { n: visible.length })}
+          {exporting ? t('history.exporting') : t('history.exportExcel')}
         </button>
         <button type="button" className="controls" onClick={() => onReport(visible, query.trim())} disabled={visible.length === 0}>
           {t('history.pdfReport')}
         </button>
       </div>
 
-      <div className="quote-tools">
-        <label className="select-all">
-          <input type="checkbox" checked={allShownTicked} onChange={toggleAllShown} disabled={visible.length === 0} />
-          {t('history.selectAll')}
-        </label>
-        <button type="button" className="controls primary" onClick={() => onCustomerQuote(ticked)} disabled={ticked.length === 0}>
-          {t('history.customerQuote', { n: ticked.length })}
-        </button>
-        {/* The same ticked parts, as one order: the client said yes to the quote. */}
-        <button type="button" className="controls" onClick={() => onCreateOrder(ticked)} disabled={ticked.length === 0}>
-          {t('history.createOrder', { n: ticked.length })}
-        </button>
-        {ticked.length === 0 && <span className="muted">{t('history.tickHint')}</span>}
+      {/* The actions on ticked parts only exist once something is ticked.
+          Before, two greyed-out buttons "(0)" and a sentence explaining them
+          sat here all the time. aria-live: a screen reader hears the bar appear. */}
+      <div className="quote-tools" aria-live="polite">
+        {ticked.length > 0 && (
+          <>
+            <span className="picked">{tp('history.picked', ticked.length)}</span>
+            <button type="button" className="controls primary" onClick={() => onCustomerQuote(ticked)}>{t('history.customerQuote')}</button>
+            {/* The same ticked parts, as one order: the client said yes to the quote. */}
+            <button type="button" className="controls" onClick={() => onCreateOrder(ticked)}>{t('history.createOrder')}</button>
+            <button type="button" className="link" onClick={toggleAllShown}>{allShownTicked ? t('history.clear') : t('history.selectAll')}</button>
+            {!allShownTicked && <button type="button" className="link" onClick={() => setSelected(new Set())}>{t('history.clear')}</button>}
+          </>
+        )}
       </div>
 
       {visible.length === 0 && <p className="muted no-results">{t('history.noMatch', { query })}</p>}
@@ -156,6 +156,15 @@ export default function History({ quotes, orders, formatMoney, onLoad, onDelete,
               instead of breaking the page layout. */}
           <div className="table-scroll">
             <table className="history-table">
+              {/* Fixed column widths (index.css): every month is its own table,
+                  and this makes their columns line up with each other. */}
+              <colgroup>
+                <col className="c-check" /><col className="c-date" /><col /><col className="c-client" />
+                <col className="c-qty" /><col className="c-total" /><col className="c-order" /><col className="c-actions" />
+              </colgroup>
+              {/* The header row is kept for screen readers and hidden on screen
+                  (index.css): a date, a name, a client and an amount do not
+                  need a label each, repeated in every month. */}
               <thead>
                 <tr>
                   <th className="check"><span className="sr-only">{t('history.col.select')}</span></th>
@@ -184,7 +193,7 @@ export default function History({ quotes, orders, formatMoney, onLoad, onDelete,
                         onChange={() => toggle(item.id)}
                       />
                     </td>
-                    <td className="muted wide">{day(quoteDate(item))}</td>
+                    <td className="muted wide date-cell">{day(quoteDate(item))}</td>
                     <td className="strong part">
                       {item.name ?? t('save.untitled')}
                       {/* Only visible on a phone, where the Qty, Client and Date
@@ -192,8 +201,8 @@ export default function History({ quotes, orders, formatMoney, onLoad, onDelete,
                           filter(Boolean) drops the empty ones (no client, 1 pc). */}
                       <span className="row-sub">{[(item.units ?? 1) > 1 && `${item.units} ${t('unit.pcs')}`, item.client, day(quoteDate(item))].filter(Boolean).join(' · ')}</span>
                     </td>
-                    <td className="wide">{item.client || <span className="muted">—</span>}</td>
-                    <td className="num wide">{item.units ?? 1}</td>
+                    <td className="wide client-cell">{item.client || <span className="muted">—</span>}</td>
+                    <td className="num wide qty-cell">{item.units ?? 1} <span className="muted">{t('unit.pcs')}</span></td>
                     <td className="num strong total-cell">{formatMoney(orderTotal(item))}</td>
                     <td className="status-cell">
                       {orderOf.has(item.id) ? (

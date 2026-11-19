@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useI18n } from './i18n/context.js'
-import { fmtDateTime, fmtDay, fmtNumber } from './i18n/format.js'
+import { currencySymbol, fmtDateTime, fmtDay, fmtNumber } from './i18n/format.js'
 import {
   ORDER_STATUSES, PAYMENT_METHODS, addPayment, editOrder, formatOrderNumber, freeLine, isDay, lineFromQuote,
   orderTotals, removePayment, setStatus, today,
 } from './orders.js'
-import { CommitText, MoneyInput, PaymentPill, QtyInput, StatusPill } from './OrderParts.jsx'
+import { CommitText, MoneyInput, PaymentPill, QtyInput } from './OrderParts.jsx'
 
 /* ==================================================================
    ORDER DETAIL — one order, everything about it, on one page.
@@ -30,6 +30,7 @@ export default function OrderDetail({ order, customers, quotes, formatMoney, cur
   const edit = patch => onChange(editOrder(order, patch))
   const editLine = (id, patch) => edit({ lines: order.lines.map(l => (l.id === id ? { ...l, ...patch } : l)) })
   const cancelled = order.status === 'cancelled'
+  const symbol = currencySymbol(locale, currency)
   const late = !cancelled && order.status !== 'delivered' && order.dueAt && order.dueAt < today()
 
   const addPart = value => {
@@ -53,11 +54,10 @@ export default function OrderDetail({ order, customers, quotes, formatMoney, cur
             {order.customerName || t('order.noClient')} · {t('order.created', { date: fmtDay(locale, new Date(order.createdAt)) })}
           </p>
         </div>
-        <div className="order-head-pills">
-          <StatusPill status={order.status} />
-          <PaymentPill payment={totals.payment} />
-          {late && <span className="opill late">{t('orders.late')}</span>}
-        </div>
+        {/* Only what is said nowhere else. The status is the control right
+            below and the payment state sits on "Payments": until 2026-11-11
+            both were repeated here as pills, three times on one screen. */}
+        {late && <div className="order-head-pills"><span className="opill late">{t('orders.late')}</span></div>}
       </header>
 
       {/* Where it is. The four steps as a segmented control: one tap moves it. */}
@@ -77,7 +77,6 @@ export default function OrderDetail({ order, customers, quotes, formatMoney, cur
               </button>
             ))}
           </div>
-          <button type="button" className="link danger-link" onClick={() => onChange(setStatus(order, 'cancelled'))}>{t('order.cancel')}</button>
         </div>
       )}
 
@@ -88,6 +87,7 @@ export default function OrderDetail({ order, customers, quotes, formatMoney, cur
           <div className="panel list-group">
             <div className="lrow">
               <span>{t('order.client')}</span>
+              <span className="lrow-pair">
               <select className="lrow-select" value={order.customerId ?? ''} aria-label={t('order.client')}
                 onChange={e => {
                   const c = customers.find(x => x.id === e.target.value)
@@ -96,12 +96,14 @@ export default function OrderDetail({ order, customers, quotes, formatMoney, cur
                 <option value="">{order.customerId ? t('order.noClient') : (order.customerName || t('order.noClient'))}</option>
                 {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
+              {/* The way to the customer's page is the chevron of this row,
+                  not a row of its own. */}
+              {order.customerId && (
+                <button type="button" className="row-btn chevron" aria-label={t('order.openClient')} title={t('order.openClient')}
+                  onClick={() => onOpenCustomer(order.customerId)}>›</button>
+              )}
+              </span>
             </div>
-            {order.customerId && (
-              <button type="button" className="lrow lrow-link" onClick={() => onOpenCustomer(order.customerId)}>
-                <span>{t('order.openClient')}</span><span aria-hidden="true">›</span>
-              </button>
-            )}
             <label className="lrow">
               <span>{t('order.due')}</span>
               <input type="date" value={order.dueAt ?? ''} onChange={e => edit({ dueAt: isDay(e.target.value) ? e.target.value : null })} />
@@ -174,21 +176,21 @@ export default function OrderDetail({ order, customers, quotes, formatMoney, cur
           <div className="panel list-group">
             <div className="lrow"><span>{t('order.subtotal')}</span><span className="num">{formatMoney(totals.subtotal)}</span></div>
             <label className="lrow"><span>{t('order.shipping')}</span>
-              <span className="num-input"><MoneyInput key={`s-${order.shipping}-${rate}`} value={order.shipping} rate={rate} onCommit={shipping => edit({ shipping })} /><span className="unit">{currency}</span></span>
+              <span className="num-input"><MoneyInput key={`s-${order.shipping}-${rate}`} value={order.shipping} rate={rate} onCommit={shipping => edit({ shipping })} /><span className="unit">{symbol}</span></span>
             </label>
             <label className="lrow"><span>{t('order.discount')}</span>
-              <span className="num-input"><MoneyInput key={`d-${order.discount}-${rate}`} value={order.discount} rate={rate} onCommit={discount => edit({ discount })} /><span className="unit">{currency}</span></span>
+              <span className="num-input"><MoneyInput key={`d-${order.discount}-${rate}`} value={order.discount} rate={rate} onCommit={discount => edit({ discount })} /><span className="unit">{symbol}</span></span>
             </label>
             <div className="lrow lrow-total"><span>{t('order.total')}</span><span className="num price">{formatMoney(totals.total)}</span></div>
             <label className="lrow"><span>{t('order.fees')}</span>
-              <span className="num-input"><MoneyInput key={`f-${order.fees}-${rate}`} value={order.fees} rate={rate} onCommit={fees => edit({ fees })} /><span className="unit">{currency}</span></span>
+              <span className="num-input"><MoneyInput key={`f-${order.fees}-${rate}`} value={order.fees} rate={rate} onCommit={fees => edit({ fees })} /><span className="unit">{symbol}</span></span>
             </label>
             <div className="lrow"><span>{t('order.cost')}</span><span className="num muted">{formatMoney(totals.cost)}</span></div>
             <div className="lrow"><span>{t('order.profit')}</span>
               <span className={`num${totals.profit < 0 ? ' loss' : ''}`}>{formatMoney(totals.profit)}</span>
             </div>
             {totals.hours !== null && (
-              <div className="lrow"><span>{t('order.hours')}</span><span className="num muted">{t('cal.hours', { h: fmtNumber(locale, totals.hours, 1) })}</span></div>
+              <div className="lrow"><span>{t('order.hours')}</span><span className="num muted">{fmtNumber(locale, totals.hours, totals.hours < 10 ? 1 : 0)} h</span></div>
             )}
           </div>
 
@@ -227,7 +229,12 @@ export default function OrderDetail({ order, customers, quotes, formatMoney, cur
             ))}
           </ol>
 
-          <button type="button" className="link danger-link delete-order" onClick={remove}>{t('order.delete')}</button>
+          {/* The two ways out, together and at the end. Cancelling keeps the
+              order in the history, so it is plain text; only deleting is red. */}
+          <div className="order-exits">
+            {!cancelled && <button type="button" className="link" onClick={() => onChange(setStatus(order, 'cancelled'))}>{t('order.cancel')}</button>}
+            <button type="button" className="link danger-link" onClick={remove}>{t('order.delete')}</button>
+          </div>
         </div>
       </div>
 
@@ -254,7 +261,8 @@ function eventText(t, e, formatMoney) {
 /* Add a payment: the amount starts at what is still due, so "paid in full"
    is one tap; a deposit is typing a smaller number. */
 function PaymentDialog({ due, currency, rate, onSave, onClose }) {
-  const { t, decimal } = useI18n()
+  const { t, decimal, locale } = useI18n()
+  const symbol = currencySymbol(locale, currency)
   const ref = useRef(null)
   const [amount, setAmount] = useState(due > 0 ? (Math.round(due * rate * 100) / 100).toFixed(2).replace('.', decimal) : '')
   const [method, setMethod] = useState('bizum')
@@ -286,7 +294,7 @@ function PaymentDialog({ due, currency, rate, onSave, onClose }) {
           <label className="sheet-row">
             <span>{t('order.amount')}</span>
             <input type="text" inputMode="decimal" value={amount} autoFocus onChange={e => { setAmount(e.target.value); setError('') }} />
-            <span className="unit">{currency}</span>
+            <span className="unit">{symbol}</span>
           </label>
           <label className="sheet-row">
             <span>{t('order.method')}</span>

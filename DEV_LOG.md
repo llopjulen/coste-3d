@@ -16,6 +16,152 @@ Registro de cambios del proyecto. La entrada más nueva va arriba.
 - De la carrera: Contabilidad de costes en Organización y Gestión de Empresas. Es el reparto de costes indirectos con una base de reparto (aquí, las horas máquina), igual que en un sistema de costes por actividad.
 - Cómo probarlo: `npm test` (4 tests nuevos en src/calculate.test.js). En la web: «Añadir un coste», importe 10 € y «Al mes». Con 60 h por semana y 8 % de fallos, la nota dice 239 horas y una pieza de 3,5 h suma unos 0,15 € en «Otros costes». Si pones las horas por semana a 0, sale el aviso y el coste no suma. En el móvil (360 px) los tres botones caben.
 
+### 2026-11-11, Auditoría 8 de 8: Calendario (y CLAUDE.md al día)
+- Archivo y sitio: src/Calendar.jsx (`monthKinds` y `shortDay` junto a `late`; la leyenda bajo la rejilla; las filas de la cola de impresión); src/i18n/format.js (`fmtDayMonth`); src/i18n/{en,es,fr}.js (`cal.note`, `cal.empty`, `cal.onTime`; fuera `cal.hours`); CLAUDE.md («Estado actual»).
+- Qué cambió:
+  - **La leyenda solo enseña los puntos que hay ese mes** (antes los cuatro tipos, siempre, aunque el mes estuviera vacío).
+  - **Cola de impresión: un dato cuando va bien** («Listo el 14 nov · a tiempo»). La fecha de entrega y la pastilla roja «Va tarde» solo salen cuando chocan. Antes cada fila decía «Listo el…», «Entrega el…» y una pastilla «A tiempo».
+  - **Fechas sin año** en la cola cuando son de este año; «21,2 h de impresión» pasa a «21 h».
+  - **Textos:** «Calculado con 60 h de impresión a la semana.» y «Sin pedidos abiertos, la cola está vacía.»
+- Por qué:
+  - **Gestión por excepción:** en una lista de trabajo lo normal no necesita etiqueta; lo que hay que ver es lo que va mal. Una pastilla «A tiempo» en cada fila hace que la roja de «Va tarde» destaque menos.
+  - **`monthKinds` se calcula de las mismas 42 celdas que se pintan**, así la leyenda no puede desincronizarse de la rejilla. Es un `Set` (cada tipo una vez) ordenado con `KIND_ORDER`, el mismo orden de los puntos.
+  - **El año solo cuando desambigua:** `shortDay` lo quita si la fecha es de este año y lo deja si no (un pedido para enero de 2027 sí lo necesita).
+- De la carrera: Interacción Persona-Ordenador (relación señal/ruido; gestión por excepción en paneles de estado).
+- Cómo probarlo: `npm test` (305 pasan). Calendario sin pedidos: no hay leyenda. Crea un pedido con fecha de entrega holgada: la cola dice «Listo el … · a tiempo» y la leyenda solo enseña los puntos que aparecen. Ponle fecha de entrega para mañana con muchas horas: sale «Entrega el…» y «Va tarde» en rojo.
+
+### 2026-11-11, Auditoría 7 de 8: el informe
+- Archivo y sitio: src/Report.jsx (constante `MIN_COLUMNS`; el bloque de cifras, la gráfica por mes y el desglose dentro de `Report`); src/index.css (bloque «Auditoría pantalla a pantalla, 7»); src/i18n/{en,es,fr}.js; scripts/shots.mjs (`SAMPLE_QUOTES` con `parts` e `inputs.fee`).
+- Qué cambió:
+  - **Las cinco tarjetas con borde son una fila de cifras** separadas por líneas finas, todas a la misma altura (antes «Beneficio medio / pieza» partía en dos líneas y su caja era más alta).
+  - **Con menos de 4 meses, la gráfica por mes son barras horizontales.** Dos columnas pegadas a la izquierda de un eje de 800 px parecían un fallo.
+  - **Títulos de sección en minúscula**, como en el resto de la app (eran MAYÚSCULAS con tracking, que no se usa en ningún otro sitio).
+  - **Lo que no se puede calcular no se pinta:** sin presupuestos con desglose no sale esa gráfica (y los clientes ocupan el ancho), y sin datos de comisión no sale «Beneficio medio». Antes salían «—» y una frase disculpándose.
+- Por qué:
+  - **Elegir la forma según los datos:** las columnas sirven para ver una tendencia en el tiempo y necesitan varios puntos; con dos o tres valores lo que se hace es compararlos, y para comparar magnitudes una barra horizontal con su etiqueta al lado se lee mejor. El umbral está en `MIN_COLUMNS`.
+  - **`<dl>` para las cifras** (lista de pares término/valor): es lo que son, y un lector de pantalla las anuncia como «Precio medio: 8,35 €».
+  - **Sobre la barra, la cifra sin céntimos ni símbolo** (`fmtNumber`): «1 250» cabe donde «1 250,00 €» se montaba con la barra de al lado; el título de la hoja ya dice la moneda. (Además el `replace(' EUR')` que quitaba el código dejó de hacer nada tras la auditoría 1.)
+  - **Datos de ejemplo completos en `shots.mjs`:** las capturas de antes enseñaban «0,00» y «versión antigua» porque los presupuestos de ejemplo no llevaban `parts` ni la comisión; no era un fallo de la app, pero escondía cómo se ve el informe de verdad.
+- De la carrera: Interacción Persona-Ordenador / Visualización de datos (elección de la codificación visual según la tarea: tendencia frente a comparación; relación datos-tinta).
+- Cómo probarlo: `npm test` (305 pasan). Historial → «Informe en PDF». Con presupuestos de 1 a 3 meses salen barras horizontales; con 4 o más, columnas. «Guardar como PDF»: la fila de cifras cabe en una línea en A4. Cambia «Idioma del documento»: importes y títulos cambian.
+
+### 2026-11-11, Auditoría 6 de 8: el presupuesto para el cliente
+- Archivo y sitio: src/CustomerQuote.jsx (`asText` y `symbol` junto a `toEur`; la barra de acciones; el nuevo `<div className="quote-layout">` que envuelve editor y hoja; los campos de precio y envío; la muestra «otro color»; fuera el texto de relleno de la hoja); src/index.css (bloque «Auditoría pantalla a pantalla, 6»); src/i18n/{en,es,fr}.js.
+- Qué cambió:
+  - **La hoja está a la vista mientras editas:** editor a la izquierda (380 px) y documento a la derecha, fijo al hacer scroll. Antes la hoja quedaba debajo de tres paneles, fuera de la primera pantalla, y con un hueco bajo «Tu negocio».
+  - **El editor usa las filas del resto de la app** (etiqueta a la izquierda, valor a la derecha sin caja). Era el único sitio con una caja gris por campo.
+  - **«Otro color» es un círculo con «+»**, no un degradado arcoíris (el único degradado de la app); cuando eliges un color propio, el círculo lo enseña.
+  - **Fuera «Aquí van tu logo y el nombre de tu negocio»** escrito dentro del documento.
+  - **Precios con la coma del idioma** («14,60») y «(€)» en vez de «(EUR)». El aviso de «Guardar como PDF» solo sale hasta que haces el primer presupuesto.
+- Por qué:
+  - **Lo que se envía es el documento:** que quede a la vista es lo que convierte el formulario en una herramienta (escribes el cliente y lo ves en la hoja). `position: sticky` lo mantiene mientras recorres el editor; por debajo de 1100 px vuelve a una columna porque la hoja no cabe legible al lado.
+  - **Casi todo es CSS:** el JSX del formulario no cambia de estructura (mismos `label`/`input`, mismos `id`), así que no se toca la lógica de guardado ni la accesibilidad. `display: contents` en `.form-pair` deshace las parejas de dos columnas; `:has(textarea)` da a los dos textos largos su fila de etiqueta arriba.
+  - **`type="text"` + `inputMode="decimal"`** en precio y envío, como en la calculadora (auditoría 1): `toEur` ya aceptaba coma, pero el campo enseñaba «14.60».
+  - **El aviso del PDF sin clave nueva de localStorage:** se usa el contador de presupuestos que ya existe (`quoteCounter` sigue en 1 hasta el primer «Guardar como PDF»). Una clave nueva obligaría a tocar backup.js para un detalle.
+  - **En papel, una columna** (`@media print`): el PDF sale igual que antes.
+- Concepto nuevo: **`:has()`**, el «selector padre» de CSS. `.form-row:has(textarea)` selecciona la fila que CONTIENE un textarea; hasta 2023 CSS solo podía seleccionar hacia abajo (hijos), no hacia arriba. Y **`field-sizing: content`**: el textarea crece con su texto sin JavaScript (en navegadores que no lo soportan se queda con su altura mínima).
+- De la carrera: Interacción Persona-Ordenador (manipulación directa: ver el resultado junto a lo que editas; consistencia entre pantallas).
+- Cómo probarlo: `npm test` (305 pasan). Historial → marca piezas → «Presupuesto para el cliente». En escritorio la hoja está a la derecha y se actualiza al escribir el cliente; cambia un precio escribiendo «3,5»; elige «+» y un color; «Guardar como PDF»: en la vista previa de impresión solo sale la hoja, sin el editor. A 390 px: editor y debajo la hoja.
+
+### 2026-11-11, Auditoría 5 de 8: Impresoras
+- Archivo y sitio: src/Printers.jsx (`PrintHistory`: las dos tablas; `slicerDiff`, nuevo, encima de `Printers`; el final de `Printers`, estado del agente); src/index.css (bloque «Auditoría pantalla a pantalla, 5»); src/i18n/{en,es,fr}.js (`printers.agent.line`; fuera `printers.agent.version`, `printers.agent.connected`, `printers.col.slicerSaid`).
+- Qué cambió:
+  - **Arreglo en el móvil:** en «Últimas impresiones» el resultado («Terminada») se pintaba ENCIMA del nombre del archivo, y la tabla por impresora salía como «8 2 / 20 %» sin etiquetas. Cada tabla tiene ahora su propia rejilla a menos de 600 px.
+  - **Un solo oro:** la barra de progreso. «Beta», «Imprimiendo» y «Agente conectado» pasan a gris (había cuatro cosas doradas).
+  - **Las impresoras son filas de una lista**, no tarjetas con borde dentro de un panel.
+  - **«Tiempo» y «Decía el laminador» son una columna:** «1 h 59 min +9 min».
+  - **El agente conectado es una línea al pie**; el panel completo solo sale cuando algo va mal (apagado, versión vieja).
+- Por qué:
+  - **La causa del solapamiento:** las dos tablas reutilizaban la clase `.history-table`, cuya versión móvil es una rejilla CSS con áreas con nombre pensadas para el Historial (`check`, `part`, `total`, `status`, `actions`). Las celdas de Impresoras no tienen esas clases, así que caían todas en la primera celda de la rejilla, unas sobre otras. Arreglo: clases propias (`jobs-table`, `fleet-table`) con su `grid-template-areas`. Las cifras por impresora llevan `data-label` y el CSS lo pinta con `td::before { content: attr(data-label) }`, porque en el móvil la fila de cabeceras está oculta.
+  - **`slicerDiff` solo para impresiones terminadas:** una fallida se paró antes, así que «−49 min» no significaría que el laminador se equivocó. Función pura fuera del componente.
+  - **Conectado es lo normal, y lo normal no se anuncia:** un panel entero con título, punto dorado y dos líneas para decir «todo bien» pesaba lo mismo que el historial. El panel con instrucciones sigue saliendo cuando el agente no responde, que es cuando hace falta.
+  - Las reglas de «cabecera oculta» y `table-layout: fixed` de la auditoría 2 se limitan a la tabla de presupuestos: aquí las cifras sin cabecera no se entienden.
+- Concepto nuevo: **`attr()` en CSS**. `content: attr(data-label)` pinta dentro de un pseudo-elemento el valor de un atributo HTML del propio elemento. Ejemplo: `<td data-label="Fallidas">2</td>` con `td::before{content:attr(data-label) " "}` se ve «Fallidas 2» sin duplicar el texto en el JSX.
+- De la carrera: Interacción Persona-Ordenador (diseño adaptable de tablas de datos). Diseño web: CSS Grid con áreas con nombre, y por qué reutilizar una clase arrastra su layout.
+- Cómo probarlo: `npm run agent -- demo` y abre `/?agent` (o `npm run build && npm run shots -- printers`). A 390 px: el resultado va bajo el tiempo, a la derecha, y no pisa el nombre. Para el agente: sale el panel con los pasos; arráncalo y «Comprobar de nuevo»: vuelve la línea gris.
+
+### 2026-11-11, Auditoría 4 de 8: Pedidos y el detalle de un pedido
+- Archivo y sitio: src/Orders.jsx (cabecera de `Orders`, `OrderList` y el nuevo `Count`); src/OrderDetail.jsx (cabecera, fila «Cliente», unidades de moneda, final de la columna derecha y `PaymentDialog`); src/i18n/format.js (`currencySymbol`); src/index.css (bloque «Auditoría pantalla a pantalla, 4»); src/i18n/{en,es,fr}.js.
+- Qué cambió:
+  - **Vacío:** un solo botón dorado (había dos «+ Nuevo pedido» a 200 px) y sin el conmutador «Pedidos 0 · Clientes 0».
+  - **Lista:** las cuatro tarjetas pasan a una línea («1 abierto · 92,98 € por cobrar»), y cobrado y beneficio solo salen cuando no son cero. Los filtros no escriben «0». El buscador aparece a partir de 6 pedidos.
+  - **Detalle:** el estado se dice una vez (el control segmentado) y el pago otra (en «Pagos»); antes las dos pastillas se repetían arriba. «Abrir ficha del cliente» es el chevron de la fila Cliente. «Cancelar» y «Borrar» van juntos al final, y solo borrar es rojo. Las unidades de los campos son «€», no «EUR». «21,2 h de impresión» pasa a «21 h».
+- Por qué:
+  - **Decir cada cosa una vez:** repetir el estado en pastilla, control y título es el patrón de «rellenar la cabecera»; quita jerarquía porque todo pesa igual. Queda en la cabecera solo «Tarde», que no se dice en ningún otro sitio.
+  - **El rojo es para lo que borra (DESIGN.md):** cancelar no destruye nada (el pedido sigue en el historial y se puede reabrir), así que deja de ser rojo y deja de estar pegado al control de estado, donde se pulsaba por error.
+  - **Cifras a cero fuera:** «Cobrado 0,00 €» y «Beneficio 0,00 €» en un taller que acaba de crear su primer pedido son ruido; aparecen cuando hay algo que contar.
+  - **Buscador a partir de 6:** una caja de búsqueda encima de una lista de un elemento es mobiliario. El umbral es una constante en el JSX, fácil de cambiar.
+  - **`currencySymbol` con `formatToParts`:** el símbolo sale de la misma fuente (Intl) que `fmtMoney`, sin tabla propia.
+- De la carrera: Interacción Persona-Ordenador (prevención de errores: separar la acción destructiva del control de uso frecuente; divulgación progresiva).
+- Cómo probarlo: `npm test` (305 pasan). Con el navegador limpio abre Pedidos: un solo botón dorado. Crea un pedido desde el Historial: en el detalle el estado solo está en el control; pulsa el «›» junto al cliente y abre su ficha; «Cancelar pedido» está abajo, en gris, y al cancelar aparece «Reabrir». En la lista, la línea de cifras solo enseña lo que no es cero.
+
+### 2026-11-11, Auditoría 3 de 8: Planes como tabla comparativa
+- Archivo y sitio: src/Plans.jsx (constante `ROWS` y todo el componente `Plans`); src/index.css (bloque «Planes», sustituye a `.plans` / `.plan`); src/i18n/{en,es,fr}.js (claves `plans.row.*`, fuera `plans.free.f*` y `plans.shop.f*`).
+- Qué cambió: las dos tarjetas de precios (lista de checks, pastilla «Próximamente», borde dorado) son ahora UNA tabla: cada cosa en una fila y la respuesta de Gratis y de Taller al lado. El precio es un dato en la cabecera de su columna. «Me interesa» queda debajo, con una frase que dice que Taller aún no se vende y qué se mide.
+- Por qué:
+  - **Era la plantilla de precios de cualquier SaaS**, la pantalla que más delataba. Y comparaba mal: había que leer dos listas y deducir la diferencia. En una tabla la diferencia es una fila («Impresoras conectadas en vivo: 1 / Varias»).
+  - **Mismos hechos, nada nuevo:** las filas salen de las listas que ya había (plan privado aprobado el 2026-11-04). Solo se añade «Cuenta: no hace falta / sí», que es el principio 3 de PRODUCT.md dicho como dato.
+  - **`<table>` de verdad con `<th scope="col">` y `<th scope="row">`:** un lector de pantalla dice «Taller, Impresoras conectadas en vivo: Varias». El check y el guion son dibujos (`aria-hidden`) con «Sí» / «No» ocultos al lado: el color o el icono nunca son la única pista.
+  - **«Próximamente» deja de ser una pastilla dorada** y pasa a una frase junto al botón: el único oro de la pantalla es «Me interesa».
+  - **El precio con `fmtMoney(…, 'EUR')`** aunque el selector diga otra moneda: es lo que cobrará la página de pago. Se quitan los céntimos vacíos («89 €», no «89,00 €»).
+  - Un test confundía `plans.one` / `plans.many` con formas de plural (`.one`, `.other`, `.many` son sufijos reservados del diccionario): las claves son `plans.printers.single` / `plans.printers.several`.
+- De la carrera: Interacción Persona-Ordenador (tablas de datos accesibles: cabeceras de fila y de columna; comparación lado a lado frente a listas paralelas).
+- Cómo probarlo: `npm test` (305 pasan). Abre Planes en los tres idiomas y a 390 px: la tabla cabe sin scroll horizontal. «Me interesa» sigue llevando a `/taller/?lang=…`.
+
+### 2026-11-11, Auditoría 2 de 8: Historial
+- Archivo y sitio: src/History.jsx (estado vacío, el bloque sobre la tabla y el `<colgroup>` de cada tabla); src/BackupPanel.jsx (`BackupReminder` y los botones de `BackupPanel`); src/index.css (bloque «Auditoría pantalla a pantalla, 2»); src/i18n/{en,es,fr}.js; scripts/shots.mjs (selector del botón de pedido).
+- Qué cambió:
+  - **El aviso de copia es una línea gris con enlace**, no una caja con botón dorado; «Aún no hay copia» se decía tres veces y ahora una.
+  - **Las cuatro tarjetas de cifras son una línea:** «3 presupuestos · 25,04 € · media 8,35 € por pieza»; «aceptados» solo sale cuando hay alguno.
+  - **Las acciones sobre piezas marcadas aparecen al marcar** («2 marcadas · Presupuesto para el cliente · Crear pedido · Marcar todas»). Antes había dos botones apagados con «(0)» y una frase explicándolos.
+  - **Sin fila de cabeceras repetida en cada mes** y columnas alineadas entre meses.
+  - **Vacío:** el botón dorado es «Ir a la calculadora»; restaurar una copia es secundario.
+- Por qué:
+  - **Un solo oro por pantalla (DESIGN.md):** el dorado era «Descargar copia», que no es a lo que viene nadie al Historial. Ahora el dorado solo aparece al marcar piezas, sobre «Presupuesto para el cliente», que es la acción de esta pantalla.
+  - **Cifras sin dato no se enseñan:** «Aceptados 0 %» con tres presupuestos no informa (principio 2 de PRODUCT.md: ninguna estadística sin datos detrás).
+  - **Cabecera oculta, no borrada:** el `<thead>` sigue en el DOM con `clip-path` para que un lector de pantalla anuncie «Cliente: Bar Pepe»; a la vista, una fecha, un nombre y un importe se entienden solos. La cantidad pasa a «25 uds» porque un «25» suelto sí era ambiguo.
+  - **`table-layout: fixed` + `<colgroup>`:** cada mes es una `<table>` distinta y con el algoritmo automático cada una reparte anchos según su contenido, así que las columnas bailaban de un mes a otro. Con anchos fijos declarados en `<col>`, todas las tablas usan la misma rejilla. Descartado: una única tabla con filas de mes intercaladas, que rompía el diseño de «un grupo por mes».
+  - **`aria-live="polite"`** en la barra de acciones: como aparece y desaparece, un lector de pantalla la anuncia cuando llega.
+- Concepto nuevo: **`table-layout: fixed`**. Con el valor por defecto (`auto`) el navegador mide TODO el contenido de la tabla para decidir el ancho de cada columna; con `fixed` usa solo los anchos declarados (en `<col>` o en la primera fila) y reparte el resto. Es más rápido y, sobre todo, predecible: dos tablas con el mismo `<colgroup>` quedan alineadas.
+- De la carrera: Interacción Persona-Ordenador (divulgación progresiva: las acciones aparecen cuando tienen sentido; jerarquía con un único acento). Accesibilidad web (regiones vivas ARIA, contenido solo para lectores de pantalla).
+- Cómo probarlo: `npm test` (305 pasan). En Historial con piezas: no hay botones apagados; marca una pieza y aparece la barra con el botón dorado; «Marcar todas» y «Quitar marcas» funcionan. Con el navegador limpio: el botón dorado lleva a la calculadora. `npm run shots -- history empty-history`.
+
+### 2026-11-11, Auditoría 1 de 8: la calculadora y lo común (moneda, decimales, pie)
+- Archivo y sitio: src/i18n/format.js (`fmtMoney` reescrita; nuevas `moneyParts`, `numberToText`, `parseNumber`, con tests en i18n.test.js); src/App.jsx (`Field`, `SiteFooter`, `formatMoney` y `moneyParts` junto a `rates`, y el bloque `.result` de la calculadora); src/CostPrint.jsx (posición de la cámara en `createScene`); src/index.css (bloque «Auditoría pantalla a pantalla, 1» al final); src/i18n/{en,es,fr}.js; src/Orders.jsx, src/Plans.jsx, src/Calendar.jsx (fuera el subtítulo); scripts/shots.mjs (reescrito); DESIGN.md, PRODUCT.md, docs/MAPA.md.
+- Qué cambió:
+  - **«7,94 €» en vez de «7,94 EUR»** en toda la app, el presupuesto y el informe («€7.94» en inglés).
+  - **Los campos numéricos siguen el idioma de la página:** «0,8» en español y francés, y aceptan coma o punto.
+  - **La calculadora empieza por la herramienta:** el h1 sigue en el HTML pero no se pinta; en el móvil el orden es importar → precio → coste con la pieza 3D → campos (antes el precio estaba a ~1.900 px de scroll).
+  - **Un solo bloque para «cuánto gano»:** tres filas comparables (a este precio, al tuyo, por hora) en vez de tres frases con tres cifras repartidas en dos paneles.
+  - **Fuera relleno:** subtítulos bajo los títulos de Historial, Pedidos, Calendario y Planes; el logo repetido en el pie; el contador de la pestaña Historial (queda el punto de «toca copia»); la pista de «Añadir otro filamento»; el título y la viñeta de «Conviene saber»; «15,8 piezas» pasa a «unas 15 piezas».
+  - **`npm run shots` fotografía 14 vistas** (antes 5): la primera pantalla sin scroll, detalle de pedido, presupuesto, informe, Impresoras con el agente demo y los estados vacíos.
+- Por qué:
+  - **`Intl.NumberFormat` con `style: 'currency'`** y no concatenar a mano: sabe dónde va el símbolo en cada idioma, el separador y cuántos decimales tiene cada moneda (el yen, ninguno). `currencyDisplay: 'narrowSymbol'` da «$» y no «US$»: el selector de la barra ya dice qué dólar es. Los formateadores se guardan en un `Map` (memoización) porque construir uno carga datos de idioma y una pantalla formatea cientos de importes. Descartado: una tabla propia de símbolos, que habría que mantener para las ~30 monedas de Frankfurter.
+  - **`type="text"` con `inputMode="decimal"`** y no `type="number"`: un campo numérico escribe el separador del idioma del NAVEGADOR, no el de la página, así que un Chrome en inglés enseñaba «0.8» junto a «5,22». El campo guarda un borrador (`draft`) mientras se escribe, porque «0,» todavía no es un número, y al salir vuelve a enseñar el valor real. Se pierden las flechas arriba/abajo del teclado, que ya estaban ocultas con CSS.
+  - **h1 con `.sr-only`** en vez de borrarlo: lo leen Google (HTML prerrenderizado) y los lectores de pantalla, y la pantalla va directa al trabajo, que es lo que pide DESIGN.md. No es texto oculto engañoso: es el título real de la página.
+  - **Reordenar con `display: contents` y `order`** y no mover el JSX: el orden del DOM (y por tanto el del tabulador y el del lector de pantalla) sigue siendo campos → resultado; solo cambia el orden visual por debajo de 860 px. Descartado: duplicar el bloque del precio arriba y abajo, que obliga a mantener dos copias.
+  - **Tres filas en vez de tres frases:** «Te quedas con 2,09», «Ganas 5,82» y «te quedas con 11,04 de 12,00» obligaban a leer tres textos para comparar dos precios. En filas, las cifras caen en columna (`tabular-nums`) y se comparan de un vistazo. Si no hay «Precio actual», las filas «al tuyo» no salen.
+  - **PRODUCT.md corregido:** decía que no se enseñaran precios de planes y que el cobro era Lemon Squeezy; CLAUDE.md (más reciente) dice 8,99 €/mes publicado y Polar.
+- Concepto nuevo: **`Intl.NumberFormat.formatToParts`**. En vez de un texto devuelve una lista de trozos con su tipo: `[{type:'integer',value:'7'},{type:'decimal',value:','},{type:'fraction',value:'94'},{type:'literal',value:' '},{type:'currency',value:'€'}]`. Así el precio grande puede pintar los céntimos más pequeños sin adivinar dónde está la coma. Y **`display: contents`**: la caja del elemento desaparece para el layout y sus hijos se colocan como si fueran hijos del abuelo.
+- De la carrera: Interacción Persona-Ordenador (internacionalización: formatos de número y moneda por *locale*; orden visual frente a orden del DOM en accesibilidad). Programación: memoización (el `Map` de formateadores) y componente controlado con estado local de borrador.
+- Cómo probarlo: `npm test` (305 pasan). En la web en español: el precio sale «7,94 €»; escribe «0,5» y «0.5» en «Embalaje», las dos valen; cambia a EN y sale «€7.94». En el móvil (o a 390 px): lo primero es importar y el precio. Borra «Precio actual»: desaparecen las filas «al tuyo». `npm run build && npm run shots -- fold calculator` para las capturas.
+
+### 2026-11-10, El objeto 3D del coste es la pieza que sueltas
+- Archivo y sitio: src/CostPrint.jsx (`paintByHeight`, `setModel` dentro de `createScene`, y el efecto del worker en el componente); src/costPrint.js (`bandStops`, con test); src/ImportFile.jsx (prop `onFile`, efecto junto a `partsCount`); src/App.jsx (estado `imported` junto a `activeLayer`, y las props de `<ImportFile>` y `<CostPrint>`).
+- Qué cambió: al soltar un archivo en «Import» (el laminado `.gcode` / `.gcode.3mf`, o un `.stl`), el jarrón se sustituye por ESA pieza, que se imprime de abajo arriba con las franjas de coste pintadas por altura. Con «Undo» vuelve el jarrón. Un `.bgcode` (que aún no se puede dibujar) deja el jarrón.
+- Por qué: es el mismo dato, pero sobre la pieza real de la persona. Decisiones: (1) Reutiliza `preview.worker.js`, el worker que ya usa la vista 3D: el análisis del archivo va en otro hilo y escribir en la calculadora no se congela. (2) El color por altura se hace en el shader con `onBeforeCompile`, que edita el shader que three.js genera para el material estándar en vez de escribir uno entero: así se conserva su iluminación. El vértice pasa su altura normalizada (0 abajo, 1 arriba) y el fragmento elige el color de la franja con `step()` y descarta (`discard`) lo que aún no está «impreso». Recolorear la pieza al teclear cuesta cambiar 8 colores y 8 números (uniforms), no tocar un millón de vértices. (3) El G-code se dibuja como líneas (es el recorrido real de la boquilla) y el STL como sólido con líneas de capa pintadas. (4) Nada nuevo guardado: el archivo vive en memoria mientras dura la visita, como ya pasaba con la vista 3D. Descartado: colorear por vértice en la CPU, que obligaría a recorrer toda la geometría en cada pulsación.
+- Concepto nuevo: uniform y varying en GLSL. Un *uniform* es un valor igual para todo el dibujo que se manda desde JavaScript (aquí, los colores de las franjas). Un *varying* lo calcula el shader de vértices y llega interpolado a cada píxel (aquí, `vT`, la altura). Ejemplo: `if (vT > uPrinted) discard;` no pinta los píxeles por encima de lo ya impreso.
+- De la carrera: Informática gráfica (pipeline programable: shader de vértices y de fragmentos); Sistemas Operativos (hilos: el Web Worker es otro hilo con paso de mensajes, sin memoria compartida, y el `Float32Array` se transfiere sin copiarlo).
+- Cómo probarlo: `npm test` (un test nuevo). En la web: suelta un `.gcode`, un `.gcode.3mf` o un `.stl` en «Import»; arriba, en el coste, tu pieza se imprime con las franjas de color. Cambia «Tu tarifa» y las franjas se mueven. Pulsa «Undo» y vuelve el jarrón.
+
+### 2026-11-10, El coste como objeto impreso en 3D
+- Archivo y sitio: src/CostPrint.jsx (nuevo, la escena de three.js) y src/costPrint.js (nuevo, el reparto de capas, con tests en costPrint.test.js); src/App.jsx, panel de costes, encima de la barra apilada (`<CostPrint>` dentro de `<Suspense>`, estado `activeLayer` junto a `presetId`); src/index.css (`.cost-print`).
+- Qué cambió: encima de la barra de costes hay un jarrón que se «imprime» capa a capa al abrir la calculadora. Cada franja de color es una parte del coste (mismos colores y orden que la barra y la lista), con un grosor proporcional a su peso. Al cambiar un número, las capas se recolorean en vivo; al pasar el ratón por una fila de la lista (o tocarla en el móvil) se ilumina su franja y el resto se apaga.
+- Por qué: es la marca hecha imagen (capas de céntimos) y enseña de un vistazo qué pesa en el precio. Decisiones: (1) `InstancedMesh`: las 56 capas son UNA malla con 56 transformaciones, una sola orden de dibujo a la GPU en vez de 56. (2) Carga con `lazy()`: three.js pesa unos 134 kB comprimidos y va en su propio trozo (el mismo que usa la vista 3D del archivo), así que la calculadora aparece igual de rápido y el objeto llega después; la caja reserva su altura para que nada salte. (3) El bucle de animación se para si el canvas no está en pantalla (`IntersectionObserver`) o la pestaña está oculta: no gasta batería sin que nadie mire. (4) Con «reducir movimiento» activado en el sistema sale ya impreso y quieto. (5) El canvas es `aria-hidden`: los números accesibles siguen siendo la barra y la lista, y si no hay WebGL simplemente no se pinta. (6) El reparto de capas usa restos mayores en vez de redondear cada parte, porque redondeando por separado la suma puede dar 55 o 57. Descartado: `OrbitControls` para girarlo con el dedo, porque en el móvil secuestra el scroll de la página.
+- Concepto nuevo: interpolación exponencial. Cada fotograma el color avanza una fracción `k = 1 − e^(−dt·9)` de lo que le falta: rápido al principio, suave al final, e igual de rápido a 60 que a 120 fotogramas por segundo porque depende del tiempo `dt` y no del número de fotogramas. Ejemplo: `color.lerp(objetivo, k)`.
+- De la carrera: Informática gráfica (matriz de transformación por instancia: posición, giro y escala compuestos en una `Matrix4`); Estadística / matemática discreta (método de los restos mayores, el del reparto de escaños, en `layerBands`).
+- Cómo probarlo: `npm test` (4 tests nuevos). En la web: abre la calculadora y mira cómo se imprime; cambia «Tu tarifa» y verás crecer la franja gris clara; pasa el ratón por «Material» en la lista y se queda encendida solo la franja dorada.
+
 ### 2026-11-08, Resultados de la prueba con la P1S de Julen
 - Archivo y sitio: docs/IMPRESORAS.md, nueva sección «Resultado de la prueba en la P1S de Julen», antes de la checklist; CLAUDE.md, pasos 3 y 5 de «Conexión con impresoras».
 - Qué cambió: queda apuntado que el agente conecta por MQTT con TLS y enseña el estado en vivo con el firmware 01.10.00.00 en modo normal, y que FTPS en el puerto 990 también funciona sin Developer Mode.
