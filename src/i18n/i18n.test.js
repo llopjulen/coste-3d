@@ -63,7 +63,7 @@ test('every key used with t("...") in the code exists in English', () => {
 
 test('every calculator field has a label and a help text', () => {
   const app = readFileSync(join(srcDir, 'App.jsx'), 'utf8')
-  const keys = [...app.matchAll(/\{ key: '(\w+)', (?:unit|unitKey):/g)].map(m => m[1])
+  const keys = [...app.matchAll(/\{ key: '(\w+)', (?:unit|unitKey|money):/g)].map(m => m[1])
   assert.ok(keys.length >= 15)
   for (const k of keys) {
     for (const part of ['label', 'help']) assert.ok(Object.hasOwn(en, `field.${k}.${part}`), `field.${k}.${part}`)
