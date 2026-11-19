@@ -21,6 +21,7 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 |---|---|
 | `index.html` | El shell: metadatos para buscadores y para compartir (título, descripción, `canonical`, Open Graph, datos estructurados JSON-LD), fuentes de Google, Cloudflare Web Analytics y el `<div id="root">` donde React pinta todo. Dentro de `#root` hay un `<h1>` y un párrafo de respaldo para quien lea el HTML sin ejecutar JavaScript; React lo reemplaza al arrancar. |
 | `src/main.jsx` | Punto de entrada. Importa `index.css`, lee y quita el `?agent` de la dirección (una vez por carga) y monta `<App>` dentro de `<StrictMode>`. En desarrollo, StrictMode ejecuta dos veces renders y efectos para destapar efectos secundarios mal hechos; en producción no hace nada. |
+| `src/money.js` | Conversión de los campos de dinero: `toDisplay`, `fromDisplay` (redondea a 4 decimales) y `currencySymbol`. Puro, con tests en `money.test.js`. |
 | `src/App.jsx` | Estado global, cálculo y navegación. Tres secciones: 1) campos (`SECTIONS`, `INITIAL`) y colores del gráfico (`LAYERS`, en el orden en que se imprime: de abajo arriba); 3) componentes pequeños (`Field`, `ExtraFilaments`, `SiteFooter`); 4) `App`. El cálculo vive en `calculate.js`. |
 | `src/History.jsx` | Lista de presupuestos: tarjetas resumen, buscador, tabla agrupada por mes, marcar piezas para el presupuesto de cliente, Load y borrar. No es dueño de ningún dato. |
 | `src/Report.jsx` | Informe imprimible (KPIs y 3 gráficas hechas con `div` y porcentajes, sin librería de gráficas). El PDF sale de `window.print()`. Su hoja tiene idioma propio (`DocLangSelect`), por defecto el de la interfaz. |
@@ -179,7 +180,7 @@ En la web (`src/agent.js` y `src/Printers.jsx`):
 
 ## Dinero y monedas
 
-Todo se guarda en EUR. Al arrancar, `App` pide los tipos de cambio a `api.frankfurter.dev/v1` (datos del BCE) y los guarda en `rates`. `formatMoney` multiplica por `rates[currency]` solo al pintar. Si la API no responde, `rates` se queda en `{ EUR: 1 }` y la app funciona en euros. `CustomerQuote` convierte a céntimos enteros de la moneda en pantalla antes de sumar, para que las líneas sumen exactamente el total (con decimales binarios, `0.1 + 0.2 !== 0.3`).
+Todo se guarda en EUR. Al arrancar, `App` pide los tipos de cambio a `api.frankfurter.dev/v1` (datos del BCE) y los guarda en `rates`. `formatMoney` multiplica por `rates[currency]` solo al pintar. Los campos de dinero del formulario (`money: true` en `SECTIONS`, y los de filamentos y costes extra) hacen lo mismo en los dos sentidos con `src/money.js`: `toDisplay` al pintar el input y `fromDisplay` al leer lo escrito; `Field` recibe el tipo y el símbolo por `CurrencyContext`. Si la API no responde, `rates` se queda en `{ EUR: 1 }` y la app funciona en euros. `CustomerQuote` convierte a céntimos enteros de la moneda en pantalla antes de sumar, para que las líneas sumen exactamente el total (con decimales binarios, `0.1 + 0.2 !== 0.3`).
 
 ## Qué se guarda en localStorage
 
