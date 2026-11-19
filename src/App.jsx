@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense, createContext, useContext } from 'react'
 import History from './History.jsx'
 import Report from './Report.jsx'
 import ImportFile from './ImportFile.jsx'
@@ -25,6 +25,7 @@ import { COST_PER, MAX_EXTRA_COSTS, MAX_EXTRA_FILAMENTS, calculate, goodHoursPer
 import { useI18n } from './i18n/context.js'
 import { LANGS, LANG_NAMES, selectorVisible } from './i18n/index.js'
 import { fmtMoney, fmtNumber, moneyParts as splitMoney, numberToText, parseNumber } from './i18n/format.js'
+import { currencySymbol, fromDisplay, toDisplay } from './money.js'
 
 /* ==================================================================
    1) FIELDS
@@ -50,7 +51,7 @@ const SECTIONS = [
     id: 'sec-material',
     titleKey: 'section.material',
     fields: [
-      { key: 'spoolPrice', unit: '€', initial: 20 },
+      { key: 'spoolPrice', money: true, initial: 20 },
       { key: 'spoolWeight', unit: 'g', initial: 1000 },
       { key: 'partGrams', unit: 'g', initial: 45 },
       { key: 'purgeGrams', unit: 'g', initial: 0 },
@@ -62,7 +63,7 @@ const SECTIONS = [
     fields: [
       { key: 'hours', unit: 'h', initial: 3.5 },
       { key: 'postMinutes', unit: 'min', initial: 10 },
-      { key: 'packaging', unit: '€', initial: 0.8 },
+      { key: 'packaging', money: true, initial: 0.8 },
     ],
   },
   {
@@ -70,7 +71,7 @@ const SECTIONS = [
     titleKey: 'section.thisSale',
     fields: [
       { key: 'quantity', unitKey: 'unit.pcs', initial: 1 },
-      { key: 'currentPrice', unit: '€', initial: 12 },
+      { key: 'currentPrice', money: true, initial: 12 },
     ],
   },
   /* The two sections below are "Your setup": numbers a person sets once
@@ -81,10 +82,10 @@ const SECTIONS = [
     titleKey: 'section.printer',
     setup: true,
     fields: [
-      { key: 'printerPrice', unit: '€', initial: 700 },
+      { key: 'printerPrice', money: true, initial: 700 },
       { key: 'lifespan', unit: 'h', initial: 3000 },
       { key: 'watts', unit: 'W', initial: 110 },
-      { key: 'kwhPrice', unit: '€', initial: 0.15 },
+      { key: 'kwhPrice', money: true, initial: 0.15 },
       { key: 'failRate', unit: '%', initial: 8 },
       { key: 'printHoursPerWeek', unit: 'h', initial: 60 },
     ],
@@ -94,7 +95,7 @@ const SECTIONS = [
     titleKey: 'section.platform',
     setup: true,
     fields: [
-      { key: 'hourlyRate', unit: '€', initial: 15 },
+      { key: 'hourlyRate', money: true, initial: 15 },
       { key: 'fee', unit: '%', initial: 8 },
       { key: 'margin', unit: '%', initial: 40 },
     ],
@@ -148,7 +149,14 @@ const LAYERS = [
 /* ==================================================================
    3) UI PIECES
 ================================================================== */
-function Field({ id, label, unit, help, value, onChange }) {
+/* The currency chosen in the top bar, for the form's money fields. A context
+   because Field is a separate component from App (it is reused by the extra
+   filaments and extra costs rows) and passing `rate` down three levels of props
+   would touch every one of them. Default: EUR at rate 1, which is what a
+   Field outside the provider (tests, a future screen) should assume. */
+const CurrencyContext = createContext({ code: 'EUR', rate: 1, symbol: '€' })
+
+function Field({ id, label, unit, money, help, value, onChange }) {
   /* Redesign 2026-11-06: no "i" button next to every label. A circle after
      each of ~20 labels was the noisiest pattern on the screen. The help now
      appears under the row while the field has focus (CSS :focus-within), as
@@ -165,6 +173,11 @@ function Field({ id, label, unit, help, value, onChange }) {
      opens the numeric keyboard on a phone. */
   const { decimal } = useI18n()
   const [draft, setDraft] = useState(null)
+  /* A money field is stored in EUR (like everything the app saves) but shown and
+     typed in the chosen currency: toDisplay on the way in, fromDisplay on the
+     way out. With EUR the rate is 1 and nothing changes. */
+  const cur = useContext(CurrencyContext)
+  const shown = money ? toDisplay(value, cur.rate) : value
   return (
     <div className="field">
       <div className="row">
@@ -174,7 +187,7 @@ function Field({ id, label, unit, help, value, onChange }) {
           type="text"
           inputMode="decimal"
           autoComplete="off"
-          value={draft ?? numberToText(value, decimal)}
+          value={draft ?? numberToText(shown, decimal)}
           aria-describedby={help ? `help-${id}` : undefined}
           /* The input doesn't hold the value: it receives it from above and
              reports changes upward (controlled component). A key that would
@@ -183,11 +196,11 @@ function Field({ id, label, unit, help, value, onChange }) {
             const n = parseNumber(e.target.value)
             if (n === null) return
             setDraft(e.target.value)
-            onChange(n)
+            onChange(money ? fromDisplay(n, cur.rate) : n)
           }}
           onBlur={() => setDraft(null)}
         />
-        <span className="unit">{unit}</span>
+        <span className="unit">{money ? cur.symbol : unit}</span>
       </div>
       {help && <p className="help" id={`help-${id}`}>{help}</p>}
     </div>
@@ -221,7 +234,7 @@ function ExtraFilaments({ list, onChange }) {
               />
               <button type="button" className="row-btn danger" aria-label={t('filament.remove', { name: f.label || title })} onClick={() => remove(f.id)}>✕</button>
             </div>
-            <Field id={`extra-${f.id}-price`} label={t('filament.price')} unit="€" value={f.spoolPrice} onChange={v => update(f.id, { spoolPrice: v })} />
+            <Field id={`extra-${f.id}-price`} label={t('filament.price')} money value={f.spoolPrice} onChange={v => update(f.id, { spoolPrice: v })} />
             <Field id={`extra-${f.id}-weight`} label={t('filament.weight')} unit="g" value={f.spoolWeight} onChange={v => update(f.id, { spoolWeight: v })} />
             <Field id={`extra-${f.id}-grams`} label={t('filament.grams')} unit="g" value={f.grams} onChange={v => update(f.id, { grams: toNumber(v) })} />
           </div>
@@ -259,7 +272,7 @@ function ExtraCosts({ list, onChange, monthHours }) {
             <Field
               id={`cost-${c.id}-amount`}
               label={t('cost.extra.amount')}
-              unit="€"
+              money
               value={c.amount}
               onChange={v => update(c.id, { amount: v === '' ? 0 : Number(v) })}
             />
@@ -597,11 +610,15 @@ export default function App({ agentOptIn = false }) {
   const [currency, setCurrency] = useState('EUR')
 
   const[rates, setRates] = useState({ EUR: 1})
+  // What the form's money fields need: the symbol to show and the rate to convert with.
+  const rate = rates[currency] || 1
+  const symbol = useMemo(() => currencySymbol(currency, locale), [currency, locale])
+  const currencyCtx = useMemo(() => ({ code: currency, rate, symbol }), [currency, rate, symbol])
 
   // Money is formatted in exactly one place (i18n/format.js): "7,94 €" in
   // Spanish and French, "€7.94" in English. Amounts are kept in EUR and
   // converted here, so saved quotes never depend on the currency on screen.
-  const inCurrency = n => (isFinite(n) ? n : 0) * (rates[currency] || 1)
+  const inCurrency = n => (isFinite(n) ? n : 0) * rate
   const formatMoney = n => fmtMoney(locale, inCurrency(n), currency)
   // The same amount in pieces, so the big price can draw its cents smaller.
   const moneyParts = n => splitMoney(locale, inCurrency(n), currency)
@@ -682,7 +699,7 @@ export default function App({ agentOptIn = false }) {
   })
 
   // The unit is a symbol (€, g, h) except for "pcs", which is a word and is translated.
-  const fieldUnit = field => (field.unitKey ? t(field.unitKey) : field.unit)
+  const fieldUnit = field => (field.unitKey ? t(field.unitKey) : field.money ? symbol : field.unit)
 
   // One input row of the form; used by the per-print sections and by the setup.
   const renderField = field => (
@@ -691,6 +708,7 @@ export default function App({ agentOptIn = false }) {
       id={field.key}
       label={t(`field.${field.key}.label`)}
       unit={fieldUnit(field)}
+      money={field.money}
       help={t(`field.${field.key}.help`)}
       value={d[field.key]}
       onChange={set(field.key)}
@@ -749,7 +767,7 @@ export default function App({ agentOptIn = false }) {
   const price = moneyParts(r.recommendedPrice)
 
   return (
-    <>
+    <CurrencyContext.Provider value={currencyCtx}>
       {/* Hidden until focused with Tab: lets keyboard users jump past the
           sidebar (nine stops) straight to the screen. Web Interface Guidelines. */}
       <a className="skip-link no-print" href="#contenido">{t('a11y.skip')}</a>
@@ -1050,7 +1068,7 @@ export default function App({ agentOptIn = false }) {
                   {SECTIONS.filter(section => section.setup).flatMap(section => section.fields).map(field => (
                     <div key={field.key}>
                       <dt>{t(`field.${field.key}.label`)}</dt>
-                      <dd>{numberToText(d[field.key], decimal)} {fieldUnit(field)}</dd>
+                      <dd>{numberToText(field.money ? toDisplay(d[field.key], rate) : d[field.key], decimal)} {fieldUnit(field)}</dd>
                     </div>
                   ))}
                 </dl>
@@ -1220,6 +1238,6 @@ export default function App({ agentOptIn = false }) {
         <SiteFooter />
       </div>
       )}
-    </>
+    </CurrencyContext.Provider>
   )
 }
