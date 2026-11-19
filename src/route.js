@@ -25,7 +25,9 @@
 // URL too (so Back from them returns to History), but they show what was
 // selected in History a moment before: opened cold from a link there is
 // nothing to show, so they fall back to History.
-export const LINKABLE = ['history', 'orders', 'calendar', 'plans', 'printers']
+// 'account' is linkable too, but App only shows it when there is a backend
+// (cloudMode() !== 'off'); otherwise the link falls back to the calculator.
+export const LINKABLE = ['history', 'orders', 'calendar', 'plans', 'printers', 'account']
 export const TRANSIENT = ['report', 'quote']
 
 const isId = v => typeof v === 'string' && /^[\w-]{1,64}$/.test(v)

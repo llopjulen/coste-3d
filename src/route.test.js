@@ -25,6 +25,11 @@ test('building keeps other parameters and drops the old screen', () => {
   assert.equal(buildSearch('', { view: 'plans', open: { kind: 'order', id: 'x' } }), '?view=plans')
 })
 
+test('account is a linkable screen', () => {
+  assert.equal(parseRoute('?view=account').view, 'account')
+  assert.equal(buildSearch('', { view: 'account' }), '?view=account')
+})
+
 test('round trip: what is built is what is read back', () => {
   const route = { view: 'orders', open: { kind: 'customer', id: 'abc-123' } }
   assert.deepEqual(parseRoute(buildSearch('', route)), route)

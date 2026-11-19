@@ -16,6 +16,8 @@ import { useOrders } from './useOrders.js'
 import { createLocalStore } from './ordersStore.js'
 import { OPEN_STATUSES, ordersByQuote } from './orders.js'
 import { TRANSIENT, buildSearch, parseRoute } from './route.js'
+import Account from './Account.jsx'
+import { cloudMode } from './cloud/session.js'
 import { adviceFor } from './advice.js'
 import NavIcon from './NavIcons.jsx'
 import SubNav from './SubNav.jsx'
@@ -489,6 +491,7 @@ export default function App({ agentOptIn = false }) {
     const { view: linked } = parseRoute(window.location.search)
     if (TRANSIENT.includes(linked)) return 'history'
     if (linked === 'printers' && !isAgentEnabled()) return 'calculator'
+    if (linked === 'account' && cloudMode() === 'off') return 'calculator'
     return linked
   })
 
@@ -514,6 +517,10 @@ export default function App({ agentOptIn = false }) {
     legacyDone.current = true
     orders.importLegacy(savedQuotes).then(next => { if (next) setSavedQuotes(next) })
   }, [orders, savedQuotes])
+
+  // The account tab exists only with a backend (or the ?cloud=mock test mode):
+  // with neither, nobody sees a "Sign in" that leads nowhere. Read once.
+  const [cloudOn] = useState(() => cloudMode() !== 'off')
 
   // Whether this browser shows the Printers tab (opt-in, see agent.js).
   // State, not just storage, so hiding the tab takes effect at once.
@@ -578,12 +585,12 @@ export default function App({ agentOptIn = false }) {
     const onPop = () => {
       const r = parseRoute(window.location.search)
       const lost = (r.view === 'report' && !report.quotes.length) || (r.view === 'quote' && !quoteParts.length)
-      setView(lost ? 'history' : r.view)
+      setView(lost ? 'history' : r.view === 'account' && !cloudOn ? 'calculator' : r.view)
       setOrdersOpen(r.open)
     }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
-  }, [report, quoteParts])
+  }, [report, quoteParts, cloudOn])
   const openCustomerQuote = (quotes) => {
     setQuoteParts(quotes)
     setView('quote')
@@ -838,6 +845,17 @@ export default function App({ agentOptIn = false }) {
               <span className="tab-label">{t('nav.printers')}</span>
             </button>
           )}
+          {cloudOn && (
+            <button
+              type="button"
+              className={`tab ${view === 'account' ? 'active' : ''}`}
+              aria-current={view === 'account' ? 'page' : undefined}
+              onClick={() => setView('account')}
+            >
+              <NavIcon name="user" />
+              <span className="tab-label">{t('nav.account')}</span>
+            </button>
+          )}
         </nav>
         <div className="topbar-end">
           <button
@@ -879,7 +897,12 @@ export default function App({ agentOptIn = false }) {
       <div id="contenido" tabIndex={-1} className="skip-target" />
 
       {/* agentOn is checked again here: if the tab was hidden, the screen goes too. */}
-      {view === 'orders' ? (
+      {view === 'account' && cloudOn ? (
+        <>
+          <Account />
+          <div className="wrap wrap-foot"><SiteFooter /></div>
+        </>
+      ) : view === 'orders' ? (
         <>
           <Orders
             api={orders}
