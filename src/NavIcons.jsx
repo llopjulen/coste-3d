@@ -33,6 +33,27 @@ const PATHS = {
     </>
   ),
   moon: <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />,
+  // Calendario: hoja con anillas
+  calendar: (
+    <>
+      <rect x="4" y="5" width="16" height="15" rx="2.5" />
+      <path d="M4 10h16M8.5 3v4M15.5 3v4" />
+    </>
+  ),
+  // Pedidos: una caja, lo que sale del taller
+  orders: (
+    <>
+      <path d="M4 8l8-4 8 4v8l-8 4-8-4z" />
+      <path d="M4 8l8 4 8-4M12 12v8" />
+    </>
+  ),
+  // Planes: una etiqueta de precio
+  plans: (
+    <>
+      <path d="M3.5 12.6V4.5a1 1 0 0 1 1-1h8.1l8 8a1.4 1.4 0 0 1 0 2l-7.1 7.1a1.4 1.4 0 0 1-2 0z" />
+      <circle cx="8.2" cy="8.2" r="1.4" />
+    </>
+  ),
   // Impresora 3D: portico, cabezal y cama
   printer: (
     <>

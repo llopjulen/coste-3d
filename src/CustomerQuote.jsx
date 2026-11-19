@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import DocLangSelect from './DocLangSelect.jsx'
 import { useI18n } from './i18n/context.js'
 import { translatorFor } from './i18n/dicts.js'
-import { fmtLongDay, fmtMoney, fmtNumber } from './i18n/format.js'
+import { currencySymbol, fmtLongDay, fmtMoney, fmtNumber } from './i18n/format.js'
+import { ACCENTS, FONTS, STYLES, inkOf, quoteStyleOf, textOn } from './quoteStyle.js'
 
 /* ==================================================================
    CUSTOMER QUOTE — the document you send to a client.
@@ -13,6 +14,8 @@ import { fmtLongDay, fmtMoney, fmtNumber } from './i18n/format.js'
 
 const BUSINESS_KEY = 'business'
 const COUNTER_KEY = 'quoteCounter'
+// accent / docStyle / docFont: how the sheet looks (quoteStyle.js). Absent in
+// older saves; quoteStyleOf() fills them in.
 const EMPTY_BUSINESS = { name: '', contact: '', logo: '', notes: '', tax: 0, validDays: 30 }
 const DAY = 24 * 60 * 60 * 1000
 
@@ -66,11 +69,13 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
   // `t` speaks the language of the screen (the form); `doc` speaks the language
   // of the SHEET the client reads, which starts the same but can be changed:
   // you can work in Spanish and send the quote in English.
-  const { t, lang } = useI18n()
+  const { t, lang, locale, decimal } = useI18n()
   const [docLang, setDocLang] = useState(lang)
   const doc = useMemo(() => translatorFor(docLang), [docLang])
   const [business, setBusiness] = useState(loadBusiness)
   const [businessError, setBusinessError] = useState('')
+  // The sheet's look, always complete and valid even for a business saved before it existed.
+  const look = quoteStyleOf(business)
   const [counter] = useState(loadCounter)
   const defaultNumber = `${new Date().getFullYear()}-${String(counter).padStart(3, '0')}`
   const [number, setNumber] = useState(defaultNumber)
@@ -104,6 +109,9 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
   }
 
   // Prices are typed in the currency on screen and stored in EUR.
+  // What a money field shows: two decimals with the page's decimal mark ("14,60").
+  const asText = eur => (eur * rate).toFixed(2).replace('.', decimal)
+  const symbol = currencySymbol(locale, currency)
   const toEur = (text) => (parseFloat(String(text).replace(',', '.')) || 0) / rate
   const updateLine = (id, patch) => setLines(lines.map(l => (l.id === id ? { ...l, ...patch } : l)))
   const removeLine = (id) => setLines(lines.filter(l => l.id !== id))
@@ -143,14 +151,20 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
   }
 
   return (
-    <div className="report-screen">
+    <div className="report-screen quote-screen">
       <div className="report-actions no-print">
         <button type="button" className="controls" onClick={onBack}>← {t('doc.back')}</button>
         <button type="button" className="controls primary" onClick={savePdf} disabled={lines.length === 0}>{t('doc.savePdf')}</button>
         <DocLangSelect value={docLang} onChange={setDocLang} />
-        <span className="muted">{t('doc.printHint')}</span>
+        {/* Only until the first quote has gone out (the counter is still at 1):
+            after that the person knows what the print dialog is for. */}
+        {counter <= 1 && <span className="muted">{t('doc.printHint')}</span>}
       </div>
 
+      {/* Editor on the left, the sheet on the right (one column on narrow
+          screens): what is typed shows on the document next to it. Until
+          2026-11-11 the sheet was below three panels, off the first screen. */}
+      <div className="quote-layout">
       <div className="quote-editor no-print">
         <section className="panel">
           <h2>{t('quote.this')}</h2>
@@ -167,7 +181,7 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
             </div>
 
             <div className="line-edit line-head" aria-hidden="true">
-              <span>{t('quote.col.item')}</span><span>{t('quote.col.qty')}</span><span>{t('quote.col.unitCur', { currency })}</span><span />
+              <span>{t('quote.col.item')}</span><span>{t('quote.col.qty')}</span><span>{t('quote.col.unitCur', { currency: symbol })}</span><span />
             </div>
             {lines.map(line => (
               <div className="line-edit" key={line.id}>
@@ -192,12 +206,10 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
                 <input
                   key={`${line.id}-${currency}`}
                   className="text-input num-input"
-                  type="number"
+                  type="text"
                   inputMode="decimal"
-                  min="0"
-                  step="0.01"
                   aria-label={t('quote.unitOf', { name: line.name })}
-                  defaultValue={(line.unitPrice * rate).toFixed(2)}
+                  defaultValue={asText(line.unitPrice)}
                   onChange={e => updateLine(line.id, { unitPrice: toEur(e.target.value) })}
                 />
                 <button type="button" className="row-btn danger" aria-label={t('quote.remove', { name: line.name })} onClick={() => removeLine(line.id)}>✕</button>
@@ -207,16 +219,14 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
 
             <div className="form-pair">
               <div className="form-row">
-                <label htmlFor="q-shipping">{t('quote.shipping', { currency })}</label>
+                <label htmlFor="q-shipping">{t('quote.shipping', { currency: symbol })}</label>
                 <input
                   id="q-shipping"
                   key={`shipping-${currency}`}
                   className="text-input num-input"
-                  type="number"
+                  type="text"
                   inputMode="decimal"
-                  min="0"
-                  step="0.01"
-                  defaultValue={(shipping * rate).toFixed(2)}
+                  defaultValue={asText(shipping)}
                   onChange={e => setShipping(toEur(e.target.value))}
                 />
               </div>
@@ -280,16 +290,77 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
             {businessError && <p className="form-error" role="alert">{businessError}</p>}
           </div>
         </section>
+
+        {/* How the sheet looks. Saved with the business details, so every
+            quote comes out the same until it's changed here. */}
+        <section className="panel">
+          <h2>{t('quote.look')}</h2>
+          <div className="form-grid">
+            <div className="form-row">
+              <span className="form-label" id="look-color">{t('quote.look.color')}</span>
+              <div className="swatches" role="radiogroup" aria-labelledby="look-color">
+                {ACCENTS.map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    role="radio"
+                    aria-checked={look.accent === c}
+                    aria-label={c}
+                    className="swatch-btn"
+                    style={{ backgroundColor: c }}
+                    onClick={() => saveBusiness({ accent: c })}
+                  />
+                ))}
+                {/* Any other colour, with the system's colour picker. A plain
+                    "+" (it was a rainbow gradient, the only one in the app);
+                    once a custom colour is chosen the circle shows it. */}
+                <label className="swatch-btn swatch-custom" title={t('quote.look.custom')}
+                  style={ACCENTS.includes(look.accent) ? undefined : { backgroundColor: look.accent, color: textOn(look.accent) }}
+                  data-on={!ACCENTS.includes(look.accent) || undefined}>
+                  <span aria-hidden="true">+</span>
+                  <span className="sr-only">{t('quote.look.custom')}</span>
+                  <input type="color" value={look.accent} onChange={e => saveBusiness({ accent: e.target.value.toUpperCase() })} />
+                </label>
+              </div>
+            </div>
+            <div className="form-row">
+              <span className="form-label" id="look-style">{t('quote.look.style')}</span>
+              <div className="segmented segmented-inline" role="group" aria-labelledby="look-style">
+                {STYLES.map(st => (
+                  <button key={st} type="button" aria-pressed={look.style === st} className={look.style === st ? 'on' : undefined} onClick={() => saveBusiness({ docStyle: st })}>
+                    {t(`quote.look.style.${st}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="form-row">
+              <span className="form-label" id="look-font">{t('quote.look.font')}</span>
+              <div className="segmented segmented-inline" role="group" aria-labelledby="look-font">
+                {FONTS.map(f => (
+                  <button key={f} type="button" aria-pressed={look.font === f} className={look.font === f ? 'on' : undefined} onClick={() => saveBusiness({ docFont: f })}>
+                    {t(`quote.look.font.${f}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
 
       {/* ---------------- The sheet that becomes the PDF ---------------- */}
-      <article className="report quote-doc" lang={doc.lang}>
+      {/* The look is applied with three CSS variables: the accent for fills,
+          an ink version of it that is always readable on white, and the text
+          colour that goes on top of the accent (the "band" header). */}
+      <article
+        className={`report quote-doc look-${look.style} font-${look.font}`}
+        lang={doc.lang}
+        style={{ '--acento': look.accent, '--acento-tinta': inkOf(look.accent), '--sobre-acento': textOn(look.accent) }}
+      >
         <header className="quote-top">
           <div className="quote-from">
             {business.logo && <img className="quote-logo" src={business.logo} alt={business.name || 'Logo'} />}
             {business.name && <div className="quote-business">{business.name}</div>}
             {business.contact && <div className="quote-contact">{business.contact}</div>}
-            {!business.logo && !business.name && <div className="quote-contact no-print">{t('quote.doc.placeholder')}</div>}
           </div>
           <div className="quote-title">
             <h1>{doc.t('quote.doc.title')}</h1>
@@ -347,6 +418,7 @@ export default function CustomerQuote({ quotes, currency, rate, onBack }) {
 
         <footer className="report-foot">{doc.t('quote.doc.footer')}</footer>
       </article>
+      </div>
     </div>
   )
 }

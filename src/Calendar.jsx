@@ -1,0 +1,218 @@
+import { useCallback, useMemo, useState } from 'react'
+import { useI18n } from './i18n/context.js'
+import { fmtDay, fmtDayMonth, fmtLongDay, fmtMonthYear, fmtNumber } from './i18n/format.js'
+import { dayKey, dayStart, eventsByDay, planOrders } from './schedule.js'
+import { readEvents, removeEvent, upsertEvent, writeEvents } from './calendarEvents.js'
+import EventDialog from './EventDialog.jsx'
+import { formatOrderNumber } from './orders.js'
+
+/* ==================================================================
+   CALENDAR — deliveries, the print queue and sales, by day.
+
+   Left: the month, Monday first (as in Spain and France), with a dot for
+   each thing on that day: a delivery agreed with a client, the day the
+   queue says an order will be printed, a sale. Tapping a day lists them.
+   Right: the print queue (schedule.js), earliest delivery first, with the
+   estimated ready day of each order and a warning when it can't make it.
+
+   Deliveries, the queue and sales are not stored: they're worked out from
+   the orders (orders.js) and the printing hours a week of "Your setup", every
+   time it's drawn. The person's own entries ("buy PETG", "craft fair")
+   are the one thing stored here (calendarEvents.js). They live in this
+   component's state, read once on mount: a restore happens in History,
+   and coming back here mounts the calendar again, so it reads the
+   restored ones without App having to hold them.
+================================================================== */
+
+const KIND_ORDER = { due: 0, ready: 1, paid: 2, own: 3 }
+
+// "#0012 · Bar Pepe": how an order is named in the day list and the queue.
+const orderLabel = (o, t) => `${formatOrderNumber(o.number)} · ${o.customerName || t('order.noClient')}`
+
+export default function Calendar({ orders, weekHours, formatMoney, onOpenOrder, onGoToOrders }) {
+  const { t, tp, locale } = useI18n()
+  const today = dayKey(new Date())
+  const [month, setMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1) })
+  const [selected, setSelected] = useState(today)
+  const [own, setOwn] = useState(() => readEvents())
+  // null, or the entry in the dialog: an existing one, or { date } for a new one.
+  const [editing, setEditing] = useState(null)
+  const [storageError, setStorageError] = useState(false)
+
+  // Every change goes to state AND storage; if storage refuses (full,
+  // blocked), the entry stays on screen and a line says it won't survive a reload.
+  const commit = next => { setOwn(next); setStorageError(!writeEvents(next)); setEditing(null) }
+  // Stable identity: the dialog's effect depends on onClose.
+  const closeDialog = useCallback(() => setEditing(null), [])
+
+  // Since 2026-11-04 the calendar reads ORDERS (orders.js), not quote states.
+  const plan = useMemo(() => planOrders(orders, { weekHours }), [orders, weekHours])
+  const events = useMemo(() => {
+    const byDay = eventsByDay(orders, plan)
+    for (const e of own) (byDay[e.date] ??= []).push({ kind: 'own', event: e })
+    return byDay
+  }, [orders, plan, own])
+
+  // The 6 × 7 grid: from the Monday on or before the 1st.
+  const first = new Date(month)
+  const offset = (first.getDay() + 6) % 7
+  const cells = Array.from({ length: 42 }, (_, i) => new Date(first.getFullYear(), first.getMonth(), 1 - offset + i))
+  // Weekday initials in the language of the screen, starting on Monday (5 Jan 2026 was a Monday).
+  const weekdays = Array.from({ length: 7 }, (_, i) =>
+    new Intl.DateTimeFormat(locale, { weekday: 'narrow' }).format(new Date(2026, 0, 5 + i)))
+
+  const move = n => setMonth(m => new Date(m.getFullYear(), m.getMonth() + n, 1))
+  const dayEvents = (events[selected] ?? []).slice().sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind])
+  const late = plan.filter(p => p.late).length
+  // The kinds of dot drawn in the days on screen, in their fixed order.
+  const monthKinds = [...new Set(cells.flatMap(d => (events[dayKey(d)] ?? []).map(e => e.kind)))].sort((a, b) => KIND_ORDER[a] - KIND_ORDER[b])
+  // In a list of this year's dates the year is noise; next year's keep it.
+  const shortDay = dt => (dt.getFullYear() === new Date().getFullYear() ? fmtDayMonth(locale, dt) : fmtDay(locale, dt))
+
+  return (
+    <main className="wrap">
+      <h1>{t('cal.title')}</h1>
+
+      <div className="cal-layout">
+        <section className="panel cal" aria-labelledby="cal-month">
+          <div className="cal-head">
+            {/* First letter up only: "noviembre de 2026" -> "Noviembre de 2026" (CSS capitalize would also do "De"). */}
+            <h2 id="cal-month">{(m => m.charAt(0).toUpperCase() + m.slice(1))(fmtMonthYear(locale, month))}</h2>
+            <div className="cal-nav">
+              <button type="button" className="row-btn" onClick={() => move(-1)} aria-label={t('cal.prev')}>‹</button>
+              <button type="button" className="row-btn" onClick={() => { const d = new Date(); setMonth(new Date(d.getFullYear(), d.getMonth(), 1)); setSelected(today) }}>{t('cal.today')}</button>
+              <button type="button" className="row-btn" onClick={() => move(1)} aria-label={t('cal.next')}>›</button>
+            </div>
+          </div>
+          <div className="cal-grid" role="grid" aria-labelledby="cal-month">
+            {weekdays.map((w, i) => <div key={i} className="cal-wd" aria-hidden="true">{w}</div>)}
+            {cells.map(d => {
+              const key = dayKey(d)
+              const list = events[key] ?? []
+              const kinds = [...new Set(list.map(e => e.kind))].sort((a, b) => KIND_ORDER[a] - KIND_ORDER[b])
+              const out = d.getMonth() !== month.getMonth()
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className={['cal-day', out && 'out', key === today && 'today', key === selected && 'sel'].filter(Boolean).join(' ')}
+                  aria-pressed={key === selected}
+                  aria-label={`${fmtLongDay(locale, d)}${list.length ? `, ${tp('cal.things', list.length)}` : ''}`}
+                  onClick={() => setSelected(key)}
+                >
+                  <span className="cal-num">{d.getDate()}</span>
+                  <span className="cal-dots" aria-hidden="true">{kinds.map(k => <i key={k} className={`dot dot-${k}`} />)}</span>
+                </button>
+              )
+            })}
+          </div>
+          {/* The legend explains only the dots that are on screen this month;
+              an empty month has none. It used to list all four, always. */}
+          {monthKinds.length > 0 && (
+            <div className="cal-legend" aria-hidden="true">
+              {monthKinds.map(k => <span key={k}><i className={`dot dot-${k}`} />{t(`cal.kind.${k}`)}</span>)}
+            </div>
+          )}
+
+          <div className="cal-daylist">
+            <div className="cal-daylist-head">
+              <h3>{fmtLongDay(locale, dayStart(selected))}</h3>
+              <button
+                type="button"
+                className="row-btn cal-add"
+                aria-label={t('cal.addLabel', { date: fmtLongDay(locale, dayStart(selected)) })}
+                onClick={() => setEditing({ date: selected })}
+              >
+                + {t('cal.add')}
+              </button>
+            </div>
+            {dayEvents.length === 0
+              ? <p className="muted">{t('cal.nothing')}</p>
+              : (
+                <ul>
+                  {dayEvents.map((e, i) => e.kind === 'own' ? (
+                    <li key={e.event.id}>
+                      {/* The whole row opens the entry: a 44 px target, like a row in iOS Calendar. */}
+                      <button type="button" className="cal-own" onClick={() => setEditing(e.event)}>
+                        <i className="dot dot-own" aria-hidden="true" />
+                        <span className="name">
+                          {e.event.title}
+                          {e.event.note && <span className="muted cal-own-note">{e.event.note}</span>}
+                        </span>
+                        <span className="muted">{e.event.time ?? ''}</span>
+                      </button>
+                    </li>
+                  ) : (
+                    <li key={i}>
+                      {/* Opens the order: from "what's on today" to the order in one tap. */}
+                      <button type="button" className="cal-own" onClick={() => onOpenOrder(e.order.id)}>
+                        <i className={`dot dot-${e.kind}`} aria-hidden="true" />
+                        <span className="name">{orderLabel(e.order, t)}</span>
+                        <span className="muted">
+                          {e.kind === 'paid' ? formatMoney(e.amount) : t(`cal.kind.${e.kind}`)}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            {storageError && <p className="import-error" role="alert">{t('cal.storageError')}</p>}
+          </div>
+        </section>
+
+        <section aria-labelledby="queue-title">
+          <h2 id="queue-title" className="group-title">
+            {t('cal.queue')}
+            {late > 0 && <span className="late-badge">{t('cal.lateCount', { n: late })}</span>}
+          </h2>
+          {plan.length === 0 ? (
+            <div className="panel cal-empty">
+              <p>{t('cal.empty')}</p>
+              <button type="button" className="controls" onClick={onGoToOrders}>{t('cal.goOrders')}</button>
+            </div>
+          ) : (
+            <ul className="panel queue">
+              {plan.map(p => (
+                <li key={p.order.id} className="queue-row">
+                  <button type="button" className="queue-main queue-open" onClick={() => onOpenOrder(p.order.id)}>
+                    <span className="name">{orderLabel(p.order, t)}</span>
+                    <span className="muted">
+                      {[t(`order.status.${p.order.status}`), p.hours !== null && `${fmtNumber(locale, p.hours, p.hours < 10 ? 1 : 0)} h`].filter(Boolean).join(' · ')}
+                    </span>
+                  </button>
+                  {/* On time, one fact is enough: when it will be ready. The
+                      delivery date only matters next to it when they clash. */}
+                  <div className="queue-dates">
+                    <span>{p.readyAt ? t('cal.readyOn', { date: shortDay(p.readyAt) }) : t('cal.noEstimate')}</span>
+                    {p.late && <span className="muted">{t('cal.dueOn', { date: shortDay(p.dueAt) })}</span>}
+                    {!p.dueAt && <span className="muted">{t('cal.noDue')}</span>}
+                    {p.dueAt && p.readyAt && !p.late && <span className="muted">{t('cal.onTime')}</span>}
+                  </div>
+                  {p.late && <span className="queue-state late">{t('cal.late')}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="muted cal-note">
+            {weekHours > 0 ? t('cal.note', { hours: fmtNumber(locale, weekHours, 0) }) : t('order.noHours')}
+          </p>
+        </section>
+      </div>
+
+      {editing && (
+        <EventDialog
+          event={editing}
+          onSave={e => {
+            commit(upsertEvent(own, e))
+            // Follow the entry if its day was changed to another one, maybe in another month.
+            const d = dayStart(e.date)
+            setSelected(e.date)
+            setMonth(new Date(d.getFullYear(), d.getMonth(), 1))
+          }}
+          onDelete={id => commit(removeEvent(own, id))}
+          onClose={closeDialog}
+        />
+      )}
+    </main>
+  )
+}

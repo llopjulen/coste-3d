@@ -1,13 +1,19 @@
-import { useState } from 'react'
-import SaleDialog from './SaleDialog.jsx'
+import { useMemo, useState } from 'react'
 import { useI18n } from './i18n/context.js'
 import { fmtDay, fmtMonthYear } from './i18n/format.js'
-import { STATUSES, saleProfit, salesSummary, statusOf, withStatus } from './sales.js'
+import { formatOrderNumber, ordersByQuote } from './orders.js'
+import { StatusPill } from './OrderParts.jsx'
 
 /* ==================================================================
    HISTORY — every saved quote, newest first, grouped by month.
    It doesn't own any data: App passes the quotes in and gets told
    when the user wants to load, delete or export something.
+
+   Since 2026-11-04 what happens after a quote lives in ORDERS (orders.js):
+   a quote here is the priced part. Each row says which order it went
+   into, or offers to create one; ticked rows become one order together.
+   The old per-quote states (quote / order / sold, sales.js) are turned
+   into orders once by migrateQuoteOrders and are no longer edited here.
 ================================================================== */
 
 // Older quotes only have `id` (a Date.now() timestamp), newer ones
@@ -24,22 +30,21 @@ function monthOf(q, locale) {
   }
 }
 
-export default function History({ quotes, formatMoney, currency, rate, onLoad, onDelete, onUpdate, onExport, exporting, onReport, onCustomerQuote, onGoToCalculator }) {
+export default function History({ quotes, orders, formatMoney, onLoad, onDelete, onExport, exporting, onReport, onCustomerQuote, onCreateOrder, onOpenOrder, onGoToCalculator }) {
   const { t, tp, locale } = useI18n()
   const day = dt => fmtDay(locale, dt)
   const [query, setQuery] = useState('')
   // Ids of the quotes ticked for a customer quote. A Set holds each id once.
   const [selected, setSelected] = useState(() => new Set())
-  // Which state is shown ('all' or one of STATUSES), and the quote whose sale is being entered.
-  const [filter, setFilter] = useState('all')
-  const [selling, setSelling] = useState(null)
+  // quote id -> its order, worked out once per change of the orders.
+  const orderOf = useMemo(() => ordersByQuote(orders), [orders])
 
   if (quotes.length === 0) {
     return (
       <div className="panel empty">
         <p>{t('history.empty.title')}</p>
         <p className="muted">{t('history.empty.hint', { button: t('save.button') })}</p>
-        <button type="button" className="controls" onClick={onGoToCalculator}>{t('history.goCalc')}</button>
+        <button type="button" className="controls primary" onClick={onGoToCalculator}>{t('history.goCalc')}</button>
       </div>
     )
   }
@@ -51,11 +56,7 @@ export default function History({ quotes, formatMoney, currency, rate, onLoad, o
     (item.name ?? '').toLowerCase().includes(q) ||
     (item.client ?? '').toLowerCase().includes(q)
   )
-  // Counts per state for the segmented control, over what the search matches.
-  const summary = salesSummary(matching)
-  const visible = matching
-    .filter(item => filter === 'all' || statusOf(item) === filter)
-    .sort((a, b) => quoteDate(b) - quoteDate(a))
+  const visible = [...matching].sort((a, b) => quoteDate(b) - quoteDate(a))
 
   // Group the visible quotes by month: [{ key, label, items, total }]
   const months = []
@@ -72,6 +73,8 @@ export default function History({ quotes, formatMoney, currency, rate, onLoad, o
 
   const totalValue = visible.reduce((sum, item) => sum + orderTotal(item), 0)
   const avgPrice = visible.length ? visible.reduce((sum, item) => sum + item.price, 0) / visible.length : 0
+  // Share of quotes that became an order (not counting cancelled ones): the "win rate".
+  const wonCount = visible.filter(item => { const o = orderOf.get(item.id); return o && o.status !== 'cancelled' }).length
 
   // Ticking works on a copy of the Set: React only redraws on a new object.
   const toggle = id => setSelected(prev => {
@@ -91,16 +94,6 @@ export default function History({ quotes, formatMoney, currency, rate, onLoad, o
   })
   const ticked = quotes.filter(item => selected.has(item.id))
 
-  /* Changing the state: 'sold' needs the sale's details first, so it opens
-     the dialog; the others apply at once (and drop a recorded sale). */
-  const changeStatus = (item, status) => {
-    if (status === 'sold') setSelling(item)
-    else onUpdate(withStatus(item, status))
-  }
-  const saveSale = sale => {
-    onUpdate(withStatus(selling, 'sold', sale))
-    setSelling(null)
-  }
 
   const remove = item => {
     if (window.confirm(t('history.confirmDelete', { name: item.name ?? t('save.untitled'), date: day(quoteDate(item)) }))) {
@@ -108,46 +101,15 @@ export default function History({ quotes, formatMoney, currency, rate, onLoad, o
     }
   }
 
-  const pct = n => (n === null ? '—' : `${Math.round(n * 100)} %`)
-
   return (
     <>
-      {/* Segmented control, as in iOS: one tap filters the list by state.
-          aria-pressed tells screen readers which one is on. */}
-      <div className="segmented" role="group" aria-label={t('sales.filter')}>
-        {['all', ...STATUSES].map(key => (
-          <button
-            key={key}
-            type="button"
-            aria-pressed={filter === key}
-            className={filter === key ? 'on' : undefined}
-            onClick={() => setFilter(key)}
-          >
-            {t(`sales.tab.${key}`)}
-            <span className="seg-count">{key === 'all' ? matching.length : summary.count[key]}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* The sold view shows what really came in; the others, what was quoted. */}
-      {filter === 'sold' ? (
-        <div className="stats">
-          <div className="stat"><span className="label">{t('sales.stat.revenue')}</span><span className="value">{formatMoney(summary.revenue)}</span></div>
-          <div className="stat"><span className="label">{t('sales.stat.profit')}</span><span className={`value${summary.profit < 0 ? ' loss' : ''}`}>{formatMoney(summary.profit)}</span></div>
-          <div className="stat"><span className="label">{t('sales.stat.margin')}</span><span className="value">{pct(summary.margin)}</span></div>
-          <div className="stat">
-            <span className="label">{t('sales.stat.vsQuoted')}</span>
-            <span className="value">{formatMoney(summary.revenue - summary.quoted)}</span>
-          </div>
-        </div>
-      ) : (
-        <div className="stats">
-          <div className="stat"><span className="label">{t('history.stat.quotes')}</span><span className="value">{visible.length}</span></div>
-          <div className="stat"><span className="label">{t('history.stat.total')}</span><span className="value">{formatMoney(totalValue)}</span></div>
-          <div className="stat"><span className="label">{t('history.stat.avg')}</span><span className="value">{formatMoney(avgPrice)}</span></div>
-          <div className="stat"><span className="label">{t('sales.stat.won')}</span><span className="value">{pct(summary.won)}</span></div>
-        </div>
-      )}
+      {/* One line of figures instead of four boxes (2026-11-11): with three
+          quotes, a card saying "Accepted 0 %" was noise. A figure with
+          nothing behind it (no accepted quote yet) is simply not shown. */}
+      <p className="history-summary">
+        {tp('count.quotes', visible.length)} · {formatMoney(totalValue)} · {t('history.summary.avg', { amount: formatMoney(avgPrice) })}
+        {wonCount > 0 && <> · {t('history.summary.won', { n: wonCount, total: visible.length })}</>}
+      </p>
 
       <div className="history-tools">
         <input
@@ -159,22 +121,27 @@ export default function History({ quotes, formatMoney, currency, rate, onLoad, o
           onChange={e => setQuery(e.target.value)}
         />
         <button type="button" className="controls" onClick={() => onExport(visible)} disabled={exporting || visible.length === 0}>
-          {exporting ? t('history.exporting') : t('history.exportExcel', { n: visible.length })}
+          {exporting ? t('history.exporting') : t('history.exportExcel')}
         </button>
         <button type="button" className="controls" onClick={() => onReport(visible, query.trim())} disabled={visible.length === 0}>
           {t('history.pdfReport')}
         </button>
       </div>
 
-      <div className="quote-tools">
-        <label className="select-all">
-          <input type="checkbox" checked={allShownTicked} onChange={toggleAllShown} disabled={visible.length === 0} />
-          {t('history.selectAll')}
-        </label>
-        <button type="button" className="controls primary" onClick={() => onCustomerQuote(ticked)} disabled={ticked.length === 0}>
-          {t('history.customerQuote', { n: ticked.length })}
-        </button>
-        {ticked.length === 0 && <span className="muted">{t('history.tickHint')}</span>}
+      {/* The actions on ticked parts only exist once something is ticked.
+          Before, two greyed-out buttons "(0)" and a sentence explaining them
+          sat here all the time. aria-live: a screen reader hears the bar appear. */}
+      <div className="quote-tools" aria-live="polite">
+        {ticked.length > 0 && (
+          <>
+            <span className="picked">{tp('history.picked', ticked.length)}</span>
+            <button type="button" className="controls primary" onClick={() => onCustomerQuote(ticked)}>{t('history.customerQuote')}</button>
+            {/* The same ticked parts, as one order: the client said yes to the quote. */}
+            <button type="button" className="controls" onClick={() => onCreateOrder(ticked)}>{t('history.createOrder')}</button>
+            <button type="button" className="link" onClick={toggleAllShown}>{allShownTicked ? t('history.clear') : t('history.selectAll')}</button>
+            {!allShownTicked && <button type="button" className="link" onClick={() => setSelected(new Set())}>{t('history.clear')}</button>}
+          </>
+        )}
       </div>
 
       {visible.length === 0 && <p className="muted no-results">{t('history.noMatch', { query })}</p>}
@@ -189,6 +156,15 @@ export default function History({ quotes, formatMoney, currency, rate, onLoad, o
               instead of breaking the page layout. */}
           <div className="table-scroll">
             <table className="history-table">
+              {/* Fixed column widths (index.css): every month is its own table,
+                  and this makes their columns line up with each other. */}
+              <colgroup>
+                <col className="c-check" /><col className="c-date" /><col /><col className="c-client" />
+                <col className="c-qty" /><col className="c-total" /><col className="c-order" /><col className="c-actions" />
+              </colgroup>
+              {/* The header row is kept for screen readers and hidden on screen
+                  (index.css): a date, a name, a client and an amount do not
+                  need a label each, repeated in every month. */}
               <thead>
                 <tr>
                   <th className="check"><span className="sr-only">{t('history.col.select')}</span></th>
@@ -198,12 +174,11 @@ export default function History({ quotes, formatMoney, currency, rate, onLoad, o
                   <th>{t('history.col.part')}</th>
                   <th className="wide">{t('history.col.client')}</th>
                   <th className="num wide">{t('history.col.qty')}</th>
-                  {/* Cost and price per part left the table (2026-11-04) to make room
-                      for the sale state and the real profit; they are in the
+                  {/* Cost and price per part left the table (2026-11-04); they are in the
                       loaded quote, the Excel and the PDF report. */}
                   <th className="num">{t('history.col.total')}</th>
-                  <th className="wide">{t('sales.col.status')}</th>
-                  <th className="num wide">{t('sales.col.profit')}</th>
+                  {/* Which order it went into; it stays on phones too. */}
+                  <th>{t('history.col.order')}</th>
                   <th><span className="sr-only">{t('history.col.actions')}</span></th>
                 </tr>
               </thead>
@@ -218,7 +193,7 @@ export default function History({ quotes, formatMoney, currency, rate, onLoad, o
                         onChange={() => toggle(item.id)}
                       />
                     </td>
-                    <td className="muted wide">{day(quoteDate(item))}</td>
+                    <td className="muted wide date-cell">{day(quoteDate(item))}</td>
                     <td className="strong part">
                       {item.name ?? t('save.untitled')}
                       {/* Only visible on a phone, where the Qty, Client and Date
@@ -226,38 +201,23 @@ export default function History({ quotes, formatMoney, currency, rate, onLoad, o
                           filter(Boolean) drops the empty ones (no client, 1 pc). */}
                       <span className="row-sub">{[(item.units ?? 1) > 1 && `${item.units} ${t('unit.pcs')}`, item.client, day(quoteDate(item))].filter(Boolean).join(' · ')}</span>
                     </td>
-                    <td className="wide">{item.client || <span className="muted">—</span>}</td>
-                    <td className="num wide">{item.units ?? 1}</td>
-                    <td className="num strong">
-                      {/* Sold: what was really charged; the quoted total stays in the tooltip. */}
-                      {statusOf(item) === 'sold'
-                        ? <span title={t('sales.quotedWas', { amount: formatMoney(orderTotal(item)) })}>{formatMoney(item.sale.amount)}</span>
-                        : formatMoney(orderTotal(item))}
-                    </td>
-                    <td className="wide">
-                      <select
-                        className={`status-select status-${statusOf(item)}`}
-                        aria-label={t('sales.statusOf', { name: item.name ?? t('save.untitled') })}
-                        value={statusOf(item)}
-                        onChange={e => changeStatus(item, e.target.value)}
-                      >
-                        {STATUSES.map(s => <option key={s} value={s}>{t(`sales.status.${s}`)}</option>)}
-                      </select>
-                    </td>
-                    <td className="num wide">
-                      {statusOf(item) === 'sold' ? (
-                        <button type="button" className={`row-btn profit${saleProfit(item) < 0 ? ' loss' : ''}`} title={t('sales.edit')} onClick={() => setSelling(item)}>
-                          {formatMoney(saleProfit(item))}
+                    <td className="wide client-cell">{item.client || <span className="muted">—</span>}</td>
+                    <td className="num wide qty-cell">{item.units ?? 1} <span className="muted">{t('unit.pcs')}</span></td>
+                    <td className="num strong total-cell">{formatMoney(orderTotal(item))}</td>
+                    <td className="status-cell">
+                      {orderOf.has(item.id) ? (
+                        <button type="button" className="row-btn order-link" onClick={() => onOpenOrder(orderOf.get(item.id).id)}
+                          title={t('history.openOrder')}>
+                          <span className="order-num">{formatOrderNumber(orderOf.get(item.id).number)}</span>
+                          <StatusPill status={orderOf.get(item.id).status} />
                         </button>
-                      ) : <span className="muted">—</span>}
+                      ) : (
+                        <button type="button" className="row-btn" onClick={() => onCreateOrder([item])}>{t('history.toOrder')}</button>
+                      )}
                     </td>
                     <td className="actions">
                       {/* Quotes saved before this version don't have the
                           form data, so there is nothing to load. */}
-                      {/* On a phone the state column is hidden: this button does the main step. */}
-                      {statusOf(item) !== 'sold' && (
-                        <button type="button" className="row-btn sell-btn" onClick={() => setSelling(item)}>{t('sales.markSold')}</button>
-                      )}
                       <button
                         type="button"
                         className="row-btn"
@@ -284,15 +244,6 @@ export default function History({ quotes, formatMoney, currency, rate, onLoad, o
         </section>
       ))}
 
-      {selling && (
-        <SaleDialog
-          quote={selling}
-          currency={currency}
-          rate={rate}
-          onSave={saveSale}
-          onClose={() => setSelling(null)}
-        />
-      )}
     </>
   )
 }

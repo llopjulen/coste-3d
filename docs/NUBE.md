@@ -10,7 +10,7 @@ Lo que **no** está aquí, a propósito: qué es de pago, precios y plan comerci
 |---|---|---|
 | Backend | **Supabase** (Postgres + Auth + Edge Functions), región UE | Backend propio en un VPS: parches, copias y caídas serían de Julen, que trabaja a jornada completa. Solo licencias sin cuentas: no da sincronización ni ver las impresoras desde el móvil. |
 | Datos de impresoras | **El agente sube el estado y los trabajos a la cuenta de la persona** | Todo local: privacidad total, pero solo se ve la flota desde el PC del agente. Mixto: dos caminos que probar y mantener. |
-| Cobro | **Lemon Squeezy** (o Paddle), que actúa de vendedor oficial: cobra, calcula y declara el IVA por país | Stripe directo: menos comisión, pero el IVA de cada país europeo lo declararía Julen. |
+| Cobro | **Polar** (decidido el 2026-11-04), que actúa de vendedor oficial (*merchant of record*): cobra, calcula y declara el IVA de cada país, gestiona devoluciones y avisa por webhook con firma | Lemon Squeezy: lo compró Stripe y su futuro pasa por Stripe Managed Payments. Stripe directo: menos comisión, pero el IVA de cada país europeo lo declararía Julen. Paddle: misma comisión que Polar, pensado para empresas. |
 
 ## Qué sigue igual
 
@@ -38,24 +38,27 @@ Es el mismo patrón de `gh auth login` o de la tele que enseña un código: el a
 3. El agente consulta `agent-pair-poll` con el `device_code` hasta que le devuelve el **token del agente**: 256 bits aleatorios.
 4. El token se guarda **hasheado (SHA-256)** en la tabla `agents` y en claro solo en `~/.layercents/cloud.json` (permisos 600). Un volcado de la base de datos no sirve para suplantar a ningún agente.
 
-El agente usa ese token, **no** la sesión de la persona. Un token robado solo puede escribir estado de impresoras de esa cuenta: no puede leer presupuestos ni datos del negocio. Se revoca desde la web (`agents.revoked_at`).
+El agente usa ese token, **no** la sesión de la persona. El token pertenece al **taller**, no a quien lo vinculó. Un token robado solo puede escribir estado de impresoras de ese taller: no puede leer presupuestos ni datos del negocio. Se revoca desde la web (`agents.revoked_at`).
 
 ## Esquema (se concreta en `supabase/migrations/`)
 
-Todas las tablas llevan `user_id` y **Row Level Security activado**: sin política, no se ve ni se escribe nada.
+**Actualizado el 2026-11-05 por el modo taller (docs/TALLER.md):** los datos son de un **taller** y no de una persona. Todas las tablas de datos llevan `workspace_id` (no `user_id`) y **Row Level Security activado**: sin política, no se ve ni se escribe nada. Una cuenta suelta es un taller de una sola persona, así que no hay dos modelos. Las tablas de pedidos y clientes están en docs/PEDIDOS.md.
 
 | Tabla | Contenido | Quién escribe |
 |---|---|---|
-| `profiles` | `user_id`, preferencias | la persona |
-| `quotes` | un presupuesto: `id`, `payload jsonb` (el mismo que `savedQuotes`), `schema_version`, `updated_at` | la persona |
-| `business` | datos del negocio (nombre, logo, impuesto…) | la persona |
-| `agents` | `id`, `user_id`, `name`, `token_hash`, `last_seen_at`, `revoked_at` | funciones |
+| `workspaces` | el taller: `id`, `name`, `owner_id` | la persona (`create_workspace`) |
+| `memberships` | quién es miembro de qué taller y con qué rol (`owner`, `manager`, `operator`) | funciones (invitaciones) |
+| `invitations` | invitaciones por correo: hash del token, caducidad, uso | funciones |
+| `profiles` | `user_id`, preferencias (esta sí es de la persona, no del taller) | la persona |
+| `quotes` | un presupuesto: `id`, `payload jsonb` (el mismo que `savedQuotes`), `schema_version`, `updated_at`. Finanzas: solo jefe y encargado | jefe y encargado |
+| `business` | datos del negocio (nombre, logo, impuesto…). Finanzas | jefe y encargado |
+| `agents` | `id`, `workspace_id`, `name`, `token_hash`, `last_seen_at`, `revoked_at` | funciones |
 | `printers` | `id`, `agent_id`, `name`, `brand`, `model`. Sin IP, serie ni código | función `agent-ingest` |
 | `printer_status` | último estado de cada impresora (`jsonb`) y `updated_at` | función `agent-ingest` |
 | `jobs` | un trabajo (`id` estable, impresora, nombre, inicio, fin, resultado, minutos estimados y reales) | función `agent-ingest` |
-| `subscriptions` | plan y estado, según el webhook de pago | solo la función `payments-webhook` |
+| `subscriptions` | plan y estado **del taller**, según el webhook de pago | solo la función `payments-webhook` |
 
-Política tipo: `using (user_id = auth.uid())`. La web **solo lee** `printers`, `printer_status`, `jobs` y `subscriptions`; escribirlas es cosa de funciones con la clave de servicio.
+Política tipo: `using (public.is_member(workspace_id))` para lo que ven todos los miembros, y `using (public.has_role(workspace_id, array['owner','manager']))` para lo que es de finanzas (docs/TALLER.md explica por qué hay dos grupos y cómo se comprueba el rol sin recursión). La web **solo lee** `printers`, `printer_status`, `jobs` y `subscriptions`; escribirlas es cosa de funciones con la clave de servicio.
 
 La flota en vivo se pinta con **Supabase Realtime** sobre `printer_status`: la web se suscribe a cambios en lugar de preguntar cada 3 s.
 
@@ -67,23 +70,24 @@ La flota en vivo se pinta con **Supabase Realtime** sobre `printer_status`: la w
 - Las funciones solo aceptan `Origin: https://layercents.com` (más `localhost` en desarrollo) cuando las llama un navegador.
 - El webhook de pago comprueba la **firma HMAC** del cuerpo antes de hacer nada. Sin firma válida, 401.
 - Lo que se cobra se aplica **en el servidor**: la web solo usa el plan para enseñar u ocultar botones. Nada de pago se protege en el cliente, porque el código es público y cualquiera podría saltárselo.
-- Borrar la cuenta borra todas sus filas (`on delete cascade`). La copia de seguridad en JSON sigue existiendo y es el «exportar mis datos».
+- Borrar la cuenta de quien es dueño de un taller **no se puede** mientras el taller exista (`on delete restrict` en `workspaces.owner_id`): primero se borra el taller (`cascade` a todo lo suyo) o se traspasa. Para quien trabaja solo, «borrar mi cuenta» borra el taller y después la cuenta; si el taller tiene más miembros, se niega (su cuenta se llevaría por delante los datos de los demás). La copia de seguridad en JSON sigue existiendo y es el «exportar mis datos».
 
 ## Orden de PRs
 
 1. Este documento y la regla nueva de CLAUDE.md.
-2. `supabase/migrations/`: tablas, RLS y tests de las políticas contra un Postgres local.
+2. `supabase/migrations/`: tablas, RLS y tests de las políticas contra un Postgres local. Con el modelo de taller (`workspaces`, `memberships`, `workspace_id` en todas las tablas, `is_member` y `has_role`): docs/TALLER.md.
 3. Cuenta en la web: entrar con enlace por correo, salir, borrar cuenta. Sin sincronizar aún.
 4. Sincronizar presupuestos y datos del negocio (`backup.js` y `MAPA.md` al día).
 5. Agente: `link`, subida de estado y trabajos (`PROTOCOL` sube).
 6. Pestaña Printers: flota desde la nube, historial, tasa de fallos y tiempo medio.
-7. Pago con Lemon Squeezy y webhook.
+6 bis. Modo taller: invitar por correo, lista de miembros, roles y asientos (docs/TALLER.md). Va antes del pago porque es el pago quien hace cumplir los asientos.
+7. Pago con Polar y webhook (firma comprobada en una Edge Function; el plan se guarda en `subscriptions`).
 8. Páginas legales (privacidad, términos, borrado de datos): antes de cobrar el primer euro.
 
 ## Lo que solo puede hacer Julen
 
 - Crear el proyecto de Supabase (región UE, Frankfurt) y pasar la URL y la `anon key` (la `service_role` **nunca** por chat ni por el repositorio).
 - Revisar el plan gratuito de Supabase antes de lanzar: los proyectos gratuitos se pausan tras un periodo sin actividad. Para algo de pago hay que usar el plan de producción.
-- Abrir la cuenta de Lemon Squeezy (pide datos fiscales y bancarios suyos).
+- Abrir la cuenta de Polar (pide datos fiscales y bancarios suyos). Comprobar al darse de alta que acepta a una persona física en España; si no, Paddle.
 - Alta de actividad en Hacienda y mirar si su contrato actual le deja tener otra actividad (pluriempleo, cláusulas de exclusividad). No es consejo legal: es lo que hay que consultar con una gestoría antes de facturar.
 - Política de privacidad y términos: los redacta o revisa una persona cualificada. Aquí solo se prepara lo técnico para poder cumplirlos (exportar, borrar, no subir secretos).

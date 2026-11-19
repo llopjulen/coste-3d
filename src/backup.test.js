@@ -5,7 +5,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   KEYS, BACKUP_SCHEMA_VERSION, sanitizeSetup, buildBackup, parseBackup, planRestore,
-  readSetup, saveSetupField, clearSetup, applyRestore, hasStoredSettings, sanitizeQuote,
+  readSetup, saveSetupField, clearSetup, applyRestore, hasStoredSettings, sanitizeQuote, sanitizeBusiness,
 } from './backup.js'
 
 // A stand-in for localStorage: same three methods, backed by a Map.
@@ -164,4 +164,35 @@ test('sanitizeQuote keeps a clean sale and status, and drops broken ones', () =>
   assert.equal('sale' in broken, false)
   assert.equal(broken.status, 'order', 'sold without a valid sale is an order')
   assert.equal('status' in sanitizeQuote({ ...base, status: 'hacked' }), false)
+})
+
+/* ---- the quote's look (quoteStyle.js) ---- */
+test('sanitizeBusiness keeps a valid look and drops anything that could inject CSS', () => {
+  const ok = sanitizeBusiness({ name: 'A', accent: '#1F3A5F', docStyle: 'band', docFont: 'serif' })
+  assert.equal(ok.accent, '#1F3A5F'); assert.equal(ok.docStyle, 'band'); assert.equal(ok.docFont, 'serif')
+  const bad = sanitizeBusiness({ name: 'A', accent: 'red;background:url(//x)', docStyle: 'neon', docFont: 1 })
+  assert.equal('accent' in bad, false); assert.equal('docStyle' in bad, false); assert.equal('docFont' in bad, false)
+})
+
+test('sanitizeQuote keeps valid order dates and drops broken ones', () => {
+  const base = { id: 6, cost: 2, price: 4, status: 'order' }
+  const ok = sanitizeQuote({ ...base, dueAt: '2026-11-20', orderedAt: '2026-11-04T08:00:00.000Z' })
+  assert.equal(ok.dueAt, '2026-11-20'); assert.equal(ok.orderedAt, '2026-11-04T08:00:00.000Z')
+  const bad = sanitizeQuote({ ...base, dueAt: '20/11/2026', orderedAt: 'yesterday' })
+  assert.equal('dueAt' in bad, false); assert.equal('orderedAt' in bad, false)
+})
+
+test('other costs survive a restore, cleaned; quotes without them stay as they were', () => {
+  const q = {
+    id: 9, name: 'Llavero', cost: 3, price: 6,
+    inputs: { spoolPrice: 20, extraCosts: [{ label: 'Imanes', amount: 0.5, per: 'part' }, { label: 'Diseño', amount: 'free', per: 'year' }] },
+    parts: { material: 1, extras: 0.5 },
+  }
+  const clean = sanitizeQuote(q)
+  assert.deepEqual(clean.inputs.extraCosts, [
+    { id: 1, label: 'Imanes', amount: 0.5, per: 'part' },
+    { id: 2, label: 'Diseño', amount: 0, per: 'part' },
+  ])
+  assert.equal(clean.parts.extras, 0.5)
+  assert.equal(sanitizeQuote({ ...q, inputs: { spoolPrice: 20 } }).inputs.extraCosts, undefined)
 })

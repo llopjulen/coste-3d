@@ -7,7 +7,7 @@ import en from './en.js'
 import es from './es.js'
 import fr from './fr.js'
 import { LANGS, READY, decimalSeparator, detectLang, fill, normalizeLang, rawText, splitSlots, translate, translatePlural } from './index.js'
-import { fmtDay, fmtGrams, fmtLongDay, fmtMoney, fmtMonthShort, fmtMonthYear, fmtNumber } from './format.js'
+import { fmtDay, fmtGrams, fmtLongDay, fmtMoney, fmtMonthShort, fmtMonthYear, fmtNumber, moneyParts, numberToText, parseNumber } from './format.js'
 import { translatorFor } from './dicts.js'
 
 const DICTS = { en, es, fr }
@@ -63,7 +63,7 @@ test('every key used with t("...") in the code exists in English', () => {
 
 test('every calculator field has a label and a help text', () => {
   const app = readFileSync(join(srcDir, 'App.jsx'), 'utf8')
-  const keys = [...app.matchAll(/\{ key: '(\w+)', (?:unit|unitKey):/g)].map(m => m[1])
+  const keys = [...app.matchAll(/\{ key: '(\w+)', (?:unit|unitKey|money):/g)].map(m => m[1])
   assert.ok(keys.length >= 15)
   for (const k of keys) {
     for (const part of ['label', 'help']) assert.ok(Object.hasOwn(en, `field.${k}.${part}`), `field.${k}.${part}`)
@@ -136,7 +136,7 @@ test('plurals follow each language\'s rules', () => {
   assert.equal(translatePlural(DICTS, 'es', 'count.quotes', 5), '5 presupuestos')
   // French: zero counts as singular
   assert.equal(translatePlural(DICTS, 'fr', 'backup.reminder.none', 1).startsWith('Aucune sauvegarde'), true)
-  assert.equal(translatePlural(DICTS, 'en', 'backup.reminder.none', 3), 'No backup yet. Your 3 quotes are stored only in this browser: clearing its data or switching computer would lose them.')
+  assert.equal(translatePlural(DICTS, 'en', 'backup.reminder.none', 3), 'No backup: 3 quotes, only in this browser.')
   // A category the language has but the file doesn't write (es "many", for millions) falls back to other
   assert.equal(translatePlural(DICTS, 'es', 'count.quotes', 1_000_000), '1000000 presupuestos')
 })
@@ -154,11 +154,33 @@ test('dates and numbers use the language\'s conventions', () => {
   assert.equal(fmtGrams('en-GB', 45), '45.0 g')
 })
 
-test('fmtMoney: two decimals, decimal comma in es/fr, no thousands separator', () => {
-  assert.equal(fmtMoney('en-GB', 12.5, 'EUR'), '12.50 EUR')
-  assert.equal(fmtMoney('es-ES', 12.5, 'EUR'), '12,50 EUR')
-  assert.equal(fmtMoney('fr-FR', 1234.567, 'USD'), '1234,57 USD')
-  assert.equal(fmtMoney('en-GB', 0, 'EUR'), '0.00 EUR')
+// Intl puts a no-break space (U+00A0, or the narrow U+202F in French) between
+// the number and the symbol: normalise them to compare with a plain string.
+const plain = text => text.replace(/[\u00a0\u202f]/g, ' ')
+test('fmtMoney: the symbol where each language puts it', () => {
+  assert.equal(fmtMoney('en-GB', 12.5, 'EUR'), '€12.50')
+  assert.equal(plain(fmtMoney('es-ES', 12.5, 'EUR')), '12,50 €')
+  assert.equal(plain(fmtMoney('fr-FR', 1234.567, 'USD')), '1 234,57 $')
+  assert.equal(fmtMoney('en-GB', 0, 'EUR'), '€0.00')
+  assert.equal(fmtMoney('en-GB', NaN, 'EUR'), '€0.00')
+})
+
+test('moneyParts: the price in pieces, symbol before or after', () => {
+  assert.deepEqual(moneyParts('en-GB', 7.94, 'EUR'), { prefix: '€', whole: '7', decimal: '.', cents: '94', suffix: '' })
+  assert.deepEqual(moneyParts('es-ES', 7.94, 'EUR'), { prefix: '', whole: '7', decimal: ',', cents: '94', suffix: '€' })
+  // The yen has no cents.
+  assert.equal(moneyParts('en-GB', 1200, 'JPY').cents, '')
+})
+
+test('parseNumber takes a comma or a point; numberToText writes the language\'s', () => {
+  assert.equal(parseNumber('0,8'), 0.8)
+  assert.equal(parseNumber('0.8'), 0.8)
+  assert.equal(parseNumber(''), 0)
+  assert.equal(parseNumber('3,'), 3)
+  assert.equal(parseNumber('abc'), null)
+  assert.equal(parseNumber('1,2,3'), null)
+  assert.equal(numberToText(0.8, ','), '0,8')
+  assert.equal(numberToText(45, ','), '45')
 })
 
 test('document dates: long day and short month follow the language', () => {

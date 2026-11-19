@@ -3,6 +3,7 @@
 
      npm run agent              starts the agent
      npm run agent -- add       adds a printer (and list, remove: setup.js)
+     npm run agent -- demo      starts it with two simulated printers (demo.js)
 
    Starting means: read the printers from ~/.layercents/printers.json,
    connect to each one, and open the HTTP port the web app asks.
@@ -26,7 +27,9 @@ const PORT = 31415
 // Anything after "--" in `npm run agent -- add` arrives here.
 const [command, ...args] = process.argv.slice(2)
 
-if (command) {
+if (command === 'demo') {
+  await startDemo()
+} else if (command) {
   // A setup command: loaded only when asked for, and the agent doesn't start.
   const { runCommand } = await import('./setup.js')
   await runCommand([command, ...args])
@@ -34,15 +37,31 @@ if (command) {
   await startAgent()
 }
 
-async function startAgent() {
-  const { printers: configured, skipped } = await readConfig()
-  for (const s of skipped) console.warn(`Skipping printer "${s.id}" in ${configPath()}: ${s.reason}`)
+/* Demo: the same agent, with simulated printers and a throwaway folder
+   (LAYERCENTS_HOME) that is deleted on Ctrl+C. Nothing of the person's
+   real setup is read or written. */
+async function startDemo() {
+  const { DEMO_PRINTERS, createDemoDriver, demoClock, prepareDemoHome } = await import('./demo.js')
+  const { home, cleanup } = await prepareDemoHome()
+  process.env.LAYERCENTS_HOME = home
+  const drivers = { bambu: createDemoDriver, moonraker: createDemoDriver }
+  console.log('DEMO: two simulated printers and three weeks of sample jobs. Nothing real is touched.')
+  await startAgent({ configured: DEMO_PRINTERS, drivers, onExit: cleanup, now: demoClock() })
+}
+
+async function startAgent({ configured: given, drivers, onExit = async () => {}, now } = {}) {
+  let configured = given
+  if (!configured) {
+    const config = await readConfig()
+    configured = config.printers
+    for (const s of config.skipped) console.warn(`Skipping printer "${s.id}" in ${configPath()}: ${s.reason}`)
+  }
 
   // Each line is prefixed with the time: when something fails at 3 a.m.,
   // the console says when.
   const log = message => console.log(`${new Date().toLocaleTimeString()}  ${message}`)
-  const jobs = await openJobLog({ log })
-  const printers = createPrinters(configured, { log, jobLog: jobs })
+  const jobs = await openJobLog({ log, ...(now ? { now } : {}) })
+  const printers = createPrinters(configured, { log, jobLog: jobs, ...(drivers ? { drivers } : {}) })
   const server = createServer(createHandler({ printers, jobs }))
 
   // The usual way to fail: a second copy of the agent is already running.
@@ -70,6 +89,6 @@ async function startAgent() {
     console.log('\nStopping the layercents agent…')
     printers.stop()
     // The job log writes in the background: wait until the last write is on disk.
-    jobs.flush().finally(() => server.close(() => process.exit(0)))
+    jobs.flush().then(onExit).finally(() => server.close(() => process.exit(0)))
   })
 }

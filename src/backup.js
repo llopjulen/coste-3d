@@ -13,8 +13,12 @@
      localStorage. They take `storage` as a parameter so tests can pass
      a fake one.
 ================================================================== */
-import { normalizeExtras } from './calculate.js'
+import { normalizeExtraCosts, normalizeExtras } from './calculate.js'
 import { STATUSES, normalizeSale } from './sales.js'
+import { FONTS, STYLES, isHexColor } from './quoteStyle.js'
+import { EVENTS_KEY, mergeEvents, readEvents, sanitizeEvents } from './calendarEvents.js'
+import { mergeOrders, sanitizeOrders } from './orders.js'
+import { mergeCustomers, sanitizeCustomers } from './customers.js'
 
 
 // Bump ONLY for breaking changes (a key renamed or removed, a value that
@@ -40,6 +44,14 @@ export const KEYS = {
   // A map of field name -> number. It came after the first backup format
   // and is optional in the file, so it needed no schemaVersion bump.
   setup: 'setup',
+  // Things written into the calendar by hand (calendarEvents.js). Optional
+  // in the file like setup: older backups don't have it, no version bump.
+  events: EVENTS_KEY,
+  // Orders and customers (orders.js, customers.js) and the last order
+  // number handed out. Optional in the file too: no version bump.
+  orders: 'orders',
+  customers: 'customers',
+  orderCounter: 'orderCounter',
   // Per-device bookkeeping, deliberately NOT inside the backup: it says
   // when THIS browser was last backed up, which is meaningless elsewhere.
   lastBackup: 'lastBackupAt',
@@ -144,10 +156,12 @@ export function sanitizeQuote(raw) {
     if (q[key] === undefined) continue
     if (isPlainObject(q[key])) {
       // numericRecord keeps only numbers, so it would silently delete the
-      // list of extra filaments: that one is cleaned by its own function.
+      // lists of extra filaments and other costs: each is cleaned by its own function.
       const extras = key === 'inputs' ? q[key].extraFilaments : undefined
+      const costs = key === 'inputs' ? q[key].extraCosts : undefined
       q[key] = numericRecord(q[key])
       if (Array.isArray(extras)) q[key].extraFilaments = normalizeExtras(extras)
+      if (Array.isArray(costs)) q[key].extraCosts = normalizeExtraCosts(costs)
     } else delete q[key]
   }
   // units is a part count: a whole number, at least 1 (calculate() floors it the same way).
@@ -163,6 +177,9 @@ export function sanitizeQuote(raw) {
     else delete q.sale
   }
   if (q.status === 'sold' && !q.sale) q.status = 'order'
+  // Order dates (sales.js withOrder): a "YYYY-MM-DD" delivery day and an ISO acceptance time.
+  if (q.dueAt !== undefined && !(typeof q.dueAt === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(q.dueAt) && isDateString(q.dueAt))) delete q.dueAt
+  if (q.orderedAt !== undefined && !isDateString(q.orderedAt)) delete q.orderedAt
   return q
 }
 
@@ -187,6 +204,11 @@ export function sanitizeBusiness(raw) {
   for (const key of ['tax', 'validDays']) {
     if (b[key] !== undefined && !(isFiniteNumber(b[key]) && b[key] >= 0)) delete b[key]
   }
+  // The sheet's look (quoteStyle.js). The colour goes into a CSS variable,
+  // so only a plain #RRGGBB passes: anything else could inject CSS.
+  if (b.accent !== undefined && !isHexColor(b.accent)) delete b.accent
+  if (b.docStyle !== undefined && !STYLES.includes(b.docStyle)) delete b.docStyle
+  if (b.docFont !== undefined && !FONTS.includes(b.docFont)) delete b.docFont
   return b
 }
 
@@ -211,7 +233,7 @@ export function sanitizeSetup(raw) {
 
 /* The backup object. `exportedAt` lets the restore screen (and the
    person, opening the file) tell two backups apart. */
-export function buildBackup({ quotes, business, counter, setup, now = new Date() }) {
+export function buildBackup({ quotes, business, counter, setup, events, orders, customers, orderCounter, now = new Date() }) {
   return {
     app: APP_ID,
     kind: KIND,
@@ -224,6 +246,10 @@ export function buildBackup({ quotes, business, counter, setup, now = new Date()
       business: business ?? null,
       quoteCounter: counter ?? null,
       setup: setup ?? null,
+      calendarEvents: events?.length ? events : null,
+      orders: orders?.length ? orders : null,
+      customers: customers?.length ? customers : null,
+      orderCounter: orderCounter ?? null,
     },
   }
 }
@@ -292,6 +318,13 @@ export function parseBackup(text) {
     counter: data.quoteCounter == null ? null : sanitizeCounter(data.quoteCounter),
     // Files made before "Your setup" existed simply don't have the key: null.
     setup: data.setup == null ? null : sanitizeSetup(data.setup),
+    // null = the file says nothing about the calendar (made before it
+    // existed, or with no events): restoring must not wipe this browser's.
+    events: data.calendarEvents == null ? null : sanitizeEvents(data.calendarEvents),
+    // Same rule: null = this file predates orders, so a restore keeps them.
+    orders: data.orders == null ? null : sanitizeOrders(data.orders),
+    customers: data.customers == null ? null : sanitizeCustomers(data.customers),
+    orderCounter: data.orderCounter == null ? null : sanitizeCounter(data.orderCounter),
   }
 }
 
@@ -402,6 +435,11 @@ export function planRestore(current, backup, mode) {
       quotes: backup.quotes,
       business: backup.business,
       setup: backup.setup ?? current.setup ?? null,
+      // Same reasoning as setup: a file without events keeps the ones here.
+      events: backup.events ?? current.events ?? [],
+      orders: backup.orders ?? current.orders ?? [],
+      customers: backup.customers ?? current.customers ?? [],
+      orderCounter: Math.max(current.orderCounter ?? 0, backup.orderCounter ?? 0) || null,
       counter,
       // After a replace, this browser holds exactly what's in the file.
       coveredByFile: true,
@@ -414,6 +452,11 @@ export function planRestore(current, backup, mode) {
     quotes: merged.quotes,
     business: mergeBusiness(current.business, backup.business),
     setup: mergeSetup(current.setup ?? null, backup.setup),
+    events: mergeEvents(current.events ?? [], backup.events ?? []),
+    orders: mergeOrders(current.orders ?? [], backup.orders ?? []).orders,
+    customers: mergeCustomers(current.customers ?? [], backup.customers ?? []),
+    // Like the quote counter: the highest wins, order numbers never go back.
+    orderCounter: Math.max(current.orderCounter ?? 0, backup.orderCounter ?? 0) || null,
     counter,
     // Only if nothing here is missing from the file does that file count
     // as a backup of this browser (e.g. restoring the same file twice).
@@ -479,6 +522,10 @@ export function readSettings(storage = browserStorage()) {
     business: sanitizeBusiness(readJson(storage, KEYS.business)),
     counter,
     setup: sanitizeSetup(readJson(storage, KEYS.setup)),
+    events: readEvents(storage),
+    orders: sanitizeOrders(readJson(storage, KEYS.orders)),
+    customers: sanitizeCustomers(readJson(storage, KEYS.customers)),
+    orderCounter: sanitizeCounter(Number(readJson(storage, KEYS.orderCounter))),
   }
 }
 
@@ -486,7 +533,7 @@ export function readSettings(storage = browserStorage()) {
    enough to call while rendering). */
 export function hasStoredSettings(storage = browserStorage()) {
   try {
-    return [KEYS.business, KEYS.counter, KEYS.setup].some(key => storage.getItem(key) !== null)
+    return [KEYS.business, KEYS.counter, KEYS.setup, KEYS.events, KEYS.orders, KEYS.customers].some(key => storage.getItem(key) !== null)
   } catch {
     return false
   }
@@ -605,6 +652,10 @@ export function applyRestore(backup, mode, currentQuotes, storage = browserStora
     [KEYS.business]: plan.business ? JSON.stringify(plan.business) : null,
     [KEYS.counter]: plan.counter ? String(plan.counter) : null,
     [KEYS.setup]: plan.setup ? JSON.stringify(plan.setup) : null,
+    [KEYS.events]: plan.events.length ? JSON.stringify(plan.events) : null,
+    [KEYS.orders]: plan.orders.length ? JSON.stringify(plan.orders) : null,
+    [KEYS.customers]: plan.customers.length ? JSON.stringify(plan.customers) : null,
+    [KEYS.orderCounter]: plan.orderCounter ? String(plan.orderCounter) : null,
     // Only written when it changes; otherwise the key isn't touched at all.
     ...(lastBackupAt ? { [KEYS.lastBackup]: lastBackupAt } : {}),
   }, storage)
@@ -628,8 +679,8 @@ export function backupFileName(now) {
    (business, counter, setup), hands it to the browser as a download and
    records when. Returns that time as an ISO string. */
 export function downloadBackup(quotes, { storage = browserStorage(), now = new Date() } = {}) {
-  const { business, counter, setup } = readSettings(storage)
-  const backup = buildBackup({ quotes, business, counter, setup, now })
+  const { business, counter, setup, events, orders, customers, orderCounter } = readSettings(storage)
+  const backup = buildBackup({ quotes, business, counter, setup, events, orders, customers, orderCounter, now })
   // Indented so anyone can open it in a text editor and see their data;
   // the extra size is irrelevant at a few hundred KB.
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })

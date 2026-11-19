@@ -21,6 +21,7 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 |---|---|
 | `index.html` | El shell: metadatos para buscadores y para compartir (título, descripción, `canonical`, Open Graph, datos estructurados JSON-LD), fuentes de Google, Cloudflare Web Analytics y el `<div id="root">` donde React pinta todo. Dentro de `#root` hay un `<h1>` y un párrafo de respaldo para quien lea el HTML sin ejecutar JavaScript; React lo reemplaza al arrancar. |
 | `src/main.jsx` | Punto de entrada. Importa `index.css`, lee y quita el `?agent` de la dirección (una vez por carga) y monta `<App>` dentro de `<StrictMode>`. En desarrollo, StrictMode ejecuta dos veces renders y efectos para destapar efectos secundarios mal hechos; en producción no hace nada. |
+| `src/money.js` | Conversión de los campos de dinero: `toDisplay`, `fromDisplay` (redondea a 4 decimales) y `currencySymbol`. Puro, con tests en `money.test.js`. |
 | `src/App.jsx` | Estado global, cálculo y navegación. Tres secciones: 1) campos (`SECTIONS`, `INITIAL`) y colores del gráfico (`LAYERS`, en el orden en que se imprime: de abajo arriba); 3) componentes pequeños (`Field`, `ExtraFilaments`, `SiteFooter`); 4) `App`. El cálculo vive en `calculate.js`. |
 | `src/History.jsx` | Lista de presupuestos: tarjetas resumen, buscador, tabla agrupada por mes, marcar piezas para el presupuesto de cliente, Load y borrar. No es dueño de ningún dato. |
 | `src/Report.jsx` | Informe imprimible (KPIs y 3 gráficas hechas con `div` y porcentajes, sin librería de gráficas). El PDF sale de `window.print()`. Su hoja tiene idioma propio (`DocLangSelect`), por defecto el de la interfaz. |
@@ -42,19 +43,41 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `src/backup.test.js` | Tests de la parte "Your setup" de `backup.js`: ida y vuelta, copias antiguas sin `setup`, Merge/Replace, almacenamiento bloqueado. |
 | `src/Logo.jsx` | El logo en SVG; los colores salen del CSS. |
 | `src/NavIcons.jsx` | Iconos de línea (calculadora, historial, impresora, sol y luna) de la navegación. SVG en línea con `currentColor`; sin librería de iconos. |
+| `src/CostPrint.jsx` | El coste como objeto impreso en 3D, encima de la barra de costes: jarrón de 56 capas (`InstancedMesh` de three.js, cargado con `lazy()`), coloreado por parte del coste; si hay un archivo en Import (G-code, 3MF o STL) dibuja ESA pieza, analizada por `preview.worker.js` y pintada por altura en el shader (`paintByHeight`); se recolorea en vivo y resalta la parte de la fila señalada (`activeLayer` en App). Decorativo: `aria-hidden`, la barra y la lista siguen siendo la fuente. |
+| `src/costPrint.js` | Reparto de las capas del objeto 3D entre las partes del coste (`layerBands`, restos mayores) y dónde acaba cada franja en la pieza soltada (`bandStops`). Tests en `costPrint.test.js`. |
+| `src/printerPresets.js` | Consumo medio publicado de impresoras conocidas (`PRINTER_PRESETS`, `presetById`, `SOURCE`); el desplegable «Modelo» de «Your setup» rellena con él el campo `watts`. Solo Bambu Lab, con fuente oficial. Tests en `printerPresets.test.js`. |
 | `src/calculate.js` | `calculate(d)`, `capacity(d)` y sus ayudas (`materialCost`, `pricePerGram`, `totalGrams`, `normalizeExtras`, `MAX_EXTRA_FILAMENTS`). Puro, sin React, para que `node --test` lo importe. Tests en `calculate.test.js`. |
 | `src/advice.js` | `adviceFor(d)`: consejos con cifras a partir del formulario (precio por debajo del recomendado y margen real, 0 % de fallos, tiempo gratis, margen fino, comisión alta y precio en venta directa, mano de obra pesada). Reglas puras, máximo 3, sin IA. Tests en `advice.test.js`. Se pintan en el panel «Conviene saber» de App.jsx. |
+| `src/quoteStyle.js` | Aspecto del presupuesto para el cliente: color de acento (`ACCENTS` o cualquier `#RRGGBB`), diseño (`line`, `band`, `minimal`) y letra (`sans`, `serif`), guardados en `business` como `accent`, `docStyle` y `docFont`. `textOn` e `inkOf` calculan colores legibles (WCAG). Tests en `quoteStyle.test.js`. |
+| `src/sales.js` | **Antiguo** (sustituido por orders.js el 2026-11-04). Se queda porque los presupuestos guardados antes y las copias ya descargadas llevan `status` y `sale`: backup.js los valida con él y `migrateQuoteOrders` los convierte en pedidos. Nada en pantalla los edita ya. |
+| `src/schedule.js` | Cola de impresión y calendario sobre los **pedidos** (orders.js), puro: `linesHours`, `planOrders` (pendientes e imprimiendo, EDF por entrega, día estimado de «listo» según `printHoursPerWeek` y `late`), `suggestDue` (fecha para un pedido nuevo, al final de la cola), `eventsByDay` (entregas, impresos estimados y cobros por día). Tests en `schedule.test.js`. |
+| `src/Calendar.jsx` | Pestaña Calendario: mes que empieza en lunes con puntos (entrega, impreso estimado, venta), lista del día elegido y la cola de impresión con «Va tarde» / «A tiempo». También los apuntes a mano (clave `calendarEvents`), que guarda en su propio estado.
+| `src/calendarEvents.js` | Apuntes a mano del calendario: `sanitizeEvent(s)` (validación, también para la copia), `upsertEvent`, `removeEvent`, `mergeEvents` (gana la versión de este navegador), `readEvents` / `writeEvents` (localStorage). Tests en `calendarEvents.test.js`. |
+| `src/orders.js` | Pedidos (modelo en docs/PEDIDOS.md): estados, líneas copiadas de presupuestos o libres, pagos, historial de eventos. `createOrder`, `setStatus`, `addPayment`, `removePayment`, `editOrder`, `orderTotals` (total, coste, pagado, pendiente, estado del pago derivado, beneficio), `ordersSummary`, `matchesOrder`, `sanitizeOrder(s)`, `mergeOrders`, `migrateQuoteOrders` (de los presupuestos con estado `order`/`sold`). Puro. |
+| `src/customers.js` | Clientes: `createCustomer`, `editCustomer`, `sanitizeCustomer(s)`, `findByName` (sin mayúsculas ni tildes), `customerStats` (calculado desde los pedidos), `linkCustomers`, `mergeCustomers`. Puro. |
+| `src/ordersStore.js` | El adaptador: `createLocalStore()` con `load`, `nextOrderNumber`, `saveOrder`, `deleteOrder`, `saveCustomer`, `deleteCustomer`, todos asíncronos. El de Supabase tendrá los mismos métodos. Errores como `StoreError`. Tests de los tres en `orders.test.js`. |
+| `supabase/tests/orders.test.sql` | Tests pgTAP de los pedidos en modo taller (89): RLS en las 8 tablas, contador por taller, `save_order(taller, json)` (producción y finanzas, todo o nada, historial que solo crece), qué ve cada rol (el operario, nada de dinero), `set_order_status`, aislamiento entre talleres y `anon`, set null y cascade. `npm run test:db`. |
+| `scripts/db/order-numbers-race.sh` | Concurrencia de `next_order_number(taller)`: 40 conexiones de dos personas del mismo taller tienen que sacar 1..40 sin repetir. Crea y borra su taller de prueba. |
+| `src/useOrders.js` | Hook que une la pantalla con el store: carga, escrituras optimistas (la pantalla cambia ya; si el store falla, avisa y vuelve a leer), `addOrder` (reutiliza o crea la ficha del cliente y pide el número al store), `reload` (tras restaurar una copia). Vive en `App`. |
+| `src/route.js` | La pantalla abierta en la URL: `parseRoute` (lee `?view=…&order=…`, ignorando lo que no reconoce) y `buildSearch` (escribe la URL conservando otros parámetros). App lo sincroniza con `pushState` y `popstate`. Tests en `route.test.js`. |
+| `scripts/shots.mjs` | `npm run shots`: captura 14 vistas (pestañas, primera pantalla sin scroll, detalle de pedido, presupuesto, informe, Impresoras con el agente demo y estados vacíos) a 1440, 1024, 768 y 390 px en claro y oscuro, en `shots/` (ignorada por git). Usa `playwright-core` con tu Chrome. |
+| `DESIGN.md` (raíz) | El sistema de diseño: tokens (colores, letra, radios, espacios) y reglas de qué sí y qué no. Lo lee cualquier persona o IA antes de tocar la interfaz. |
+| `src/Orders.jsx` | Pestaña Pedidos: control segmentado Pedidos / Clientes, cifras (abiertos, por cobrar, cobrado, beneficio), buscador, filtros, lista de pedidos y de clientes, ficha del cliente (`CustomerDetail`) y hoja «Nuevo cliente». Qué página se ve lo guarda `App` (`ordersOpen`), para que otras pestañas puedan abrir un pedido. |
+| `src/OrderDetail.jsx` | Página de un pedido: estado, cliente y entrega, piezas editables, importes, pagos (hoja `PaymentDialog`), notas, historial y borrar. Todo cambio pasa por las funciones de orders.js. |
+| `src/NewOrderDialog.jsx` | Hoja «Nuevo pedido»: cliente con sugerencias (`<datalist>`), fecha de entrega y piezas del Historial con cantidad. |
+| `src/OrderParts.jsx` | Piezas comunes: `StatusPill`, `PaymentPill` y campos que guardan al salir (`CommitText`, `MoneyInput`, `QtyInput`). |
+| `src/EventDialog.jsx` | Hoja «Nuevo apunte» / «Editar apunte»: qué, día, hora opcional y nota; Borrar al editar. |
+| `src/Plans.jsx` | Pestaña «Planes»: Gratis y Taller (8 €/mes o 79 €/año, «Próximamente»). «Me interesa» es un enlace normal a `/taller/`. |
+| `public/taller/index.html` | Página estática de «Gracias, apuntado». Su número de visitas en Cloudflare Web Analytics es cuánta gente quiere el plan Taller. `noindex` y fuera de `robots.txt`. No guarda nada. |
 | `src/cloud/session.js` | La puerta entre las pantallas y el backend de cuentas: `cloudMode()` (`off`, `mock`, `live`), `adapter()`, `registerCloudAdapter()` y un adaptador simulado (`?cloud=mock`, solo esa pestaña). El adaptador real con Supabase lo escribe Julen y cumple el contrato documentado arriba del archivo. Tests en `session.test.js`. |
 | `src/Account.jsx` | Pantalla «Cuenta»: entrar con enlace por correo, ver quién eres, salir y borrar la cuenta. Solo existe si `cloudMode()` no es `off`. |
-| `src/sales.js` | Qué pasó con cada presupuesto: estados `quote` / `order` / `sold` (campo `status` del presupuesto) y la venta real (`sale`: `amount`, `fees`, `channel`, `soldAt`, en EUR). `statusOf`, `withStatus`, `defaultSale`, `saleProfit` (cobrado − comisiones − coste × piezas), `salesSummary`. Puro, tests en `sales.test.js`. |
-| `src/SaleDialog.jsx` | Hoja «Marcar como vendido» (`<dialog>` nativo con `showModal`): cobrado, comisiones, dónde y fecha, en la moneda de la pantalla y guardado en EUR. |
 | `src/SubNav.jsx` | El segundo nivel de la barra lateral: lista «On this page» bajo la pestaña Calculator, con salto a cada bloque del formulario y marca del bloque visible (scrollspy con `IntersectionObserver`). Solo en escritorio ancho. La lista `CALC_NAV` y los `id="sec-…"` están en `App.jsx`. |
 | `src/i18n/index.js` | Núcleo de la traducción, sin React: idiomas (`en`, `es`, `fr`), detección (ruta `/es/`, `?lang=`, elección guardada, navegador), `pathForLang`/`langFromPath`, `translate`/`fill`/`splitSlots` y el separador decimal. `READY` (ya en `true`) decide si el selector es visible y si manda el idioma del navegador. |
 | `src/i18n/en.js`, `es.js`, `fr.js` | Los textos de la interfaz, `clave -> texto` con `{huecos}`. El inglés es la referencia; los tres deben tener las mismas claves (lo comprueba `i18n.test.js`). |
 | `src/i18n/context.js`, `Provider.jsx` | `useI18n()` da `t`, `tr` (con elementos dentro), `tp` (plurales), `lang`, `setLang`, `locale` y `decimal`. El Provider envuelve `<App />` en `main.jsx` y pone `<html lang>`. |
 | `src/i18n/dicts.js` | `DICTS` y `translatorFor(lang)`: un traductor de idioma fijo, sin React, para los documentos (que pueden ir en otro idioma que la pantalla) y para `exportExcel.js`. |
 | `src/DocLangSelect.jsx` | El selector «Idioma del documento» del presupuesto y del informe. Oculto mientras el selector general lo esté. |
-| `src/i18n/format.js` | Fechas y números según el idioma (`fmtDay`, `fmtDateTime`, `fmtMonthYear`, `fmtNumber`, `fmtGrams`, `fmtLongDay`, `fmtMonthShort`, `fmtMoney`). Reciben el `locale` como parámetro. |
+| `src/i18n/format.js` | Fechas y números según el idioma (`fmtDay`, `fmtDateTime`, `fmtMonthYear`, `fmtNumber`, `fmtGrams`, `fmtLongDay`, `fmtMonthShort`), dinero (`fmtMoney`, «7,94 €» / «€7.94», y `moneyParts` para el precio grande) y los campos numéricos (`numberToText`, `parseNumber`). Reciben el `locale` como parámetro. |
 | `src/theme.js` | Tema claro u oscuro: lee la elección guardada o la del sistema, la pone en `<html data-theme>` y en el color de la barra del navegador. |
 | `src/logoGeometry.js` | Las coordenadas de las capas del logo, como datos. Las leen el logo y la gráfica de costes, para que no se descuadren. |
 | `src/index.css` | Todos los estilos. Arriba los tokens (`--fondo`, `--oro`…) en `:root`; luego una sección por pantalla, con comentarios en español. `@media print` decide qué sale en los PDF. |
@@ -66,6 +89,7 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `agent/config.js` | Lee y guarda la lista de impresoras en `~/.layercents/printers.json` (fuera del proyecto, permisos 600) y valida cada campo al cargarla. |
 | `agent/printers.js` | Un driver por impresora según su marca; `list()` devuelve el estado común de todas y cada cambio de estado se pasa al registro de trabajos. |
 | `agent/drivers/moonraker.js` | Driver de Klipper/Moonraker: pregunta por HTTP cada 2 s (`getJson`, sin seguir redirecciones y con tope de tamaño), `printerStatus` (a estado común) e `historyToJobs` (el historial propio de Moonraker a trabajos). Solo lectura. |
+| `agent/demo.js` | `npm run agent -- demo`: el agente real con dos impresoras simuladas (una Bambu, una Klipper), una carpeta temporal que se borra al salir, tres semanas de trabajos de ejemplo y un reloj acelerado para el registro. Para ver Impresoras, el historial y «Usar datos reales» sin tener impresora. Tests en `demo.test.js`. |
 | `agent/fakeMoonraker.js` | Una impresora Klipper de mentira para los tests: un servidor HTTP de verdad con los datos que fija cada test. |
 | `agent/jobs.js` | Registro de trabajos: una máquina de estados por impresora (empieza al imprimir, acaba en `finished`, `failed` o `unknown`) que se guarda en `~/.layercents/jobs.json`. Un tiempo calculado nunca se presenta como medido (`startedApprox`). Para Bambu el registro se construye mirando cambios de estado (`observe`); para Moonraker se copia su historial (`importHistory`). |
 | `agent/drivers/bambu.js` | Driver de Bambu Lab: TLS con la huella del certificado fijada, MQTT, `pushall`, fusión de las actualizaciones parciales, reconexión con esperas crecientes, y `printerStatus` (de mensaje de Bambu a estado común). |
@@ -74,10 +98,10 @@ Es una SPA (single-page application) de React 19 compilada con Vite 8, sin backe
 | `agent/fakeBroker.js` | Una impresora de mentira para los tests: habla MQTT, graba lo que le mandan y contesta como una Bambu. |
 | `agent/handler.js` | Qué responde el agente a cada petición: seguridad (Host, Origin, CORS, preflight) y rutas: `/health` y `/printers` (solo lectura). `PROTOCOL` es la versión del contrato con la web. |
 | `supabase/migrations/20261028000000_init.sql` | Esquema de la base de datos en la nube (todavía sin conectar a la web): `quotes`, `business`, `agents`, `printers`, `printer_status`, `jobs`, `subscriptions`, `pairings`. Cada tabla con RLS y con los permisos de `anon` y `authenticated` quitados y devueltos uno a uno. Diseño en `docs/NUBE.md`. |
-| `supabase/tests/prelude.sql` | Solo para los tests: crea en un Postgres normal lo que Supabase ya trae (roles `anon`, `authenticated`, `service_role`, `auth.users`, `auth.uid()`). |
-| `supabase/rls.test.js` | Tests de las políticas contra un Postgres de verdad con `psql`. Se saltan si no existe `LAYERCENTS_TEST_PG`. |
+| `supabase/tests/workspaces.test.sql` | Tests pgTAP del modelo de taller: `workspaces`, `memberships`, `invitations`, `quotes`, `business`, `is_member`/`has_role` y `create_workspace`, con una persona por rol y otro taller aparte. Se ejecutan con `supabase test db` (Supabase ya trae pgTAP, los roles y `auth.users`). Fijan el contrato de `docs/TALLER.md`: la migración de Julen tiene que pasarlos.
 | `agent/*.test.js` | Tests del agente con `node:test` (`npm test`), sin dependencias: HTTP (`handler`), MQTT byte a byte (`mqtt`), driver de Bambu con TLS de verdad (`bambu`; se saltan sin openssl), configuración (`config`), registro de trabajos (`jobs`, con reloj falso), driver de Moonraker (`moonraker`, contra HTTP de verdad) y el comando `add` de punta a punta (`setup`). |
 | `docs/MAPA.md` | Este archivo. |
+| `docs/INVENTARIO.md` | Inventario de filamento (todavía sin código): bobinas, movimientos, reservas derivadas de los pedidos, contrato del adaptador `spoolsStore`, esquema para Supabase, lo que necesitan las etiquetas y el plan de PRs. |
 | `docs/IMPRESORAS.md` | Investigación por marca (Bambu, Klipper/Moonraker, Prusa, Creality, Elegoo, Anycubic, Flashforge, OctoPrint): protocolo, puerto, credenciales, qué se puede leer, y el orden del plan. |
 | `docs/AUDITORIA-2026-10-28.md` | Auditoría técnica de diseño (accesibilidad, rendimiento, tokens, responsive, coherencia): nota, hallazgos P1/P2/P3 con su estado y orden recomendado de arreglos. |
 | `CLAUDE.md`, `DEV_LOG.md` | Instrucciones del proyecto y registro de cada cambio con su porqué. |
@@ -159,7 +183,7 @@ En la web (`src/agent.js` y `src/Printers.jsx`):
 
 ## Dinero y monedas
 
-Todo se guarda en EUR. Al arrancar, `App` pide los tipos de cambio a `api.frankfurter.dev/v1` (datos del BCE) y los guarda en `rates`. `formatMoney` multiplica por `rates[currency]` solo al pintar. Si la API no responde, `rates` se queda en `{ EUR: 1 }` y la app funciona en euros. `CustomerQuote` convierte a céntimos enteros de la moneda en pantalla antes de sumar, para que las líneas sumen exactamente el total (con decimales binarios, `0.1 + 0.2 !== 0.3`).
+Todo se guarda en EUR. Al arrancar, `App` pide los tipos de cambio a `api.frankfurter.dev/v1` (datos del BCE) y los guarda en `rates`. `formatMoney` multiplica por `rates[currency]` solo al pintar. Los campos de dinero del formulario (`money: true` en `SECTIONS`, y los de filamentos y costes extra) hacen lo mismo en los dos sentidos con `src/money.js`: `toDisplay` al pintar el input y `fromDisplay` al leer lo escrito; `Field` recibe el tipo y el símbolo por `CurrencyContext`. Si la API no responde, `rates` se queda en `{ EUR: 1 }` y la app funciona en euros. `CustomerQuote` convierte a céntimos enteros de la moneda en pantalla antes de sumar, para que las líneas sumen exactamente el total (con decimales binarios, `0.1 + 0.2 !== 0.3`).
 
 ## Qué se guarda en localStorage
 
@@ -169,6 +193,10 @@ Todo se guarda en EUR. Al arrancar, `App` pide los tipos de cambio a `api.frankf
 | `business` | `{ name, contact, logo, notes, tax, validDays }`; `logo` es un data URL PNG de 480 × 200 px como mucho | `CustomerQuote.saveBusiness`, `applyRestore` | `CustomerQuote` al abrirse |
 | `quoteCounter` | Entero: el siguiente número de presupuesto (2026-007) | `CustomerQuote.savePdf`, `applyRestore` (nunca lo baja) | `CustomerQuote` |
 | `setup` | `{ campo: número }` con solo los campos de "Your setup" que la persona ha editado (`printerPrice`, `watts`, `hourlyRate`, `fee`…) | `App.set` (vía `saveSetupField`), `resetSetup`, `applyRestore` | `App` al arrancar (`readSetup`) |
+| `calendarEvents` | Array de apuntes del calendario `{ id, date: 'YYYY-MM-DD', title, time?: 'HH:MM', note? }`, ordenado por día y hora. Va en la copia (`data.calendarEvents`) | `Calendar` (vía `writeEvents`), `applyRestore` | `Calendar` al abrirse (`readEvents`) |
+| `orders` | Array de pedidos (forma en docs/PEDIDOS.md), del más nuevo al más viejo. Va en la copia | `ordersStore` (`saveOrder`, `deleteOrder`, `deleteCustomer`), `applyRestore` | `ordersStore.load` |
+| `customers` | Array de clientes, por nombre. Va en la copia | `ordersStore` (`saveCustomer`, `deleteCustomer`), `applyRestore` | `ordersStore.load` |
+| `orderCounter` | Entero: el último número de pedido dado; nunca baja | `ordersStore.nextOrderNumber`, `applyRestore` | `ordersStore.nextOrderNumber` |
 | `lastBackupAt` | Fecha ISO de la última copia en este dispositivo; no va dentro de la copia | `downloadBackup`, `applyRestore` | `App` |
 | `agentEnabled` | `'1'` si este navegador enseña la pestaña Printers; tampoco va en la copia | `agent.js` (`setAgentEnabled`, `consumeAgentOptIn`) | `App` al arrancar |
 | `theme` | `'light'` o `'dark'`, la elección de tema de este dispositivo; si no existe, manda el sistema. Tampoco va en la copia | `theme.js` (`saveTheme`) | `index.html` (antes de pintar) y `App` |
@@ -182,8 +210,8 @@ Forma de un presupuesto guardado:
   createdAt: '2026-10-03T…Z',   // fecha ISO
   date: '3/10/2026',            // texto antiguo, ya no se usa para pintar
   name: 'Phone stand', client: 'Ana',
-  inputs: { spoolPrice: 20, …, extraFilaments: [{ id, label, spoolPrice, spoolWeight, grams }] },  // copia de d: lo que "Load" vuelve a poner en el formulario. `extraFilaments` es opcional: los otros filamentos de la pieza (los presupuestos anteriores no lo tienen y valen igual)
-  parts: { material: 0.9, … },    // las seis capas del coste
+  inputs: { spoolPrice: 20, …, extraFilaments: [{ id, label, spoolPrice, spoolWeight, grams }], extraCosts: [{ id, label, amount, per: 'part' | 'order' | 'month' }] },  // copia de d: lo que "Load" vuelve a poner en el formulario. `extraFilaments` (otros filamentos) y `extraCosts` (otros costes) son opcionales: los presupuestos anteriores no los tienen y valen igual
+  parts: { material: 0.9, …, extras: 0 },    // las capas del coste; `extras` (otros costes) solo en los guardados desde el 2026-11-04
   cost: 5.22, price: 7.94, units: 1, orderTotal: 7.94,
 }
 ```
@@ -201,7 +229,9 @@ Función pura en `src/calculate.js`: entran los valores del formulario y salen n
 - `depreciation = hours × printerPrice / lifespan` (amortización lineal por hora de uso)
 - `failures = (material + power + depreciation) × failRate / 100`
 - `labor = postMinutes / 60 × hourlyRate`, más `packaging`
-- `cost` = la suma de las seis capas
+- `extras = Σ amount` de los otros costes «por pieza» `+ Σ amount / quantity` de los «por pedido» (`extraCostsPerPart`). No entran en `failures`: un imán no se pierde si falla la impresión.
+  Los «al mes» (licencia comercial, plan del laminador) se suman como `hours × Σ amount / goodHoursPerMonth`, con `goodHoursPerMonth = printHoursPerWeek × 52/12 × (1 − failRate)` (`monthlyCostPerHour`). Sin horas por semana suman 0 y la pantalla lo avisa.
+- `cost` = la suma de las siete capas
 - `recommendedPrice = cost × (1 + margin) / (1 − fee)`: la comisión de la plataforma se cobra sobre el precio final, así que se divide entre `(1 − fee)` en vez de multiplicar por `(1 + fee)`.
 - `profit = currentPrice × (1 − fee) − cost` y `perHour = profit / hours`.
 
@@ -251,5 +281,17 @@ En la app, la ruta manda sobre lo guardado (`readLang`: `/es/` > `?lang=` > elec
 - `npm run lint`: oxlint, con las reglas de hooks de React.
 - `npm run agent`: arranca el agente local y se conecta a las impresoras guardadas. Para comprobarlo, abre `http://127.0.0.1:31415/health` o `/printers` en el navegador. Se para con Ctrl+C.
 - `npm run agent -- add` (y `list`, `remove <id>`): gestiona las impresoras del agente.
+- `npm run agent -- demo`: el agente con dos impresoras simuladas; no toca tu configuración real.
 - `npm test`: `node --test` busca y ejecuta todos los `*.test.js` del proyecto, con el test runner que ya trae Node. `--test-timeout=20000`: un test que se quede colgado falla a los 20 s en vez de bloquear la terminal.
 - `npm run deploy`: `gh-pages` publica `dist/` en la rama `gh-pages`. GitHub Pages sirve esa rama y `public/CNAME` le dice el dominio; Cloudflare va delante y pone el HTTPS.
+
+
+## Pedidos: de dónde viene cada dato (desde el 2026-11-04)
+
+```
+Historial ──«Crear pedido» / «Pedido con N»──► NewOrderDialog ──► useOrders.addOrder ──► ordersStore
+                                                     ▲ suggestDue (cola)                     │
+Pedidos (Orders.jsx) ◄──── useOrders (en App) ◄──────┴──────── load / reload ◄───────────────┘
+Calendario ◄─── planOrders / eventsByDay sobre orders.orders
+Arranque: presupuestos con status 'order'/'sold' sin orderId ──► useOrders.importLegacy (una vez)
+```

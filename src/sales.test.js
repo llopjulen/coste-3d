@@ -1,7 +1,7 @@
 /* Tests for sales.js. Run them with:  npm test */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { defaultSale, normalizeSale, saleProfit, salesSummary, statusOf, withStatus } from './sales.js'
+import { defaultSale, normalizeSale, saleProfit, salesSummary, statusOf, withOrder, withStatus } from './sales.js'
 
 const Q = { id: 1, cost: 5, price: 8, units: 4, orderTotal: 32, inputs: { fee: 10 } }
 
@@ -70,4 +70,15 @@ test('summary of nothing has no margin instead of NaN', () => {
   const s = salesSummary([])
   assert.equal(s.margin, null)
   assert.equal(s.won, null)
+})
+
+test('an order keeps its delivery date and when it was accepted; back to quote drops both', () => {
+  const o = withOrder(Q, '2026-11-20', new Date('2026-11-04T08:00:00Z'))
+  assert.equal(o.status, 'order'); assert.equal(o.dueAt, '2026-11-20'); assert.equal(o.orderedAt, '2026-11-04T08:00:00.000Z')
+  assert.equal(withOrder(o, '2026-11-25').orderedAt, o.orderedAt, 'changing the date keeps the original acceptance')
+  const sold = withStatus(o, 'sold', { amount: 30, fees: 0, soldAt: '2026-11-21' })
+  assert.equal(sold.dueAt, '2026-11-20', 'the delivery date stays when sold')
+  const back = withStatus(o, 'quote')
+  assert.equal('dueAt' in back, false); assert.equal('orderedAt' in back, false)
+  assert.equal('dueAt' in withOrder(Q, 'tomorrow'), false)
 })
