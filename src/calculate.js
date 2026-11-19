@@ -61,15 +61,50 @@ export function normalizeExtras(list) {
    -----------
    Anything that isn't filament, electricity, the printer or your time:
    magnets, heat-set inserts, paint, a keyring, a design fee, shipping
-   labels. `extraCosts`: [{ id, label, amount, per: 'part' | 'order' }].
+   labels. `extraCosts`: [{ id, label, amount, per: 'part' | 'order' | 'month' }].
    - 'part': it goes into every part (a magnet per part).
    - 'order': it is paid once per order (a design fee, a box for the whole
      order) and is spread over the parts, so the per-part price still adds
      up to the order total.
+   - 'month': a subscription that doesn't depend on any one order (a
+     commercial licence for the models you sell, a slicer or a shop plan).
+     It is spread over the printing hours of a month, see monthlyCostPerHour.
    Same trick as extraFilaments: optional, so an old quote is "no other
-   costs" and keeps its price to the cent, with no migration. */
+   costs" and keeps its price to the cent, with no migration. Adding 'month'
+   doesn't break the backup format either: an older copy of the app reading a
+   newer file turns an unknown `per` into 'part' (normalizeExtraCosts), so the
+   file still restores; that's why BACKUP_SCHEMA_VERSION stays as it is. */
 export const MAX_EXTRA_COSTS = 10
-export const COST_PER = ['part', 'order']
+export const COST_PER = ['part', 'order', 'month']
+
+/* Average weeks in a month: 52 weeks / 12 months. Using 4 would charge
+   February-style months all year and overprice by about 8 %. */
+export const WEEKS_PER_MONTH = 52 / 12
+
+/* What one hour at the printer has to pay of the monthly costs.
+   Why per HOUR and not per part: a month's fee is paid by everything you
+   print that month, and a 10-hour part uses the printer ten times longer
+   than a 1-hour keyring. Hours are the fair driver, the same one
+   depreciation uses (printerPrice / lifespan).
+   Why the GOOD hours (× (1 - failRate)): a failed print burns licence time
+   too but sells nothing, so the parts that do sell have to carry it. Same
+   0.95 ceiling as `calculate` and `capacity`, so 100 % can't divide by zero.
+   goodHoursPerMonth is exported apart so the screen shows the same number
+   the price uses. Both return 0 when "Print hours per week" is empty: without it there is no
+   honest way to spread the fee, and the screen says so instead of guessing. */
+export function goodHoursPerMonth(d) {
+  const weekHours = finite(d?.printHoursPerWeek) ? d.printHoursPerWeek : 0
+  if (weekHours <= 0) return 0
+  const ok = 1 - Math.min(Math.max(finite(d?.failRate) ? d.failRate : 0, 0) / 100, 0.95)
+  return weekHours * WEEKS_PER_MONTH * ok
+}
+
+export function monthlyCostPerHour(d) {
+  const list = Array.isArray(d?.extraCosts) ? d.extraCosts : []
+  const monthly = list.reduce((sum, c) => sum + (c?.per === 'month' && finite(c.amount) && c.amount > 0 ? c.amount : 0), 0)
+  const hours = goodHoursPerMonth(d)
+  return monthly > 0 && hours > 0 ? monthly / hours : 0
+}
 
 export function normalizeExtraCosts(list) {
   if (!Array.isArray(list)) return []
@@ -85,14 +120,18 @@ export function normalizeExtraCosts(list) {
 }
 
 /* What the other costs add to ONE part. Per-order ones are divided by the
-   number of parts (at least 1, the same floor `calculate` uses). */
+   number of parts (at least 1, the same floor `calculate` uses); monthly
+   ones are the part's hours × monthlyCostPerHour. */
 export function extraCostsPerPart(d) {
   const list = Array.isArray(d?.extraCosts) ? d.extraCosts : []
   const units = Math.max(Math.floor(finite(d?.quantity) ? d.quantity : 1), 1)
-  return list.reduce((sum, c) => {
+  const fixed = list.reduce((sum, c) => {
     const amount = c && finite(c.amount) && c.amount > 0 ? c.amount : 0
+    if (c?.per === 'month') return sum
     return sum + (c?.per === 'order' ? amount / units : amount)
   }, 0)
+  const hours = finite(d?.hours) && d.hours > 0 ? d.hours : 0
+  return fixed + hours * monthlyCostPerHour(d)
 }
 
 /* Grams of every filament of one part: part + purge + the extras. */

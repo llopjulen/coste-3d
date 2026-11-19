@@ -1,7 +1,7 @@
 /* Tests for calculate.js. Run them with:  npm test */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { MAX_EXTRA_COSTS, MAX_EXTRA_FILAMENTS, calculate, capacity, extraCostsPerPart, materialCost, normalizeExtraCosts, normalizeExtras, pricePerGram, totalGrams } from './calculate.js'
+import { MAX_EXTRA_COSTS, MAX_EXTRA_FILAMENTS, WEEKS_PER_MONTH, calculate, capacity, goodHoursPerMonth, extraCostsPerPart, materialCost, monthlyCostPerHour, normalizeExtraCosts, normalizeExtras, pricePerGram, totalGrams } from './calculate.js'
 
 // The calculator's defaults (INITIAL in App.jsx).
 const BASE = {
@@ -131,4 +131,43 @@ test('normalizeExtraCosts cleans names, amounts, "per" and the list size', () =>
   assert.deepEqual(list[0], { id: 1, label: 'x'.repeat(40), amount: 0, per: 'part' })
   assert.deepEqual(list[1], { id: 2, label: 'Diseño', amount: 20, per: 'order' })
   assert.deepEqual(normalizeExtraCosts('nope'), [])
+})
+
+/* ---- monthly costs: a commercial licence, a slicer plan… ---- */
+test('monthly costs are spread over the good printing hours of a month', () => {
+  // 60 h a week, 8 % failed: 60 × 52/12 × 0.92 = 239.2 good hours a month.
+  const d = { ...BASE, printHoursPerWeek: 60, failRate: 8, extraCosts: [
+    { id: 1, label: 'Licencia', amount: 10, per: 'month' },
+    { id: 2, label: 'Slicer', amount: 5, per: 'month' },
+  ] }
+  const perHour = 15 / (60 * WEEKS_PER_MONTH * 0.92)
+  near(goodHoursPerMonth(d), 60 * WEEKS_PER_MONTH * 0.92)
+  near(monthlyCostPerHour(d), perHour)
+  near(extraCostsPerPart(d), 3.5 * perHour)
+  // A part twice as long pays twice as much of the fee.
+  near(extraCostsPerPart({ ...d, hours: 7 }), 2 * extraCostsPerPart(d))
+  // The quantity of the order doesn't change what each part pays.
+  near(extraCostsPerPart({ ...d, quantity: 10 }), extraCostsPerPart(d))
+  near(calculate(d).parts.extras, 3.5 * perHour)
+})
+
+test('monthly costs mix with per part and per order ones', () => {
+  const d = { ...BASE, quantity: 4, printHoursPerWeek: 40, failRate: 0, extraCosts: [
+    { id: 1, label: 'Imanes', amount: 0.5, per: 'part' },
+    { id: 2, label: 'Diseño', amount: 20, per: 'order' },
+    { id: 3, label: 'Licencia', amount: 13, per: 'month' },
+  ] }
+  near(extraCostsPerPart(d), 0.5 + 20 / 4 + 3.5 * 13 / (40 * WEEKS_PER_MONTH))
+})
+
+test('without print hours per week a monthly cost adds nothing instead of Infinity', () => {
+  const d = { ...BASE, extraCosts: [{ id: 1, label: 'Licencia', amount: 10, per: 'month' }] }
+  near(monthlyCostPerHour(d), 0)
+  near(extraCostsPerPart({ ...d, printHoursPerWeek: 0 }), 0)
+  // A 100 % fail rate hits the 0.95 ceiling: finite, not a division by zero.
+  assert.ok(Number.isFinite(monthlyCostPerHour({ ...d, printHoursPerWeek: 60, failRate: 100 })))
+})
+
+test('normalizeExtraCosts keeps per: month', () => {
+  assert.equal(normalizeExtraCosts([{ label: 'Licencia', amount: 10, per: 'month' }])[0].per, 'month')
 })
