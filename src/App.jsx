@@ -24,7 +24,7 @@ import { isAgentEnabled, setAgentEnabled } from './agent.js'
 import { MAX_EXTRA_COSTS, MAX_EXTRA_FILAMENTS, calculate, capacity, normalizeExtraCosts, normalizeExtras } from './calculate.js'
 import { useI18n } from './i18n/context.js'
 import { LANGS, LANG_NAMES, selectorVisible } from './i18n/index.js'
-import { fmtNumber } from './i18n/format.js'
+import { fmtMoney, fmtNumber, moneyParts as splitMoney, numberToText, parseNumber } from './i18n/format.js'
 import { currencySymbol, fromDisplay, toDisplay } from './money.js'
 
 /* ==================================================================
@@ -162,26 +162,43 @@ function Field({ id, label, unit, money, help, value, onChange }) {
      appears under the row while the field has focus (CSS :focus-within), as
      iOS shows a footer under a setting. It is always in the DOM and tied to
      the input with aria-describedby, so a screen reader reads it on focus
-     without anything to open. */
+     without anything to open.
+
+     2026-11-11: a text input, not type="number". A number input writes the
+     decimal mark of the BROWSER's language, so a Spanish page in an English
+     Chrome showed "0.8" next to results that said "5,22". As text, the field
+     follows the page's language and accepts a comma or a point.
+     `draft` is what the person is typing ("0," is not a number yet); while
+     it is null the field shows the real value. inputMode="decimal" still
+     opens the numeric keyboard on a phone. */
+  const { decimal } = useI18n()
+  const [draft, setDraft] = useState(null)
   /* A money field is stored in EUR (like everything the app saves) but shown and
      typed in the chosen currency: toDisplay on the way in, fromDisplay on the
      way out. With EUR the rate is 1 and nothing changes. */
   const cur = useContext(CurrencyContext)
   const shown = money ? toDisplay(value, cur.rate) : value
-  const report = n => onChange(money ? fromDisplay(n, cur.rate) : n)
   return (
     <div className="field">
       <div className="row">
         <label htmlFor={id}>{label}</label>
         <input
           id={id}
-          type="number"
+          type="text"
           inputMode="decimal"
-          value={shown}
+          autoComplete="off"
+          value={draft ?? numberToText(shown, decimal)}
           aria-describedby={help ? `help-${id}` : undefined}
-          /* The input doesn't hold its own value: it receives it from
-             above and reports changes upward (controlled component). */
-          onChange={e => report(e.target.value === '' ? 0 : Number(e.target.value))}
+          /* The input doesn't hold the value: it receives it from above and
+             reports changes upward (controlled component). A key that would
+             not make a number (a letter) is simply not accepted. */
+          onChange={e => {
+            const n = parseNumber(e.target.value)
+            if (n === null) return
+            setDraft(e.target.value)
+            onChange(money ? fromDisplay(n, cur.rate) : n)
+          }}
+          onBlur={() => setDraft(null)}
         />
         <span className="unit">{money ? cur.symbol : unit}</span>
       </div>
@@ -289,7 +306,6 @@ function SiteFooter() {
   const { t } = useI18n()
   return (
     <footer className="site-foot">
-      <strong className="brand"><Logo size={16} small /> layercents</strong>
       <span>{t('footer.tagline')}</span>
       <a href="https://github.com/llopjulen/coste-3d/issues">{t('footer.feedback')}</a>
     </footer>
@@ -307,7 +323,7 @@ const ordersStore = createLocalStore()
 ================================================================== */
 // agentOptIn: true when this page load came from layercents.com/?agent (see main.jsx).
 export default function App({ agentOptIn = false }) {
-  const { t, tr, lang, setLang, decimal, locale } = useI18n()
+  const { t, lang, setLang, decimal, locale } = useI18n()
   // Built here (not at module level) because the labels depend on the language.
   // t changes only when the language does, so the observer in SubNav is rebuilt
   // only then.
@@ -589,21 +605,13 @@ export default function App({ agentOptIn = false }) {
   const symbol = useMemo(() => currencySymbol(currency, locale), [currency, locale])
   const currencyCtx = useMemo(() => ({ code: currency, rate, symbol }), [currency, rate, symbol])
 
-  // The amount split in three, so the big price can show the cents and
-  // the currency smaller. formatMoney below is built on top of it, so
-  // the whole app keeps formatting money in exactly one place.
-  const moneyParts = (n) => {
-    const value = (isFinite(n) ? n : 0) * rate
-    const [whole, cents] = value.toFixed(2).split('.')
-    // `decimal` is "." or "," depending on the language (see i18n/index.js).
-    // Only the separator changes: the digits are the same, so the saved
-    // quotes and the totals never depend on the language.
-    return { whole, cents, decimal, currency }
-  }
-  const formatMoney = (n) => {
-    const { whole, cents } = moneyParts(n)
-    return `${whole}${decimal}${cents} ${currency}`
-  }
+  // Money is formatted in exactly one place (i18n/format.js): "7,94 €" in
+  // Spanish and French, "€7.94" in English. Amounts are kept in EUR and
+  // converted here, so saved quotes never depend on the currency on screen.
+  const inCurrency = n => (isFinite(n) ? n : 0) * rate
+  const formatMoney = n => fmtMoney(locale, inCurrency(n), currency)
+  // The same amount in pieces, so the big price can draw its cents smaller.
+  const moneyParts = n => splitMoney(locale, inCurrency(n), currency)
 
   useEffect(() => {
     fetch('https://api.frankfurter.dev/v1/latest?from=EUR')
@@ -777,7 +785,6 @@ export default function App({ agentOptIn = false }) {
           >
             <NavIcon name="history" />
             <span className="tab-label">{t('nav.history')}</span>
-            <span className="count">{savedQuotes.length}</span>
             {/* The dot is decoration; the hidden text gives screen readers the same news. */}
             {backupDue && <><span className="tab-dot" aria-hidden="true" /><span className="sr-only">{t('nav.backupDue')}</span></>}
           </button>
@@ -915,7 +922,6 @@ export default function App({ agentOptIn = false }) {
       ) : view === 'history' ? (
         <div className="wrap">
           <h1>{t('history.title')}</h1>
-          <p className="subtitle">{t('history.subtitle')}</p>
           {/* Above the list, so it's seen; renders nothing unless a backup is due. */}
           <BackupReminder quotes={savedQuotes} lastBackupAt={lastBackupAt} onBackup={backupNow} />
           <History
@@ -940,8 +946,10 @@ export default function App({ agentOptIn = false }) {
         </div>
       ) : (
       <div className="wrap calc-page">
-        <h1>{t('calc.title')}</h1>
-        <p className="subtitle">{t('calc.subtitle')}</p>
+        {/* The title is for Google and for screen readers (it is in the
+            prerendered HTML); on screen the page starts with the tool itself.
+            DESIGN.md: "the first screen is the tool". */}
+        <h1 className="sr-only">{t('calc.title')}</h1>
 
         <div className="columns">
           {/* --- Form: drawn by looping over SECTIONS. "form-col" gives it the
@@ -961,7 +969,6 @@ export default function App({ agentOptIn = false }) {
                         <button type="button" className="controls" onClick={addFilament} disabled={d.extraFilaments.length >= MAX_EXTRA_FILAMENTS}>
                           + {t('filament.add')}
                         </button>
-                        {d.extraFilaments.length === 0 && <span className="muted">{t('filament.hint')}</span>}
                       </div>
                     </>
                   )}
@@ -1051,7 +1058,7 @@ export default function App({ agentOptIn = false }) {
                   {SECTIONS.filter(section => section.setup).flatMap(section => section.fields).map(field => (
                     <div key={field.key}>
                       <dt>{t(`field.${field.key}.label`)}</dt>
-                      <dd>{field.money ? fmtNumber(locale, toDisplay(d[field.key], rate), 2) : d[field.key]} {fieldUnit(field)}</dd>
+                      <dd>{numberToText(field.money ? toDisplay(d[field.key], rate) : d[field.key], decimal)} {fieldUnit(field)}</dd>
                     </div>
                   ))}
                 </dl>
@@ -1062,31 +1069,52 @@ export default function App({ agentOptIn = false }) {
           {/* --- Result: the price first, because it's the answer the
                person came for; then why (the symbol), then what happens
                at their current price, then saving it. --- */}
-          <div className="result" ref={resultRef}>
-            <div className="panel hero">
+          <div className="result">
+            <div className="panel hero" ref={resultRef}>
               <span className="hero-label">{t('hero.label')}</span>
               <div className="hero-price">
+                {price.prefix && <span className="hero-cents">{price.prefix}</span>}
                 <span className="hero-whole">{price.whole}</span>
-                <span className="hero-cents">{price.decimal}{price.cents}</span>
-                <span className="hero-currency">{price.currency}</span>
+                <span className="hero-cents">{price.cents && price.decimal + price.cents}{price.suffix && ` ${price.suffix}`}</span>
               </div>
-              <p className="hero-sub">
-                {tr('hero.keep', {}, { amount: <strong>{formatMoney(r.recommendedProfit)}</strong> })}
-              </p>
+              {/* What is left per part, at the recommended price and at the
+                  person's own, one under the other so they can be compared.
+                  Until 2026-11-11 three blocks said this with three
+                  different figures ("you keep", "you make", "after fees"). */}
+              <dl className="hero-rows">
+                <div>
+                  <dt>{t('hero.atRecommended')}</dt>
+                  <dd>{formatMoney(r.recommendedProfit)}</dd>
+                </div>
+                {d.currentPrice > 0 && (
+                  <>
+                    <div>
+                      <dt>{t('hero.atYours', { price: formatMoney(d.currentPrice) })}</dt>
+                      <dd className={r.profit < 0 ? 'loss' : undefined}>{formatMoney(r.profit)}</dd>
+                    </div>
+                    <div>
+                      <dt>{t('hero.perHour')}</dt>
+                      <dd className={r.perHour < 0 ? 'loss' : undefined}>{formatMoney(r.perHour)}</dd>
+                    </div>
+                  </>
+                )}
+                {r.units > 1 && (
+                  <div>
+                    <dt>{t('hero.orderTotal', { units: r.units })}</dt>
+                    <dd>{formatMoney(r.orderPrice)}</dd>
+                  </div>
+                )}
+              </dl>
               {cap && (
                 <p className="hero-sub">
-                  {tr('hero.perWeek', { hours: fmtNumber(locale, d.printHoursPerWeek, 1) }, { amount: <strong>{fmtNumber(locale, cap.goodPerWeek, 1)}</strong> })}
-                  {r.units > 1 && <> {tr('hero.orderDays', { units: r.units }, { days: <strong>{fmtNumber(locale, cap.orderDays, 1)}</strong> })}</>}
-                </p>
-              )}
-              {r.units > 1 && (
-                <p className="hero-sub">
-                  {tr('hero.orderTotal', { units: r.units }, { amount: <strong>{formatMoney(r.orderPrice)}</strong> })}
+                  {/* Whole parts: nobody sells 15.8 of them. Below ten a decimal still matters. */}
+                  {t('hero.perWeek', { hours: fmtNumber(locale, d.printHoursPerWeek, 1), amount: fmtNumber(locale, cap.goodPerWeek >= 10 ? Math.floor(cap.goodPerWeek) : cap.goodPerWeek, 1) })}
+                  {r.units > 1 && <> {t('hero.orderDays', { units: r.units, days: fmtNumber(locale, cap.orderDays, 1) })}</>}
                 </p>
               )}
             </div>
 
-            <div className="panel">
+            <div className="panel cost-panel">
               <h2 className="with-value">
                 <span>{t('cost.title')}</span>
                 <strong>{formatMoney(r.cost)}</strong>
@@ -1134,41 +1162,19 @@ export default function App({ agentOptIn = false }) {
               </div>
             </div>
 
-            <div className="panel">
-              <div className="verdict">
-                <span className="context">{t('verdict.context')}</span>
-                <div className={`sentence ${r.profit < 0 ? 'loss' : 'gain'}`}>
-                  {r.profit < 0
-                    ? t('verdict.lose', { amount: formatMoney(Math.abs(r.profit)) })
-                    : t('verdict.make', { amount: formatMoney(r.profit) })}
-                </div>
-                <span className="note">
-                  {t('verdict.note', { net: formatMoney(r.currentNet), price: formatMoney(d.currentPrice) })}
-                </span>
-              </div>
-              {/* This figure is computed from the CURRENT price, so it lives
-                  here and not next to the recommended price, where it
-                  looked like the profit of the price shown above it. */}
-              <div className="figure">
-                <span className="label">{t('verdict.perHour')}</span>
-                <span className="value">{formatMoney(r.perHour)}</span>
-              </div>
-            </div>
-
             {/* Tips from the numbers above (advice.js): plain rules, at most three.
                 Hidden when there is nothing worth saying. */}
             {tips.length > 0 && (
-              <section className="panel" aria-labelledby="advice-title">
-                <h2 id="advice-title">{t('advice.title')}</h2>
-                <ul className="body advice">
-                  {tips.map(tip => (
-                    <li key={tip.id}>{t(`advice.${tip.id}`, {
-                      ...tip.vars,
-                      takes: tip.vars.takes != null ? formatMoney(tip.vars.takes) : undefined,
-                      direct: tip.vars.direct != null ? formatMoney(tip.vars.direct) : undefined,
-                    })}</li>
-                  ))}
-                </ul>
+              /* Plain sentences, no title and no bullets: with one tip (the
+                 usual case) a headed list of one item was all scaffolding. */
+              <section className="panel advice" aria-label={t('advice.title')}>
+                {tips.map(tip => (
+                  <p key={tip.id}>{t(`advice.${tip.id}`, {
+                    ...tip.vars,
+                    takes: tip.vars.takes != null ? formatMoney(tip.vars.takes) : undefined,
+                    direct: tip.vars.direct != null ? formatMoney(tip.vars.direct) : undefined,
+                  })}</p>
+                ))}
               </section>
             )}
 

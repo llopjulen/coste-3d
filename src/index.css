@@ -528,22 +528,33 @@ footer{margin-top:24px;font-size:.82rem;color:var(--tenue);max-width:38em}
 .cal-empty{padding:20px;display:grid;gap:12px;justify-items:start}
 .cal-note{margin-top:10px;padding:0 16px;font-size:.8rem}
 .row-btn.due-btn{display:block;margin:4px 0 0;padding:2px 4px;font-size:.76rem;color:var(--tenue)}
-.plans{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:32px;max-width:860px}
-@media(max-width:720px){.plans{grid-template-columns:1fr}}
-.plan{display:flex;flex-direction:column;padding:26px 24px;background:var(--panel);border-radius:var(--radio)}
-/* El plan de pago se distingue con un filo de oro, no con un degradado. */
-.plan-shop{box-shadow:inset 0 0 0 1.5px rgba(var(--oro-rgb),.55)}
-.plan h2{display:flex;align-items:center;gap:10px;font-size:1.05rem;font-weight:600}
-.soon{font-size:.72rem;font-weight:500;padding:2px 8px;border-radius:999px;background:rgba(var(--oro-rgb),.16);color:var(--oro-texto)}
-.plan-price{margin-top:14px;display:flex;align-items:baseline;gap:6px}
-.plan-price .amount{font-size:2.6rem;font-weight:300;letter-spacing:-.04em;line-height:1}
-.plan-price .per{color:var(--tenue)}
-.plan-for{margin-top:6px;font-size:.88rem;color:var(--tenue)}
-.plan-list{list-style:none;margin-top:18px;display:grid;align-content:start;gap:10px;font-size:.94rem;flex:1}
-.plan-list li{display:flex;gap:10px;align-items:flex-start}
-.plan-list svg{flex:none;margin-top:3px;color:var(--tenue)}
-.plan-cta{display:block;margin-top:22px;text-align:center;text-decoration:none}
-.plan-foot{margin-top:12px;font-size:.8rem}
+/* Planes: una tabla comparativa dentro de un grupo (2026-11-11; antes dos
+   tarjetas de precios con lista de checks y borde dorado). */
+.plans-panel{max-width:820px;overflow:hidden}
+.plans-table{width:100%;border-collapse:collapse;font-size:.95rem}
+.plans-table th,.plans-table td{padding:13px 16px;text-align:left;vertical-align:middle;border-top:1px solid var(--borde)}
+.plans-table thead th{border-top:0;vertical-align:top;padding:20px 16px 18px;font-weight:400}
+.plans-table tbody th{font-weight:400;text-wrap:pretty}
+.plans-table th:nth-child(n+2),.plans-table td{width:24%;font-variant-numeric:tabular-nums}
+.plans-table th:last-child,.plans-table td:last-child{width:30%}
+.plans-table td svg{display:block;color:var(--texto)}
+.plan-name{display:block;font-size:.84rem;font-weight:500;color:var(--tenue)}
+.plan-amount{display:block;margin-top:4px;font-size:1.5rem;font-weight:600;letter-spacing:-.025em;line-height:1.15}
+.plan-amount .per{font-size:.84rem;font-weight:400;letter-spacing:0;color:var(--tenue)}
+.plan-sub{display:block;margin-top:4px;font-size:.8rem;color:var(--tenue)}
+.plans-cta{max-width:820px;margin-top:16px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:12px 24px}
+.plans-cta p{font-size:.84rem;max-width:34em;text-wrap:pretty}
+.plans-cta .controls{flex:none;text-decoration:none}
+@media(max-width:600px){
+  .plans-table{font-size:.88rem}
+  .plans-table th,.plans-table td{padding:12px 10px}
+  .plans-table th:first-child{padding-left:14px}
+  .plans-table th:nth-child(n+2),.plans-table td{width:22%}
+  .plans-table th:last-child,.plans-table td:last-child{width:30%}
+  .plan-amount{font-size:1.15rem}
+  .plan-amount .per{display:block}
+  .plans-cta{flex-direction:column;align-items:flex-start;padding:0 4px}
+}
 .wrap-foot{padding-top:0}
 .segmented{display:inline-flex;gap:2px;margin-top:22px;padding:3px;background:var(--panel-alto);border-radius:10px;max-width:100%;overflow-x:auto}
 /* Control segmentado, como en iOS: el activo es una pastilla clara que flota sobre el carril. */
@@ -1289,3 +1300,236 @@ html{-webkit-tap-highlight-color:transparent}
 .tabs.more-right{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent)}
 .tabs.more-left{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 36px),transparent)}
 .tabs.more-left.more-right{-webkit-mask-image:linear-gradient(to right,transparent,#000 36px,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to right,transparent,#000 36px,#000 calc(100% - 36px),transparent)}
+
+/* ------------------------------------------------------------------
+   Auditoría pantalla a pantalla (2026-11-11), 1: calculadora y común.
+------------------------------------------------------------------ */
+/* Sin subtítulo bajo el título, lo que venía detrás necesita su aire. */
+.wrap > h1 + *{margin-top:24px}
+.calc-page > .columns{margin-top:0}
+
+/* El símbolo de la moneda va con los céntimos, no como etiqueta gris aparte. */
+.hero-price .hero-cents:first-child{margin-right:2px}
+
+/* Lo que queda por pieza: al precio recomendado y al de la persona, una fila
+   debajo de otra con la cifra en columna para compararlas de un vistazo. */
+.hero-rows{margin-top:16px;border-top:1px solid var(--borde)}
+.hero-rows > div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 0;border-bottom:1px solid var(--borde)}
+.hero-rows dt{font-size:.88rem;color:var(--tenue)}
+.hero-rows dd{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hero-rows dd.loss{color:var(--rojo)}
+.hero-rows + .hero-sub{margin-top:12px}
+.hero{padding-bottom:18px}
+
+/* El consejo: una frase, sin título ni viñeta. */
+.panel.advice{padding:14px 18px;display:grid;gap:8px;font-size:.88rem;line-height:1.5;color:var(--tenue)}
+.panel.advice p{text-wrap:pretty}
+
+/* El objeto 3D llena su caja (la cámara se acercó en CostPrint.jsx). */
+.cost-print{height:250px}
+@media (max-width:560px){.cost-print{height:210px}}
+
+/* Pie: una línea, sin repetir el logo que ya está arriba. */
+.site-foot{margin-top:56px;padding-top:0;border-top:0;font-size:.8rem;gap:4px 10px}
+.site-foot a{color:var(--tenue)}
+.site-foot a:hover{color:var(--texto)}
+
+/* En una columna (móvil y tableta) el orden cambia: importar, el precio y
+   el coste con la pieza 3D, y DESPUÉS los campos. Antes el precio quedaba a
+   ~1.900 px de scroll y la primera pantalla era solo un formulario.
+   `display:contents` hace que las dos columnas «desaparezcan» como cajas y
+   sus hijos pasen a ser hijos directos de .columns, que los ordena con
+   `order`. El orden del DOM (y del teclado) no cambia: los campos siguen
+   yendo antes que el resultado al tabular. */
+@media(max-width:860px){
+  .columns{display:flex;flex-direction:column;gap:20px}
+  .form-col,.result{display:contents}
+  .form-col > *{order:4;margin-bottom:0}
+  .form-col .panel,.form-col .dropzone{margin-bottom:0}
+  .form-col > #sec-import{order:1}
+  .result > *{order:5}
+  .result > .hero{order:2}
+  .result > .cost-panel{order:3}
+}
+
+/* ------------------------------------------------------------------
+   Auditoría pantalla a pantalla (2026-11-11), 2: Historial.
+------------------------------------------------------------------ */
+/* Aviso de copia: una línea gris con enlace, no una caja con botón dorado. */
+.backup-reminder{margin-top:10px;padding:0 0 0 16px;background:none;border-radius:0;font-size:.86rem;color:var(--tenue)}
+.backup-reminder::before{left:0;top:.58em;width:7px;height:7px}
+.backup-reminder p{flex:1 1 auto;max-width:none}
+.backup-reminder .link{color:var(--texto)}
+
+/* Las cifras del historial: una línea, no cuatro cajas. */
+.history-summary{font-size:.95rem;color:var(--tenue);font-variant-numeric:tabular-nums;text-wrap:pretty}
+.wrap > h1 + .history-summary{margin-top:6px}
+.wrap > h1 + .backup-reminder{margin-top:8px}
+.wrap > .backup-reminder + .history-summary{margin-top:4px}
+
+/* La barra de acciones sobre lo marcado solo ocupa sitio cuando existe. */
+.quote-tools{margin:0 0 14px}
+.quote-tools:empty{display:none}
+.quote-tools .picked{font-weight:600;font-variant-numeric:tabular-nums;margin-right:4px}
+.quote-tools .link{color:var(--texto)}
+
+/* Sin fila de cabeceras a la vista: sigue en el DOM para los lectores de
+   pantalla. `table-layout:fixed` con anchos en un <colgroup> hace que las
+   columnas caigan en el mismo sitio en todos los meses (cada mes es una
+   tabla distinta, y con el reparto automático cada una iba a su aire). */
+.history-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+@media(min-width:601px){
+  .history-table{table-layout:fixed}
+  .history-table td{padding:11px 12px;overflow:hidden;text-overflow:ellipsis}
+  .history-table tbody tr:first-child td{border-top:0}
+  .history-table td.check{padding-left:18px}
+  .history-table td.actions{padding-right:14px;overflow:visible;text-overflow:clip}
+  .history-table .c-check{width:46px}
+  .history-table .c-date{width:112px}
+  .history-table .c-client{width:18%}
+  .history-table .c-qty{width:84px}
+  .history-table .c-total{width:112px}
+  .history-table .c-order{width:176px}
+  .history-table .c-actions{width:128px}
+}
+.panel > h2.month-head{border-bottom:1px solid var(--borde)}
+
+/* Estado vacío: el botón principal es ir a calcular. */
+.empty{padding:36px 18px}
+
+/* ------------------------------------------------------------------
+   Auditoría pantalla a pantalla (2026-11-11), 4: Pedidos y su detalle.
+------------------------------------------------------------------ */
+.orders .history-summary{margin-top:6px}
+.orders-tools{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;margin:14px 0 12px}
+.orders-tools .segmented{margin:0}
+.orders-tools .text-input{flex:1 1 220px}
+.orders-switch + .history-summary{margin-top:14px}
+.orders .empty h2{font-size:1rem;font-weight:600}
+/* Cliente: el desplegable y, a su lado, el chevron que abre su ficha. */
+.lrow-pair{display:flex;align-items:center;gap:2px;min-width:0;max-width:64%}
+.lrow-pair .lrow-select{max-width:100%}
+.row-btn.chevron{font-size:1.15rem;line-height:1;padding:6px 8px;color:var(--tenue)}
+/* Las dos salidas, juntas y al final: cancelar (texto) y borrar (rojo). */
+.order-exits{display:flex;flex-wrap:wrap;gap:8px 22px;margin:24px 16px 0;font-size:.9rem}
+.order-exits .link:not(.danger-link){color:var(--tenue)}
+.order-flow{margin-bottom:28px}
+
+/* ------------------------------------------------------------------
+   Auditoría pantalla a pantalla (2026-11-11), 5: Impresoras.
+------------------------------------------------------------------ */
+/* Un solo oro: la barra de progreso. «Beta», «Imprimiendo» y el estado del
+   agente pasan a gris; antes había cuatro cosas doradas a la vez. */
+.beta{background:var(--panel-alto);color:var(--tenue);font-weight:500}
+.printer-badge.busy{background:var(--panel-alto);color:var(--texto)}
+/* Las impresoras son filas de una lista, no tarjetas con borde dentro de un
+   panel (DESIGN.md: nada de tarjetas dentro de tarjetas). */
+.printers-body{gap:0;padding-top:4px;padding-bottom:4px}
+.printer-card{border:0;border-radius:0;background:none;padding:14px 0}
+.printer-card + .printer-card{border-top:1px solid var(--borde)}
+.printers-body > p:first-child{padding-top:10px}
+/* La diferencia con el laminador, pequeña y gris junto al tiempo real. */
+.slicer-diff{margin-left:8px;font-size:.8rem}
+/* El agente, cuando todo va bien: una línea al pie. */
+.agent-line{margin:18px 16px 0;font-size:.82rem}
+.agent-line .link{color:var(--texto)}
+
+/* Móvil. Estas dos tablas heredaban la rejilla del Historial (casilla,
+   pieza, total, estado, acciones), que no es la suya: el resultado se
+   pintaba ENCIMA del nombre del archivo y las cifras por impresora salían
+   sin etiqueta («8 2 / 20 %»). Cada una lleva ahora su propia rejilla. */
+@media(max-width:600px){
+  .jobs-table tr{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"part time" "part result";column-gap:12px;padding:10px 4px}
+  .jobs-table td.part{grid-area:part}
+  .jobs-table td.time-cell{grid-area:time;text-align:right}
+  .jobs-table td.result-cell{grid-area:result;text-align:right;font-size:.76rem;color:var(--tenue)}
+  .jobs-table .slicer-diff{display:none}
+  .fleet-table tr{display:flex;flex-wrap:wrap;gap:2px 14px;padding:10px 4px}
+  .fleet-table td:first-child{flex:1 0 100%}
+  .fleet-table td[data-label]{font-size:.8rem;color:var(--tenue);text-align:left}
+  .fleet-table td[data-label]::before{content:attr(data-label) " "}
+}
+/* Las tablas de Impresoras sí enseñan su cabecera (son cifras que sin
+   etiqueta no se entienden) y reparten el ancho según el contenido: las
+   reglas de cabecera oculta y ancho fijo de la auditoría 2 son solo para
+   la tabla de presupuestos del Historial. */
+.fleet-table thead,.jobs-table thead{position:static;width:auto;height:auto;overflow:visible;clip-path:none}
+@media(min-width:601px){
+  .fleet-table,.jobs-table{table-layout:auto}
+  .fleet-table td,.jobs-table td{overflow:visible}
+  .fleet-table tbody tr:first-child td,.jobs-table tbody tr:first-child td{border-top:1px solid var(--borde)}
+}
+.printers-subtitle{margin-top:20px}
+
+/* ------------------------------------------------------------------
+   Auditoría pantalla a pantalla (2026-11-11), 6: presupuesto del cliente.
+------------------------------------------------------------------ */
+/* El editor a la izquierda y la hoja a la derecha, que es lo que se va a
+   enviar. En pantallas estrechas, una columna: editor y debajo la hoja. */
+.quote-screen{max-width:1240px}
+@media(min-width:1100px){
+  .quote-layout{display:grid;grid-template-columns:380px minmax(0,1fr);gap:24px;align-items:start}
+  .quote-layout > .report{position:sticky;top:20px}
+}
+.quote-editor{grid-template-columns:1fr;gap:22px;margin-bottom:22px}
+@media(min-width:700px) and (max-width:1099px){.quote-editor{grid-template-columns:1fr 1fr}}
+
+/* El editor con el mismo lenguaje que el resto de la app: título pequeño y
+   gris fuera del grupo, y dentro filas con la etiqueta a la izquierda y el
+   valor a la derecha sin caja. Era el único sitio con una caja gris por campo. */
+.quote-editor .panel{background:none;overflow:visible}
+.quote-editor .panel > h2{padding:0 16px 7px;border-bottom:0;font-size:.84rem;font-weight:500;color:var(--tenue)}
+.quote-editor .form-grid{gap:0;padding:2px 16px;background:var(--panel);border-radius:var(--radio)}
+.quote-editor .form-pair{display:contents}
+.quote-editor .form-row{flex-direction:row;align-items:center;justify-content:space-between;gap:12px;min-height:48px;border-top:1px solid var(--borde)}
+.quote-editor .form-grid > .form-row:first-child,.quote-editor .form-grid > .form-pair:first-child > .form-row:first-child{border-top:0}
+.quote-editor .form-row label,.quote-editor .form-label{font-size:.95rem;color:var(--texto);flex:none}
+.quote-editor .form-row .text-input{flex:1 1 auto;width:auto;min-width:0;max-width:62%;padding:7px 8px;border-color:transparent;background:none;text-align:right}
+.quote-editor .form-row .text-input:hover{background:var(--velo)}
+.quote-editor .form-row .text-input:focus-visible{background:var(--hundido)}
+/* Los dos textos largos: etiqueta arriba y el texto a todo el ancho. */
+.quote-editor .form-row:has(textarea){flex-direction:column;align-items:stretch;gap:2px;padding:11px 0 8px}
+.quote-editor .form-row textarea.text-input{max-width:none;text-align:left;padding:4px 0;min-height:44px;resize:none;field-sizing:content}
+.quote-editor .form-row textarea.text-input:hover,.quote-editor .form-row textarea.text-input:focus-visible{background:none;box-shadow:none;border-color:transparent}
+.quote-editor .form-row:has(.swatches),.quote-editor .form-row:has(.segmented){flex-wrap:wrap;padding:8px 0}
+.quote-editor .form-row .segmented{margin:0}
+.quote-editor .form-hint,.quote-editor .form-error{padding:10px 0 12px;border-top:1px solid var(--borde)}
+/* Las líneas del presupuesto: filas, no cajas. */
+.quote-editor .line-edit{padding:5px 0;border-top:1px solid var(--borde);grid-template-columns:minmax(0,1fr) 52px 84px 28px}
+.quote-editor .line-edit .text-input{padding:7px 8px;border-color:transparent;background:none}
+.quote-editor .line-edit .text-input:first-child{padding-left:0}
+.quote-editor .line-edit .text-input:hover{background:var(--velo)}
+.quote-editor .line-edit .text-input:focus-visible{background:var(--hundido)}
+.quote-editor .line-head{margin:0;padding:10px 0 6px;font-size:.76rem}
+.quote-editor .line-head span:nth-child(2),.quote-editor .line-head span:nth-child(3){text-align:right;padding-right:8px}
+/* «Otro color»: un círculo con un +, sin degradado. */
+.swatch-custom{background:var(--panel-alto);color:var(--tenue);display:grid;place-items:center;font-size:1.05rem;line-height:1}
+.swatch-custom[data-on]{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--texto)}
+.swatches{gap:9px}
+.swatch-btn{width:26px;height:26px}
+/* En papel no hay dos columnas: solo la hoja. */
+@media print{.quote-layout{display:block}.quote-layout > .report{position:static}}
+.quote-editor .logo-row .controls{padding:7px 12px;font-size:.88rem}
+
+/* ------------------------------------------------------------------
+   Auditoría pantalla a pantalla (2026-11-11), 7: el informe.
+------------------------------------------------------------------ */
+/* Títulos de sección como los del resto de la app: sin mayúsculas ni tracking. */
+.report h2{font-size:.84rem;font-weight:600;text-transform:none;letter-spacing:0;color:var(--tinta);margin-bottom:12px}
+/* Las cifras: una fila separada por líneas finas, sin cajas. */
+.report-kpis{display:flex;flex-wrap:wrap;gap:0;margin:22px 0 4px;border-bottom:1px solid var(--linea-papel)}
+.kpi{flex:1 1 0;min-width:120px;padding:2px 16px 16px;border:0;border-radius:0;border-left:1px solid var(--linea-papel)}
+.kpi:first-child{padding-left:0;border-left:0}
+.kpi dt{font-size:.74rem;color:var(--tinta-suave)}
+.kpi dd{margin-top:3px;font-size:1.2rem;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.kpi dd.loss{color:var(--rojo)}
+@media(max-width:700px){
+  .report-kpis{display:grid;grid-template-columns:1fr 1fr;gap:14px 0}
+  .kpi{padding:0 12px 0;border-left:0}
+  .kpi:nth-child(odd){padding-left:0}
+  .report-kpis{padding-bottom:16px}
+}
+/* Sin desglose, los clientes ocupan todo el ancho. */
+.report-two.one{grid-template-columns:1fr}
+.report .bar-row{grid-template-columns:minmax(72px,120px) 1fr auto}
+.report .bar-track,.report .bar-fill{height:10px;border-radius:5px}

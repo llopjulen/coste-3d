@@ -58,13 +58,17 @@ export function BackupReminder({ quotes, lastBackupAt, onBackup }) {
   if (!status.due) return null
   const n = status.pending
   return (
+    /* One quiet line with a link (2026-11-11). It used to be a box with a
+       gold button, the loudest thing in History, for something that is not
+       what the person came to do. The gold dot stays: it is the same one
+       that marks the tab. */
     <aside className="backup-reminder no-print" aria-label={t('backup.reminder.label')}>
       <p>
         {status.hasBackup
           ? tp('backup.reminder.since', n, { date: fmtDay(locale, status.last) })
           : tp('backup.reminder.none', n)}
+        {' '}<button type="button" className="link" onClick={onBackup}>{t('backup.download')}</button>
       </p>
-      <button type="button" className="controls primary" onClick={onBackup}>{t('backup.download')}</button>
     </aside>
   )
 }
@@ -152,9 +156,9 @@ export default function BackupPanel({ quotes, lastBackupAt, onBackup, onRestore 
 
         {/* "Last backup" line: hidden on an empty, never-backed-up browser,
             where "No backup yet" would only be noise. */}
-        {(!isEmpty || status.hasBackup) && (
+        {status.hasBackup && (
           <p className="muted">
-            {status.hasBackup ? t('backup.last', { date: fmtDateTime(locale, status.last) }) : t('backup.none')}
+            {t('backup.last', { date: fmtDateTime(locale, status.last) })}
             {status.hasBackup && (status.pending > 0 ? t('backup.savedSince', { count: tp('count.quotes', status.pending) }) : t('backup.upToDate'))}
           </p>
         )}
@@ -164,11 +168,11 @@ export default function BackupPanel({ quotes, lastBackupAt, onBackup, onRestore 
               due, the reminder already has the gold "Download backup", and two
               identical gold buttons on one screen look like two different things. */}
           {canDownload && (
-            <button type="button" className={`controls ${status.due ? '' : 'primary'}`} onClick={onBackup}>{t('backup.download')}</button>
+            <button type="button" className="controls" onClick={onBackup}>{t('backup.download')}</button>
           )}
           {/* A real <input type="file"> inside a styled label: the browser's own
               picker, keyboard included, without its unstyleable default button. */}
-          <label className={`controls file-label ${isEmpty ? 'primary' : ''}`} aria-busy={reading}>
+          <label className="controls file-label" aria-busy={reading}>
             {reading ? t('backup.reading') : t('backup.restoreFile')}
             <input
               type="file"

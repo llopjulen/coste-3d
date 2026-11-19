@@ -3,7 +3,7 @@ import DocLangSelect from './DocLangSelect.jsx'
 import Logo from './Logo.jsx'
 import { useI18n } from './i18n/context.js'
 import { translatorFor } from './i18n/dicts.js'
-import { fmtDay, fmtMoney, fmtMonthShort } from './i18n/format.js'
+import { fmtDay, fmtMoney, fmtMonthShort, fmtNumber } from './i18n/format.js'
 
 /* ==================================================================
    REPORT — a printable summary of the quotes shown in History.
@@ -20,6 +20,8 @@ const LAYER_KEYS = ['material', 'power', 'depreciation', 'failures', 'labor', 'p
 const quoteDate = q => new Date(q.createdAt ?? q.id)
 const orderTotal = q => q.orderTotal ?? q.price
 const average = list => (list.length ? list.reduce((a, b) => a + b, 0) / list.length : 0)
+// Fewer months than this are drawn as rows, not columns.
+const MIN_COLUMNS = 4
 const pct = (part, whole) => (whole > 0 ? (part / whole) * 100 : 0)
 
 /* Horizontal bar list: one bar per row, longest = full width. */
@@ -115,9 +117,9 @@ export default function Report({ quotes, filter, currency, rate, onBack }) {
     <div className="report-screen">
       <div className="report-actions no-print">
         <button type="button" className="controls" onClick={onBack}>← {t('doc.back')}</button>
-        <button type="button" className="controls primary" onClick={() => window.print()}>{t('doc.savePdf')}</button>
+        {/* The hint is the button's tooltip here; the customer quote, used first, shows it in full. */}
+        <button type="button" className="controls primary" title={t('doc.printHint')} onClick={() => window.print()}>{t('doc.savePdf')}</button>
         <DocLangSelect value={docLang} onChange={setDocLang} />
-        <span className="muted">{t('doc.printHint')}</span>
       </div>
 
       <article className="report" lang={doc.lang}>
@@ -136,24 +138,31 @@ export default function Report({ quotes, filter, currency, rate, onBack }) {
           </div>
         </header>
 
-        <section className="report-kpis">
-          <div className="kpi"><span className="label">{doc.t('report.kpi.quotes')}</span><span className="value">{quotes.length}</span></div>
-          <div className="kpi"><span className="label">{doc.t('report.kpi.total')}</span><span className="value">{formatMoney(totalQuoted)}</span></div>
-          <div className="kpi"><span className="label">{doc.t('report.kpi.avgPrice')}</span><span className="value">{formatMoney(avgPrice)}</span></div>
-          <div className="kpi"><span className="label">{doc.t('report.kpi.avgCost')}</span><span className="value">{formatMoney(avgCost)}</span></div>
-          <div className="kpi">
-            <span className="label">{doc.t('report.kpi.avgProfit')}</span>
-            <span className="value">{withInputs.length ? formatMoney(avgProfit) : '—'}</span>
-            <span className="hint">{doc.t('report.kpi.afterFees')}</span>
-          </div>
-        </section>
+        {/* Figures in a row split by thin rules, not five boxes. A figure
+            nobody can compute (profit, when no quote has its form data)
+            is left out instead of printing a dash. */}
+        <dl className="report-kpis">
+          <div className="kpi"><dt>{doc.t('report.kpi.quotes')}</dt><dd>{quotes.length}</dd></div>
+          <div className="kpi"><dt>{doc.t('report.kpi.total')}</dt><dd>{formatMoney(totalQuoted)}</dd></div>
+          <div className="kpi"><dt>{doc.t('report.kpi.avgPrice')}</dt><dd>{formatMoney(avgPrice)}</dd></div>
+          <div className="kpi"><dt>{doc.t('report.kpi.avgCost')}</dt><dd>{formatMoney(avgCost)}</dd></div>
+          {withInputs.length > 0 && (
+            <div className="kpi"><dt>{doc.t('report.kpi.avgProfit')}</dt><dd className={avgProfit < 0 ? 'loss' : undefined}>{formatMoney(avgProfit)}</dd></div>
+          )}
+        </dl>
 
         <section className="report-block">
           <h2>{doc.t('report.perMonth')}</h2>
+          {months.length < MIN_COLUMNS ? (
+            /* With two or three months, columns were a couple of bars stuck
+               to the left of an empty axis: the same data reads better as rows. */
+            <BarList rows={months.map(m => ({ label: `${m.month} ${m.year}`, value: m.value }))} formatMoney={formatMoney} />
+          ) : (
           <div className="columns-chart" role="img" aria-label={doc.t('report.perMonth')}>
             {months.map((m, i) => (
               <div className="col" key={m.key} title={`${m.month} ${m.year}: ${formatMoney(m.value)} (${doc.tp('count.quotes', m.count)})`}>
-                <span className="col-value">{formatMoney(m.value).replace(` ${currency}`, '')}</span>
+                {/* Whole units over the bar: "1 250" fits where "1 250,00 €" would not. */}
+                <span className="col-value">{fmtNumber(doc.locale, m.value * rate, 0)}</span>
                 <span className="col-bar-area">
                   <span className="col-bar" style={{ height: `${pct(m.value, maxMonth)}%` }} />
                 </span>
@@ -166,15 +175,17 @@ export default function Report({ quotes, filter, currency, rate, onBack }) {
               </div>
             ))}
           </div>
+          )}
         </section>
 
-        <div className="report-two">
-          <section className="report-block">
-            <h2>{doc.t('report.breakdown')}</h2>
-            {withParts.length
-              ? <BarList rows={breakdown} formatMoney={formatMoney} showShare locale={doc.locale} />
-              : <p className="muted">{doc.t('report.noBreakdown')}</p>}
-          </section>
+        <div className={`report-two${withParts.length ? '' : ' one'}`}>
+          {/* No quote with a breakdown: no chart, instead of a sentence apologising for it. */}
+          {withParts.length > 0 && (
+            <section className="report-block">
+              <h2>{doc.t('report.breakdown')}</h2>
+              <BarList rows={breakdown} formatMoney={formatMoney} showShare locale={doc.locale} />
+            </section>
+          )}
           <section className="report-block">
             <h2>{doc.t('report.topClients')}</h2>
             <BarList rows={clients} formatMoney={formatMoney} />
