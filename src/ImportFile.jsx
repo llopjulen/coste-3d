@@ -25,20 +25,45 @@ const safeColor = (c) => (/^#[0-9a-f]{3,8}$/i.test(c) ? c : 'var(--tenue)')
    IMPORT PANEL
    onApply(values, isNewFile): puts hours / partGrams / purgeGrams
    into the form. onUndo(): puts back what was there before.
+
+   saved / onSave: App keeps a snapshot of this panel. The calculator is
+   one branch of a ternary in App, so going to History UNMOUNTS it and every
+   useState below would start from zero on the way back: the file, the
+   chosen plate and the Undo button were lost while the numbers they had
+   filled stayed in the form. Starting from `saved` and writing back on every
+   change makes the panel survive that.
 ================================================================== */
-export default function ImportFile({ onApply, onUndo, onFile }) {
+export default function ImportFile({ onApply, onUndo, onFile, saved, onSave }) {
   const { t, locale } = useI18n()
   const formatGrams = g => fmtGrams(locale, g)
   const inputRef = useRef(null)
-  const [status, setStatus] = useState('idle') // idle | reading | done | error
-  const [error, setError] = useState('')
-  const [result, setResult] = useState(null) // { fileName, slicer, plates }
-  const [plate, setPlate] = useState('all') // a plate number, or 'all'
-  const [partsText, setPartsText] = useState('1')
+  // The initial value of a useState is read only on the first render, which
+  // is exactly when we want to restore the snapshot (a remount).
+  const [status, setStatus] = useState(saved?.status ?? 'idle') // idle | reading | done | error
+  const [error, setError] = useState(saved?.error ?? '')
+  const [result, setResult] = useState(saved?.result ?? null) // { fileName, slicer, plates }
+  const [plate, setPlate] = useState(saved?.plate ?? 'all') // a plate number, or 'all'
+  const [partsText, setPartsText] = useState(saved?.partsText ?? '1')
   const [dragging, setDragging] = useState(false)
   // The last file dropped, kept for the 3D preview, and whether it is open.
-  const [file, setFile] = useState(null)
-  const [previewOpen, setPreviewOpen] = useState(false)
+  const [file, setFile] = useState(saved?.file ?? null)
+  const [previewOpen, setPreviewOpen] = useState(saved?.previewOpen ?? false)
+
+  // False once the panel is unmounted: a file still being read when the person
+  // leaves must not apply its numbers to a form they are no longer looking at.
+  const alive = useRef(true)
+  useEffect(() => {
+    alive.current = true
+    return () => { alive.current = false }
+  }, [])
+
+  // Every change is reported to App. 'reading' is never saved: a snapshot
+  // taken mid-read would come back as a panel stuck on "reading" forever.
+  useEffect(() => {
+    if (status === 'reading') return
+    onSave?.({ status, error, result, plate, partsText, file, previewOpen })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- onSave is a new function on every render of App
+  }, [status, error, result, plate, partsText, file, previewOpen])
 
   // Tells App which file (and plate) is loaded, so the 3D cost object can
   // show that part. null when it is undone or could not be read.
@@ -57,6 +82,7 @@ export default function ImportFile({ onApply, onUndo, onFile }) {
     setFile(file)
     try {
       const res = await readSlicedFile(file)
+      if (!alive.current) return
       const firstPlate = res.plates.length > 1 ? res.plates[0].index : 'all'
       setResult(res)
       setPlate(firstPlate)
@@ -64,6 +90,7 @@ export default function ImportFile({ onApply, onUndo, onFile }) {
       setStatus('done')
       onApply(formValuesFromPlates(res.plates, firstPlate, 1), true)
     } catch (err) {
+      if (!alive.current) return
       // Our own errors already have a message for the person; anything
       // else is a bug, so it also goes to the console.
       if (!(err instanceof ImportError)) console.error(err)

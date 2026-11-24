@@ -419,6 +419,10 @@ export default function App({ agentOptIn = false }) {
       })
       setQuoteName(quote.name ?? '')
       setQuoteClient(quote.client ?? '')
+      // The numbers now come from the quote, not from the file that was imported
+      // before: forget that file so the panel doesn't show one that no longer matches.
+      setImportSession(null)
+      setBeforeImport(null)
       setView('calculator')
       window.scrollTo(0, 0)
     }
@@ -674,6 +678,10 @@ export default function App({ agentOptIn = false }) {
   const [activeLayer, setActiveLayer] = useState(null)
   // The file loaded in Import, so the 3D cost object can be that very part.
   const [imported, setImported] = useState(null)
+  // Snapshot of the import panel (see ImportFile): it survives the calculator
+  // being unmounted when History is open. State and not a ref because it is READ
+  // while rendering (it is the panel's starting point); a ref must not be.
+  const [importSession, setImportSession] = useState(null)
   const [presetId, setPresetId] = useState('')
   const preset = presetById(presetId)
   const pickPreset = id => {
@@ -988,7 +996,13 @@ export default function App({ agentOptIn = false }) {
           {/* --- Form: drawn by looping over SECTIONS. "form-col" gives it the
                grouped-list look (titles outside, rows inside; index.css). --- */}
           <div className="form-col">
-            <div id="sec-import"><ImportFile onApply={applyImport} onUndo={undoImport} onFile={(file, plate) => setImported(file ? { file, plate } : null)} /></div>
+            <div id="sec-import"><ImportFile
+              onApply={applyImport}
+              onUndo={undoImport}
+              onFile={(file, plate) => setImported(file ? { file, plate } : null)}
+              saved={importSession}
+              onSave={setImportSession}
+            /></div>
             {/* The numbers that change with every part */}
             {SECTIONS.filter(section => !section.setup).map(section => (
               <section className="panel" key={section.id} id={section.id}>

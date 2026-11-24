@@ -116,6 +116,8 @@ Restos de la plantilla de Vite que nada usa y se pueden borrar: `src/assets/` (h
                  ┌──────────────────── App ─────────────────────┐
   Field ─onChange─► set(key) ─► d (valores del formulario)       │
   ImportFile ─onApply─► applyImport ─► d                        │
+                 │   ImportFile ─onSave─► importSession (sobrevive │
+                 │     a ir a History y volver)                   │
                  │   d ──► calculate(d) ──► r (se recalcula en  │
                  │                            cada render)      │
                  │   saveQuote: {…d, …r} ──► savedQuotes ──► useEffect ──► localStorage
