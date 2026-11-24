@@ -7,19 +7,22 @@ import { createRoot } from 'react-dom/client'
 import '@fontsource-variable/inter'
 import '@fontsource-variable/bricolage-grotesque/opsz.css'
 import './index.css'
-import App from './App.jsx'
+import Root from './Root.jsx'
 import I18nProvider from './i18n/Provider.jsx'
 import { consumeAgentOptIn } from './agent.js'
+import { isEmbed } from './embed.js'
 
+const embedded = isEmbed(window.location.search)
 // Read and removed here, once per page load, before React starts. Inside a
 // component it would run twice in development (StrictMode calls state
 // initializers twice) and the second call would no longer see the ?agent.
-const agentOptIn = consumeAgentOptIn()
+// The widget must not even read it: it could remove it from a shop's address.
+const agentOptIn = embedded ? false : consumeAgentOptIn()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <I18nProvider>
-      <App agentOptIn={agentOptIn} />
+      <Root embedded={embedded} agentOptIn={agentOptIn} />
     </I18nProvider>
   </StrictMode>,
 )

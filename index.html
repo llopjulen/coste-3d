@@ -56,6 +56,12 @@
         if (t !== 'light' && t !== 'dark') {
           t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
         }
+        // Inside an iframe (?embed) the shop decides the theme, not this
+        // browser's saved choice. The same rule as src/embed.js (embedTheme).
+        if (/[?&]embed(=|&|$)/.test(location.search)) {
+          t = /[?&]theme=light(&|$)/.test(location.search) ? 'light' : 'dark'
+          document.documentElement.setAttribute('data-embed', '')
+        }
         document.documentElement.setAttribute('data-theme', t)
         var m = document.querySelector('meta[name="theme-color"]')
         if (m) m.setAttribute('content', t === 'light' ? '#F2F2F4' : '#111113')
@@ -67,6 +73,11 @@
     <style>
       html,body{margin:0;background:#111113;color:#F2F2F0;font-family:system-ui,sans-serif}
       html[data-theme="light"],html[data-theme="light"] body{background:#F2F2F4;color:#1D1D1F}
+      /* The widget paints its own canvas (or none): never a dark box before it loads. */
+      html[data-embed],html[data-embed] body{background:transparent}
+      /* The static SEO text inside #root must not flash in a shop's page while the widget loads. */
+      html[data-embed] #root{visibility:hidden}
+      html[data-embed] .embed{visibility:visible}
     </style>
 
     <title>3D Print Cost Calculator &amp; Quote Maker · layercents</title>
@@ -80,6 +91,20 @@
       </main>
     </div>
     <script type="module" src="/src/main.jsx"></script>
-    <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "cb72017d95f74d0eac0692088522eb88"}'></script><!-- End Cloudflare Web Analytics -->
+    <!-- Cloudflare Web Analytics. Not inside the shop widget (?embed): that iframe
+         runs on other people's pages, and counting their visitors as layercents
+         visits would inflate our numbers (the /taller/ interest count) and send
+         their customers' visits to our analytics. Same snippet as the one Cloudflare
+         gives, added from a script so it can be skipped. -->
+    <script>
+      if (!/[?&]embed(=|&|$)/.test(location.search)) {
+        var cf = document.createElement('script')
+        cf.type = 'module'
+        cf.src = 'https://static.cloudflareinsights.com/beacon.min.js'
+        cf.setAttribute('data-cf-beacon', '{"token": "cb72017d95f74d0eac0692088522eb88"}')
+        document.body.appendChild(cf)
+      }
+    </script>
+    <!-- End Cloudflare Web Analytics -->
   </body>
 </html>

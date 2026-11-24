@@ -37,7 +37,9 @@ export function luminance(hex) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
 
-const contrast = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
+// Exported for src/embed.js, which also needs to know whether two colours read
+// against each other (WCAG contrast ratio from two luminances).
+export const contrast = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
 
 /* The text colour to put ON the accent (the "band" header): whichever of
    white or near-black contrasts more with it. */

@@ -704,4 +704,21 @@ export default {
   'seo.intro': 'layercents es una calculadora gratuita del coste de impresión 3D. Suelta tu archivo laminado (.gcode, .bgcode o .gcode.3mf) y obtén el coste real de una pieza: material, electricidad, amortización de la impresora, impresiones fallidas, tu tiempo y el embalaje. Después sugiere un precio y prepara un presupuesto para el cliente. Sin cuenta, y nada de lo que escribes sale de tu navegador.',
   'seo.noscript': 'Esta herramienta necesita JavaScript para funcionar. Actívalo en tu navegador.',
   'seo.appDescription': 'Calculadora gratuita del coste de impresión 3D. Calcula el coste real de una pieza impresa (material, electricidad, desgaste de la impresora, impresiones fallidas, mano de obra y embalaje), un precio recomendado y un presupuesto para el cliente.',
+
+  // --- Widget incrustado (?embed): el presupuesto del cliente dentro de la página de una tienda
+  'embed.title': 'Calcula tu impresión',
+  'embed.grams': 'Filamento (g)',
+  'embed.hours': 'Tiempo de impresión (h)',
+  'embed.minutes': 'Acabado (min)',
+  'embed.filament': 'Filamento',
+  'embed.machine': 'Tiempo de máquina',
+  'embed.labour': 'Mano de obra',
+  'embed.subtotal': 'Subtotal',
+  'embed.tax': 'Impuestos',
+  'embed.taxRate': '{name} {rate}%',
+  'embed.total': 'Total',
+  'embed.detailGrams': '{amount} g',
+  'embed.detailHours': '{amount} h',
+  'embed.detailMinutes': '{amount} min',
+  'embed.poweredBy': 'Hecho con layercents',
 }

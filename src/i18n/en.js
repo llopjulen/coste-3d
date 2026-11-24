@@ -718,4 +718,21 @@ export default {
   'seo.intro': 'layercents is a free 3D print cost calculator. Drop your sliced file (.gcode, .bgcode or .gcode.3mf) and get the real cost of a part: material, power, printer depreciation, failed prints, your time and packaging. It then suggests a price and builds a customer quote. No account, and nothing you type leaves your browser.',
   'seo.noscript': 'This tool needs JavaScript to run. Please enable it in your browser.',
   'seo.appDescription': 'Free 3D print cost calculator. Works out the real cost of a printed part (material, power, printer wear, failed prints, labor and packaging), a recommended price and a customer quote.',
+
+  // --- Embedded widget (?embed): the customer quote inside a shop's page
+  'embed.title': 'Estimate your print',
+  'embed.grams': 'Filament (g)',
+  'embed.hours': 'Print time (h)',
+  'embed.minutes': 'Finishing (min)',
+  'embed.filament': 'Filament',
+  'embed.machine': 'Machine time',
+  'embed.labour': 'Labour',
+  'embed.subtotal': 'Subtotal',
+  'embed.tax': 'Tax',
+  'embed.taxRate': '{name} {rate}%',
+  'embed.total': 'Total',
+  'embed.detailGrams': '{amount} g',
+  'embed.detailHours': '{amount} h',
+  'embed.detailMinutes': '{amount} min',
+  'embed.poweredBy': 'Made with layercents',
 }

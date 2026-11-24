@@ -125,6 +125,10 @@ Una herramienta, no un folleto. Quien la abre viene a calcular un precio o a mov
 
 Encima de la barra de costes, un jarrón impreso capa a capa (src/CostPrint.jsx). Es la única pieza 3D de la interfaz y cumple las mismas reglas: plástico mate, sin brillos ni sombras proyectadas, fondo transparente sobre el panel, y solo los colores de las capas de coste. Si la persona suelta un archivo, el jarrón pasa a ser su pieza, con las mismas franjas. Gira despacio; con «reducir movimiento» sale quieto. No añadir más objetos 3D decorativos: este funciona porque es el dato.
 
+## El widget incrustable
+
+`?embed` (src/Embed.jsx, docs/EMBED.md) es la misma gramática —grupo sobre fondo, filas de 48 px, separadores finos, el acento solo en el total— pero con los colores, el redondeo y la fuente que pone la tienda por la dirección. Las reglas: los grises salen de fondo y texto (`mix`), el texto atenuado llega a 4,5:1, y si el acento no se lee como texto (menos de 3:1) el total va en el color del texto. Fondo `transparent` para fundirse con la página. Ningún texto de la dirección llega a CSS (lista blanca, tests en `src/embed.test.js`). El oro de layercents solo es el acento por defecto.
+
 ## Interacción
 
 - **Foco visible** con el teclado en todo lo pulsable (`:focus-visible`, anillo oro suave). Nunca `outline: none` sin otro indicador.
