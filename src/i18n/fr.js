@@ -705,4 +705,21 @@ export default {
   'seo.intro': 'layercents est un calculateur gratuit du coût d’impression 3D. Déposez votre fichier tranché (.gcode, .bgcode ou .gcode.3mf) et obtenez le coût réel d’une pièce : matière, électricité, amortissement de l’imprimante, impressions ratées, votre temps et l’emballage. Il propose ensuite un prix et prépare un devis client. Sans compte, et rien de ce que vous saisissez ne quitte votre navigateur.',
   'seo.noscript': 'Cet outil a besoin de JavaScript pour fonctionner. Activez-le dans votre navigateur.',
   'seo.appDescription': 'Calculateur gratuit du coût d’impression 3D. Calcule le coût réel d’une pièce imprimée (matière, électricité, usure de l’imprimante, impressions ratées, main-d’œuvre et emballage), un prix recommandé et un devis client.',
+
+  // --- Widget intégré (?embed) : le devis client dans la page d’une boutique
+  'embed.title': 'Estimez votre impression',
+  'embed.grams': 'Filament (g)',
+  'embed.hours': 'Durée d’impression (h)',
+  'embed.minutes': 'Finition (min)',
+  'embed.filament': 'Filament',
+  'embed.machine': 'Temps machine',
+  'embed.labour': 'Main-d’œuvre',
+  'embed.subtotal': 'Sous-total',
+  'embed.tax': 'Taxes',
+  'embed.taxRate': '{name} {rate} %',
+  'embed.total': 'Total',
+  'embed.detailGrams': '{amount} g',
+  'embed.detailHours': '{amount} h',
+  'embed.detailMinutes': '{amount} min',
+  'embed.poweredBy': 'Fait avec layercents',
 }

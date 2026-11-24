@@ -1553,3 +1553,52 @@ html{-webkit-tap-highlight-color:transparent}
 .report-two.one{grid-template-columns:1fr}
 .report .bar-row{grid-template-columns:minmax(72px,120px) 1fr auto}
 .report .bar-track,.report .bar-fill{height:10px;border-radius:5px}
+
+/* ------------------------------------------------------------------
+   EMBED (?embed) — the customer's quote inside a shop's iframe.
+   Self-contained: it only uses the tokens that src/Embed.jsx overrides on
+   <main class="embed"> from the address (colours, radius, font), so the
+   same markup looks like the shop's. Same grammar as the app: grouped
+   lists, 48 px rows, hairlines, the accent on the total only.
+------------------------------------------------------------------ */
+html[data-embed],html[data-embed] body{background:transparent}
+/* A page whose colour scheme differs from its iframe's gets an OPAQUE canvas
+   behind the iframe (a browser rule, so text stays readable). :root says
+   `color-scheme:dark`, which made `bg=transparent` paint a dark box on a shop
+   with a dark theme but no color-scheme declared. In the widget the root
+   declares nothing; each control gets its scheme from .embed (see Embed.jsx). */
+html[data-embed]{color-scheme:normal}
+/* The app reserves a side rail on wide screens (`body{padding-left:var(--rail-w)}`,
+   above). The widget has no rail: in an iframe wider than 860 px it would be pushed
+   232 px to the right. Same specificity as that rule, later in the file, so it wins. */
+html[data-embed] body{padding-left:0}
+.embed{
+  background:var(--fondo);color:var(--texto);
+  padding:16px;display:flex;flex-direction:column;gap:14px;
+  font-size:15px;line-height:1.47;
+}
+.embed[data-transparent]{background:transparent}
+.embed-group{background:var(--panel);border-radius:var(--radio);padding:0 16px}
+.embed-row,.embed-line{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:48px}
+.embed-row + .embed-row,.embed-line + .embed-line{border-top:1px solid var(--borde)}
+.embed-row label{color:var(--texto)}
+.embed-row input{
+  width:7.5em;text-align:right;background:transparent;border:0;color:var(--texto);
+  font:inherit;font-variant-numeric:tabular-nums;padding:10px 8px;margin-right:-8px;border-radius:var(--radio-campo);
+}
+.embed-row input::placeholder{color:var(--tenue)}
+.embed-row input:focus-visible{outline:none;background:var(--hundido);box-shadow:0 0 0 2px var(--oro)}
+.embed-quote dl{margin:0}
+.embed-line dt{display:flex;flex-direction:column;line-height:1.25}
+.embed-line dt small{color:var(--tenue);font-size:.78rem;min-height:0}
+.embed-line dt small:empty{display:none}
+.embed-line dd{font-variant-numeric:tabular-nums;white-space:nowrap;margin:0}
+.embed-sub dt,.embed-sub dd{color:var(--tenue)}
+.embed-total{min-height:56px}
+.embed-total dt{font-weight:600}
+.embed-total dd{font-size:1.35rem;font-weight:650;letter-spacing:-.025em;color:var(--oro-texto)}
+.embed-foot{text-align:center;font-size:.78rem}
+.embed-foot a{color:var(--tenue);text-decoration:none}
+.embed-foot a:hover{text-decoration:underline}
+.embed-foot a:focus-visible{outline:2px solid var(--oro);outline-offset:2px;border-radius:4px}
+@media (pointer:coarse){.embed-row input{font-size:16px}} /* iOS zooms into smaller fields */
