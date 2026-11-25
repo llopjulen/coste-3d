@@ -1,7 +1,7 @@
 /* Tests for calculate.js. Run them with:  npm test */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { MAX_EXTRA_COSTS, MAX_EXTRA_FILAMENTS, WEEKS_PER_MONTH, calculate, capacity, goodHoursPerMonth, extraCostsPerPart, materialCost, monthlyCostPerHour, normalizeExtraCosts, normalizeExtras, pricePerGram, totalGrams } from './calculate.js'
+import { MAX_EXTRA_COSTS, MAX_EXTRA_FILAMENTS, WEEKS_PER_MONTH, calculate, capacity, goodHoursPerMonth, extraCostsPerPart, materialCost, monthlyCostPerHour, normalizeExtraCosts, normalizeExtras, pricePerGram, totalGrams, worthIt } from './calculate.js'
 
 // The calculator's defaults (INITIAL in App.jsx).
 const BASE = {
@@ -170,4 +170,52 @@ test('without print hours per week a monthly cost adds nothing instead of Infini
 
 test('normalizeExtraCosts keeps per: month', () => {
   assert.equal(normalizeExtraCosts([{ label: 'Licencia', amount: 10, per: 'month' }])[0].per, 'month')
+})
+
+test('worthIt: loss, below the floor, meets it, or nothing to say', () => {
+  assert.equal(worthIt({ profit: -0.5, perHour: -0.2, hours: 2.5, minPerHour: 3 }), 'loss')
+  assert.equal(worthIt({ profit: -0.5, perHour: -0.2, hours: 2.5, minPerHour: 0 }), 'loss') // a loss is a loss with no floor set
+  assert.equal(worthIt({ profit: 4, perHour: 1.6, hours: 2.5, minPerHour: 3 }), 'below')
+  assert.equal(worthIt({ profit: 10, perHour: 4, hours: 2.5, minPerHour: 3 }), 'ok')
+  assert.equal(worthIt({ profit: 7.5, perHour: 3, hours: 2.5, minPerHour: 3 }), 'ok') // exactly the floor meets it
+  assert.equal(worthIt({ profit: 10, perHour: 4, hours: 2.5, minPerHour: 0 }), null) // no floor: no comparison
+  assert.equal(worthIt({ profit: 10, perHour: 0, hours: 0, minPerHour: 3 }), null) // no hours per print: no per-hour figure
+})
+
+test('worthIt compares in cents, the way the screen shows the figures', () => {
+  assert.equal(worthIt({ profit: 12.49, perHour: 4.996, hours: 2.5, minPerHour: 5 }), 'ok') // 5.00 vs 5.00
+  assert.equal(worthIt({ profit: 12.4, perHour: 4.96, hours: 2.5, minPerHour: 5 }), 'below') // 4.96 vs 5.00
+  assert.equal(worthIt({ profit: -0.004, perHour: -0.001, hours: 2.5, minPerHour: 0 }), null) // -0.00 is not a loss
+})
+
+test('calculate: a quote without minProfitPerHour (an old saved one) gets no comparison', () => {
+  const r = calculate(BASE)
+  assert.equal(r.minPerHour, 0)
+  assert.equal(r.minPrice, null)
+  assert.equal(r.worth, null) // BASE's 12 is a gain, and there is no floor to compare it with
+  assert.equal(calculate({ ...BASE, currentPrice: 1 }).worth, 'loss')
+})
+
+test('calculate: minPrice is the price that leaves exactly the floor per printer hour', () => {
+  for (const floor of [1, 3, 7.5]) {
+    const d = { ...BASE, minProfitPerHour: floor }
+    const r = calculate(d)
+    near(calculate({ ...d, currentPrice: r.minPrice }).perHour, floor, `floor ${floor}`)
+    // One cent less and it is below; at it, it is fine (rounded up to the cent the person would type).
+    assert.equal(calculate({ ...d, currentPrice: Math.ceil(r.minPrice * 100) / 100 }).worth, 'ok')
+    assert.equal(calculate({ ...d, currentPrice: r.minPrice - 0.5 }).worth === 'ok', false)
+  }
+})
+
+test('calculate: the platform fee is inside minPrice (the price is bigger than cost + floor)', () => {
+  const d = { ...BASE, minProfitPerHour: 3, fee: 20 }
+  const r = calculate(d)
+  assert.ok(r.minPrice > (r.cost + 3 * d.hours) / (1 - 0.1)) // more than a 10 % fee would need
+  near(r.minPrice, (r.cost + 3 * d.hours) / 0.8)
+})
+
+test('calculate: no hours per print means no per-hour floor price', () => {
+  const r = calculate({ ...BASE, hours: 0, minProfitPerHour: 3 })
+  assert.equal(r.minPrice, null)
+  assert.equal(r.worth, null)
 })

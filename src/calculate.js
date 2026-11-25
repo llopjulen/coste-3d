@@ -179,11 +179,35 @@ export function calculate(d) {
   const perHour = d.hours > 0 ? profit / d.hours : 0
   const units = Math.max(Math.floor(d.quantity), 1)
 
+  // "Is it worth printing at the price I can get?" The person's own floor, in
+  // profit per printer hour (a setup field; an old saved quote doesn't have
+  // it, and then there's no comparison). `minPrice` is the price that leaves
+  // exactly that floor: solving  (price * (1 - f) - cost) / hours = floor  for
+  // the price. It is what to ask for if the market allows it.
+  const minPerHour = finite(d.minProfitPerHour) && d.minProfitPerHour > 0 ? d.minProfitPerHour : 0
+  const minPrice = d.hours > 0 && minPerHour > 0 ? (cost + minPerHour * d.hours) / (1 - f) : null
+  const worth = worthIt({ profit, perHour, hours: d.hours, minPerHour })
+
   return {
     parts, cost, recommendedPrice, recommendedProfit, profit, perHour, currentNet, units,
+    minPerHour, minPrice, worth,
     orderPrice: recommendedPrice * units,
     materialPct: cost > 0 ? (material / cost) * 100 : 0,
   }
+}
+
+/* The verdict on a price: 'loss' (it costs you money), 'below' (it earns, but
+   less per printer hour than your floor), 'ok' (it meets the floor) or null
+   (nothing to say: no hours per print, or no floor set and not a loss).
+   Compared in whole cents: the screen shows cents, so 4.996 against a floor of
+   5.00 must not say "below" next to a figure that reads 5.00. Pure and apart
+   from `calculate`, so the three cases are tested without a whole form. */
+export function worthIt({ profit, perHour, hours, minPerHour }) {
+  if (!(hours > 0)) return null
+  const cents = x => Math.round(x * 100)
+  if (cents(profit) < 0) return 'loss'
+  if (minPerHour > 0) return cents(perHour) >= cents(minPerHour) ? 'ok' : 'below'
+  return null
 }
 
 /* How much the printer can turn out in a week, from the hours it really runs.
