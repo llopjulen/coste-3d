@@ -1339,6 +1339,10 @@ html{-webkit-tap-highlight-color:transparent}
 .hero-rows dd{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .hero-rows dd.loss{color:var(--rojo)}
 .hero-rows + .hero-sub{margin-top:12px}
+.hero-verdict{margin-top:12px;font-size:.92rem;font-weight:600;text-wrap:pretty}
+.hero-verdict .reach{font-weight:400;color:var(--tenue)}
+.hero-verdict.loss .reach{color:var(--tenue)} /* only the sentence is red, never the help */
+.hero-verdict + .hero-sub{margin-top:8px}
 .hero{padding-bottom:18px}
 
 /* El consejo: una frase, sin título ni viñeta. */

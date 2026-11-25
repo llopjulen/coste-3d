@@ -100,6 +100,8 @@ const SECTIONS = [
       { key: 'hourlyRate', money: true, initial: 15 },
       { key: 'fee', unit: '%', initial: 8 },
       { key: 'margin', unit: '%', initial: 40 },
+      // The floor for "is this price worth printing at?" (calculate.js, worthIt).
+      { key: 'minProfitPerHour', money: true, initial: 3 },
     ],
   },
 ]
@@ -1152,6 +1154,18 @@ export default function App({ agentOptIn = false }) {
                   </div>
                 )}
               </dl>
+              {/* The verdict on the person's own price: is it worth printing?
+                  Red only when it loses money (DESIGN.md: gaining is plain
+                  text, losing is red; gold is for the price). The price that
+                  reaches the floor is said once, and only if it is missing. */}
+              {d.currentPrice > 0 && r.worth && (
+                <p className={`hero-verdict${r.worth === 'loss' ? ' loss' : ''}`} aria-live="polite">
+                  {r.worth === 'loss' && t('hero.verdictLoss')}
+                  {r.worth === 'below' && t('hero.verdictBelow', { min: formatMoney(r.minPerHour) })}
+                  {r.worth === 'ok' && t('hero.verdictOk', { min: formatMoney(r.minPerHour) })}
+                  {r.worth !== 'ok' && r.minPrice != null && <span className="reach"> {t('hero.verdictReach', { price: formatMoney(r.minPrice) })}</span>}
+                </p>
+              )}
               {cap && (
                 <p className="hero-sub">
                   {/* Whole parts: nobody sells 15.8 of them. Below ten a decimal still matters. */}

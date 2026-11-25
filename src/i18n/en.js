@@ -79,6 +79,8 @@ export default {
   'field.fee.help': "What the platform keeps between commission and card processing. It's taken from the final selling price, the same way the platform charges it. Selling in person, this is 0.",
   'field.margin.label': 'Target margin',
   'field.margin.help': 'What you want to earn on top of cost. Below 20% you have nothing left to reinvest or absorb a surprise.',
+  'field.minProfitPerHour.label': 'Minimum profit per printer hour',
+  'field.minProfitPerHour.help': 'The least an hour of printing has to leave you, after every cost and the platform fee, for it to be worth running. The calculator compares your price with it. 0 turns the comparison off.',
 
   // --- Resultado
   'hero.label': 'Recommended price',
@@ -88,6 +90,10 @@ export default {
   'hero.orderTotal': 'Order total, {units} pcs',
   'hero.perWeek': 'At {hours} h of printing a week, about {amount} parts.',
   'hero.orderDays': 'This order of {units}, about {days} days.',
+  'hero.verdictLoss': 'You lose money at this price.',
+  'hero.verdictBelow': 'Below your minimum of {min} an hour.',
+  'hero.verdictOk': 'Clears your minimum of {min} an hour.',
+  'hero.verdictReach': 'At least {price} reaches it.',
   'cost.title': 'Cost to make it',
   'cost.chartLabel': 'Cost breakdown: {list}',
   'layer.material': 'Material',
